@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-03T23:59:04Z",
+  "updated_at": "2026-10-03T23:59:30Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 20,
     "started_at": "2026-10-03T23:46:16Z",
-    "turns": 29
+    "turns": 31
   },
   "round": {
     "number": null,
@@ -218,16 +218,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-03T21:17:54Z",
-      "kind": "run",
-      "text": "grep -n \"safeGetTransaction\\|maxRetries\\|maxConcurrent\\|class SolanaRpcClient\" -A 15 src/rpc.ts | head -150"
-    },
-    {
-      "t": "2026-10-03T21:18:10Z",
-      "kind": "edit",
-      "text": "rug-radar/tmp-probe-watcher-only.ts"
-    },
     {
       "t": "2026-10-03T21:18:14Z",
       "kind": "run",
@@ -617,6 +607,16 @@
       "t": "2026-10-03T23:58:07Z",
       "kind": "run",
       "text": "echo \"=== getTokenSupply (USDC) ===\" curl -s -m 5 -X POST \"https://solana-rpc.publicnode.com\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getTokenSup\u2026"
+    },
+    {
+      "t": "2026-10-03T23:59:11Z",
+      "kind": "read",
+      "text": "rug-radar/src/wsDiscovery.ts"
+    },
+    {
+      "t": "2026-10-03T23:59:30Z",
+      "kind": "run",
+      "text": "cat src/config.test.ts; echo \"---poller.test.ts---\"; cat src/poller.test.ts"
     }
   ],
   "schedule": {
