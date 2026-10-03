@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-03T23:46:16Z",
+  "updated_at": "2026-10-03T23:46:43Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 20,
     "started_at": "2026-10-03T23:46:16Z",
-    "turns": 0
+    "turns": 4
   },
   "round": {
     "number": null,
@@ -218,31 +218,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-03T16:20:23Z",
-      "kind": "run",
-      "text": "NODE_OPTIONS=--experimental-websocket node --import tsx src/server.ts > /tmp/server2.out 2>&1 & SERVER_PID=$! sleep 4 curl -s http://localhost:8787/api/feed echo kill $SERVER_PID \u2026"
-    },
-    {
-      "t": "2026-10-03T16:20:29Z",
-      "kind": "think",
-      "text": "Server boots, `/api/feed` responds correctly, no crashes. Now let's update PROGRESS.md with this session's work."
-    },
-    {
-      "t": "2026-10-03T16:21:03Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-03T16:21:04Z",
-      "kind": "think",
-      "text": "Now let's do a final full verification pass and check git status."
-    },
-    {
-      "t": "2026-10-03T16:21:05Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -10 && echo \"===TEST===\" && npm test 2>&1 | tail -10 && echo \"===BUILD===\" && npm run build 2>&1 | tail -10 && cd .. && echo \"===STATUS===\" && git st\u2026"
-    },
     {
       "t": "2026-10-03T16:21:21Z",
       "kind": "think",
@@ -617,6 +592,31 @@
       "t": "2026-10-03T23:46:16Z",
       "kind": "start",
       "text": "Session 20 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-03T23:46:21Z",
+      "kind": "run",
+      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-03T23:46:23Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-03T23:46:29Z",
+      "kind": "run",
+      "text": "git status && echo \"---\" && ls rug-radar && echo \"---find tmp files---\" && find rug-radar -maxdepth 1 -iname \"tmp*\" -o -iname \"probe*\" 2>/dev/null"
+    },
+    {
+      "t": "2026-10-03T23:46:32Z",
+      "kind": "think",
+      "text": "Repo is clean, no leftover scratch files. Let me verify the test suite and typecheck are in the state the last session claimed."
+    },
+    {
+      "t": "2026-10-03T23:46:32Z",
+      "kind": "run",
+      "text": "cd rug-radar && npm install --silent 2>&1 | tail -5 && echo \"---typecheck---\" && npm run typecheck 2>&1 | tail -20 && echo \"---test---\" && time npm test 2>&1 | tail -30"
     }
   ],
   "schedule": {
