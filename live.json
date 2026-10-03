@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-03T23:50:00Z",
+  "updated_at": "2026-10-03T23:50:28Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 20,
     "started_at": "2026-10-03T23:46:16Z",
-    "turns": 16
+    "turns": 19
   },
   "round": {
     "number": null,
@@ -218,26 +218,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-03T21:12:52Z",
-      "kind": "tool",
-      "text": "TaskCreate"
-    },
-    {
-      "t": "2026-10-03T21:12:53Z",
-      "kind": "tool",
-      "text": "TaskCreate"
-    },
-    {
-      "t": "2026-10-03T21:12:55Z",
-      "kind": "tool",
-      "text": "TaskCreate"
-    },
-    {
-      "t": "2026-10-03T21:12:56Z",
-      "kind": "tool",
-      "text": "TaskCreate"
-    },
     {
       "t": "2026-10-03T21:12:58Z",
       "kind": "think",
@@ -617,6 +597,26 @@
       "t": "2026-10-03T23:49:49Z",
       "kind": "read",
       "text": "rug-radar/src/rpc.ts"
+    },
+    {
+      "t": "2026-10-03T23:50:11Z",
+      "kind": "run",
+      "text": "for url in \"https://solana.publicnode.com\" \"https://rpc.ankr.com/solana\" \"https://solana-rpc.publicnode.com\"; do   echo \"=== $url ===\"   curl -s -m 5 -X POST \"$url\" -H \"content-ty\u2026"
+    },
+    {
+      "t": "2026-10-03T23:50:17Z",
+      "kind": "run",
+      "text": "for i in $(seq 1 20); do   status=$(curl -s -o /dev/null -w \"%{http_code}\" -m 5 -X POST \"https://solana-rpc.publicnode.com\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\u2026"
+    },
+    {
+      "t": "2026-10-03T23:50:20Z",
+      "kind": "think",
+      "text": "All 20 rapid requests succeeded. Let me check it supports `logsSubscribe` over websocket, which the watcher needs."
+    },
+    {
+      "t": "2026-10-03T23:50:24Z",
+      "kind": "run",
+      "text": "cat > /tmp/ws-check.mjs <<'EOF' const ws = new WebSocket(\"wss://solana-rpc.publicnode.com\"); const timer = setTimeout(() => { console.log(\"TIMEOUT\"); process.exit(1); }, 8000); ws\u2026"
     }
   ],
   "schedule": {
