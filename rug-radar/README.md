@@ -109,7 +109,12 @@ the websocket watcher just saw visible to `getTransaction`. Without the
 retry, that launch was silently dropped forever (a "not found" result isn't
 an exception, so nothing surfaced the loss). A transaction that resolves but
 isn't a create instruction is never retried — only the "doesn't exist yet"
-case is transient.
+case is transient. **A thrown error (e.g. a 429 that exhausted `rpc.ts`'s own
+retries) is not retried either** (fixed session 19, see "Known limitations"):
+it used to be swallowed to the same `null` as "not found yet" and retried
+identically, which meant a rate-limit exhaustion triggered up to 5 more
+rounds of `rpc.ts`'s own 4-retry backoff — amplifying load on an endpoint
+that had just asked for a slower pace, instead of backing off from it.
 
 `src/pipeline.ts` turns one discovered launch into a full `LaunchScore` by
 running all four signals' data-fetch + score functions (a signal that fails
@@ -136,15 +141,33 @@ same as before) — it just stops one path from starving the other's share.
 
 ### Known limitations
 
-- **The public RPC's rate limit is still the binding constraint.** Even with
-  retry-with-backoff and a concurrency cap (above), a live run still logs
-  occasional `getTransaction failed: ... 429` lines during a burst of
-  candidate creates — the free public endpoint's quota is tight enough that
-  client-side queuing reduces but doesn't eliminate it. This fails closed,
-  not loudly: `safeGetTransaction` catches and skips, so a dropped launch is
-  silently under-reported rather than crashing anything. A real fix needs a
-  paid/less-restricted RPC provider, which is out of scope for "public RPC,
-  no keys."
+- **The public RPC's rate limit is still the binding constraint, and is
+  currently severe enough to stall live discovery almost entirely.**
+  Previously documented as "occasional 429s, reduced but not eliminated" —
+  a live check this session (session 19) found something worse: running
+  `LaunchWatcher` alone, at production's own `maxConcurrent: 2`, for 3
+  straight minutes against real mainnet-beta resolved **zero** launches,
+  logging a 429 for essentially every `getTransaction` call. Investigating
+  why surfaced a real, now-fixed bug that was making it worse: a thrown 429
+  error (after `rpc.ts`'s own 4 retries were exhausted) was swallowed by
+  `safeGetTransaction` to the same `null` as a genuine "not found yet"
+  result, so `resolveLaunchFromSignature`'s not-found retry loop retried a
+  rate-limit exhaustion exactly like replication lag — up to 5 more rounds,
+  each re-running `rpc.ts`'s own 4-retry backoff, i.e. up to ~20-25 real HTTP
+  calls for one signature, hammering an endpoint that had just asked for a
+  slower pace. Fixed in `resolveLaunchFromSignature` (`src/discovery.ts`): a
+  thrown error now gives up immediately instead of entering the not-found
+  retry loop (see `src/discovery.test.ts`'s "does not retry a thrown error"
+  test). Re-running the same 3-minute live check after the fix still
+  resolved zero launches — the amplification bug was real and worth fixing
+  (it was actively making a bad situation worse), but it was not the whole
+  story: the endpoint's current throttling is tight enough that even a single
+  non-amplified attempt per signature mostly fails. This fails closed, not
+  loudly either way: a dropped launch is silently under-reported rather than
+  crashing anything. A real fix needs a paid/less-restricted RPC provider,
+  out of scope for "public RPC, no keys." Worth re-checking at a different
+  time — this may partly reflect load on the free endpoint varying over time
+  rather than being a fixed ceiling.
 - The old signature-polling path (`src/discovery.ts`) under-samples on its
   own — confirmed live, the pump.fun program sees roughly 500 tx/second
   across every instruction type combined, so 1000 signatures from
@@ -176,9 +199,12 @@ same as before) — it just stops one path from starving the other's share.
   contribution from the scan's).
 - `findFundingSource` (in `src/data/bundledBuys.ts`) has the same style of
   lookback-limit cap (default 50 signatures) for a buyer's funding source —
-  not yet live-checked against a real long-history wallet this session (ran
-  out of early-buy activity on the freshly-created mints used for the
-  deployer-history check above); still an open "worth checking" item.
+  still not live-checked against a real long-history wallet. Attempted again
+  this session (session 19); blocked by the rate-limit finding above, which
+  turned out bigger: the websocket watcher couldn't resolve even one live
+  launch to test against in the time available. Needs the rate-limit
+  situation above to ease (or a lucky lower-traffic window) before this can
+  be attempted again.
 
 ## Setup
 

@@ -4,7 +4,6 @@
 // getSignaturesForAddress/getTransaction methods the other data/* modules use.
 
 import { decodeCreateInstruction, PUMP_FUN_PROGRAM_ID } from "./pumpfun.js";
-import { safeGetTransaction } from "./rpc.js";
 import type { ParsedTransaction, SolanaRpcClient } from "./rpc.js";
 
 export interface DiscoveredLaunch {
@@ -101,6 +100,17 @@ export interface ResolveLaunchOptions {
   // result isn't an exception). Only a null *transaction* is retried — a
   // transaction that resolves but isn't a create instruction won't become
   // one on a retry, so that case returns immediately.
+  // Confirmed live (session 19): a thrown getTransaction error (e.g. the
+  // public RPC's 429 retries in rpc.ts already exhausted) used to be
+  // swallowed to the same `null` as a genuine not-found-yet result via
+  // safeGetTransaction, so this retry loop retried a rate-limit exhaustion
+  // exactly like replication lag — up to 5 more times, each re-running
+  // rpc.ts's own 4-retry backoff, i.e. up to ~20-25 real HTTP calls for one
+  // signature. Against an endpoint that just told us to back off, that
+  // amplification is the opposite of helpful: it was observed live to stall
+  // the watcher to zero resolved launches over several minutes. Only a
+  // genuine null (no exception) is replication lag worth retrying; a thrown
+  // error gives up immediately instead of hammering harder.
   retries?: number;
   baseDelayMs?: number;
   sleep?: (ms: number) => Promise<void>;
@@ -130,7 +140,13 @@ export async function resolveLaunchFromSignature(
   const sleep = options.sleep ?? defaultSleep;
 
   for (let attempt = 0; ; attempt++) {
-    const tx = await safeGetTransaction(rpc, signature);
+    let tx: ParsedTransaction | null;
+    try {
+      tx = await rpc.getTransaction(signature);
+    } catch (err) {
+      console.error(`getTransaction failed for ${signature}:`, err instanceof Error ? err.message : err);
+      return null;
+    }
     if (tx && tx.blockTime !== null) {
       const created = findCreateInstruction(tx);
       return created ? { ...created, createdAt: tx.blockTime, signature } : null;

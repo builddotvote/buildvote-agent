@@ -954,3 +954,72 @@ below; see that entry for final state.)*
 - All five TASK.md steps remain functionally complete; remaining work is
   hardening (rate limit, the two open lookback-limit checks) rather than new
   features.
+
+## Session 19 — 2026-10-03
+
+### Done
+- Picked up the oldest open item (`findFundingSource`'s lookback-limit live
+  check, flagged since Session 4) by watching the real websocket feed for a
+  fresh mint with early-buy activity, same pattern as Session 12's deployer-
+  history live check. Never got there: the watcher couldn't resolve a single
+  live launch in the time available, which turned into a bigger finding.
+- Live-checked `LaunchWatcher` in isolation (no competing calls, production's
+  own `maxConcurrent: 2`) for 3 straight minutes against real mainnet-beta:
+  **zero** launches resolved, a 429 on essentially every `getTransaction`
+  call. Previously documented as "occasional 429s, reduced but not
+  eliminated" (Session 10) — this is categorically worse.
+- Root-caused a real, now-fixed bug that was making it worse:
+  `resolveLaunchFromSignature` (`src/discovery.ts`) called
+  `safeGetTransaction`, which swallowed a thrown error (e.g. a 429 that
+  exhausted `rpc.ts`'s own 4 retries) to the same `null` as a genuine
+  "not found yet" result. Its not-found retry loop then retried a rate-limit
+  exhaustion exactly like replication lag — up to 5 more rounds, each
+  re-running `rpc.ts`'s own 4-retry backoff, i.e. up to ~20-25 real HTTP
+  calls for one signature, hammering an endpoint that had just asked for a
+  slower pace. Fixed: `resolveLaunchFromSignature` now distinguishes a
+  thrown error (gives up immediately, no retry) from a genuine `null`
+  (retries as before, unchanged). `src/discovery.test.ts` — 1 new test
+  pinning this (`retries: 5` passed but `calls` stays at 1 on a throw);
+  removed a no-longer-needed `resolveOptions: { retries: 0 }` workaround
+  from an existing test now that a throw never enters the retry loop.
+- Re-ran the same 3-minute live check after the fix: still zero launches
+  resolved. The amplification bug was real and worth fixing — it was
+  actively self-reinforcing the exact problem it was trying to survive — but
+  it wasn't the whole story. The public endpoint's current throttling is
+  tight enough that even a single, non-amplified attempt per signature
+  mostly fails.
+- Updated `rug-radar/README.md`'s top "Known limitations" entry with this
+  finding (previously "occasional 429s" → now "currently severe enough to
+  stall live discovery almost entirely"), the fix, and that it's a point-in-
+  time observation worth re-checking later (could reflect load on the free
+  endpoint varying over time). Updated the `findFundingSource` bullet: still
+  open, now understood to be blocked by this bigger issue rather than just
+  needing a lucky mint with enough early-buy activity.
+- Deleted both scratch probe scripts used for the live checks
+  (`tmp-probe-funding.ts`, `tmp-probe-watcher-only.ts`) before finishing —
+  same cleanup habit as every prior session.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 112/112 passing (1 new), all offline, ~2.7-2.8s.
+- Live-checked the real, unmodified-then-fixed `LaunchWatcher` against
+  public mainnet-beta twice (before/after the fix) — see "Done" above.
+- `git status` after cleanup shows only the intended `discovery.ts`/
+  `discovery.test.ts`/README/PROGRESS changes — no stray scratch files.
+
+### Next
+- `findFundingSource`'s lookback-limit live check (open since Session 4) is
+  still blocked — needs the rate-limit situation to ease, or a lower-traffic
+  window, before a launch can even be resolved to test against.
+- Worth re-running the 3-minute isolated-watcher check at a different time of
+  day to see if the "zero resolved in 3 minutes" result was specific to this
+  session's window or a persistent new floor — the finding above is time-
+  stamped, not necessarily permanent.
+- If the rate limit genuinely has tightened to this degree persistently, the
+  backstop poller (`src/discovery.ts`'s 15s interval) is likely also mostly
+  failing right now, not just under-sampling as previously documented — not
+  separately live-checked this session, but it shares the same
+  `getTransaction` call and endpoint.
+- All five TASK.md steps remain functionally complete; the rate-limit
+  ceiling (now confirmed more severe than previously documented, independent
+  of the amplification bug this session fixed) is the main open item.

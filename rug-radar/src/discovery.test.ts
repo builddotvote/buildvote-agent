@@ -123,7 +123,9 @@ test("skips a signature whose getTransaction call throws, instead of failing the
     return signature === "sigCreate" ? createTx() : null;
   };
 
-  const result = await findNewLaunches(rpc, 1700000000, { resolveOptions: { retries: 0 } });
+  // No resolveOptions needed: a thrown error never enters the retry loop
+  // (see the dedicated test below), so this doesn't need a fake sleep.
+  const result = await findNewLaunches(rpc, 1700000000);
   assert.equal(result.launches.length, 1);
   assert.equal(result.launches[0].mint, "Mint1111111111111111111111111111111111111");
   assert.equal(result.newestBlockTime, 1700000200);
@@ -201,6 +203,32 @@ test("resolveLaunchFromSignature does not retry a resolved transaction that simp
 
   assert.equal(launch, null);
   assert.equal(calls, 1);
+  assert.deepEqual(sleeps, []);
+});
+
+test("resolveLaunchFromSignature does not retry a thrown error the way it retries a genuine not-found", async () => {
+  // Session 19: a thrown error (e.g. 429s exhausted) used to be swallowed to
+  // the same null as "not found yet" and retried identically, amplifying
+  // load on an already-rate-limited RPC. It should give up immediately.
+  let calls = 0;
+  const rpc = {
+    async getTransaction() {
+      calls++;
+      throw new Error("RPC HTTP error 429 for getTransaction");
+    },
+  };
+  const sleeps: number[] = [];
+
+  const launch = await resolveLaunchFromSignature(rpc, "sigRateLimited", {
+    retries: 5,
+    baseDelayMs: 10,
+    sleep: async (ms) => {
+      sleeps.push(ms);
+    },
+  });
+
+  assert.equal(launch, null);
+  assert.equal(calls, 1); // no retry on a thrown error, unlike a genuine null
   assert.deepEqual(sleeps, []);
 });
 
