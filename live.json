@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-03T21:12:19Z",
+  "updated_at": "2026-10-03T21:12:45Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 19,
     "started_at": "2026-10-03T21:12:19Z",
-    "turns": 0
+    "turns": 6
   },
   "round": {
     "number": null,
@@ -209,51 +209,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-03T11:54:50Z",
-      "kind": "read",
-      "text": "rug-radar/src/discovery.test.ts"
-    },
-    {
-      "t": "2026-10-03T11:54:55Z",
-      "kind": "edit",
-      "text": "rug-radar/src/discovery.test.ts"
-    },
-    {
-      "t": "2026-10-03T11:54:58Z",
-      "kind": "read",
-      "text": "rug-radar/src/discovery.test.ts"
-    },
-    {
-      "t": "2026-10-03T11:55:04Z",
-      "kind": "edit",
-      "text": "rug-radar/src/discovery.test.ts"
-    },
-    {
-      "t": "2026-10-03T11:55:07Z",
-      "kind": "think",
-      "text": "Now run typecheck and the full test suite again."
-    },
-    {
-      "t": "2026-10-03T11:55:08Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -40 && echo \"===TEST===\" && npm test 2>&1 | tail -20"
-    },
-    {
-      "t": "2026-10-03T11:56:00Z",
-      "kind": "think",
-      "text": "Duration jumped from ~5s to 47s \u2014 something is using real timers instead of the injected fake sleep. Let me check."
-    },
-    {
-      "t": "2026-10-03T11:56:01Z",
-      "kind": "run",
-      "text": "npm test 2>&1 | grep -E \"ms\\)\" | sort -t'(' -k2 -rn | head -5"
-    },
-    {
-      "t": "2026-10-03T11:57:11Z",
-      "kind": "think",
-      "text": "I need to thread resolve options through `findNewLaunches` so the existing polling-path tests (which don't inject a fake sleep) don't fall back to real 23-second timers. Let me ch\u2026"
-    },
     {
       "t": "2026-10-03T11:57:11Z",
       "kind": "run",
@@ -608,6 +563,51 @@
       "t": "2026-10-03T21:12:19Z",
       "kind": "start",
       "text": "Session 19 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-03T21:12:22Z",
+      "kind": "think",
+      "text": "I'll start by reading the task and progress files."
+    },
+    {
+      "t": "2026-10-03T21:12:23Z",
+      "kind": "run",
+      "text": "cat TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat PROGRESS.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-03T21:12:26Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-03T21:12:26Z",
+      "kind": "read",
+      "text": "TASK.md"
+    },
+    {
+      "t": "2026-10-03T21:12:30Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && git status && echo \"---ls---\" && ls -la && echo \"---src---\" && ls src && echo \"---node_modules?---\" && ls node_mo\u2026"
+    },
+    {
+      "t": "2026-10-03T21:12:33Z",
+      "kind": "think",
+      "text": "Repo is clean, all five TASK.md steps are functionally complete per PROGRESS.md. Let me install deps and verify current state before picking up the next open item."
+    },
+    {
+      "t": "2026-10-03T21:12:34Z",
+      "kind": "run",
+      "text": "npm install --silent 2>&1 | tail -20 && echo \"---typecheck---\" && npm run typecheck 2>&1 | tail -30 && echo \"---test---\" && time npm test 2>&1 | tail -40"
+    },
+    {
+      "t": "2026-10-03T21:12:42Z",
+      "kind": "think",
+      "text": "All 111 tests pass, clean typecheck, suite runs in ~3s as fixed last session. Now let me look at the most concrete open item \u2014 `findFundingSource`'s lookback-limit live check \u2014 wh\u2026"
+    },
+    {
+      "t": "2026-10-03T21:12:43Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/bundledBuys.ts"
     }
   ],
   "schedule": {
