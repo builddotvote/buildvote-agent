@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-03T21:24:15Z",
+  "updated_at": "2026-10-03T21:27:36Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 19,
     "started_at": "2026-10-03T21:12:19Z",
-    "turns": 33
+    "turns": 37
   },
   "round": {
     "number": null,
@@ -209,36 +209,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-03T16:18:24Z",
-      "kind": "read",
-      "text": "rug-radar/src/poller.test.ts"
-    },
-    {
-      "t": "2026-10-03T16:18:27Z",
-      "kind": "think",
-      "text": "Both poller tests resolve successfully on first try (sigCreate returns a valid tx immediately), so no retry triggers. These are fine. Now let's run the full suite to confirm the f\u2026"
-    },
-    {
-      "t": "2026-10-03T16:18:28Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -20 && echo \"===TEST===\" && time npm test 2>&1 | tail -20"
-    },
-    {
-      "t": "2026-10-03T16:18:35Z",
-      "kind": "think",
-      "text": "111/111 passing offline in ~2.6s now (down from 24s). Let's also verify the build and clean up the leftover scratch files from session 17."
-    },
-    {
-      "t": "2026-10-03T16:18:36Z",
-      "kind": "run",
-      "text": "npm run build 2>&1 | tail -20 && echo \"=== scratch files ===\" && ls tmp-*.ts 2>/dev/null"
-    },
-    {
-      "t": "2026-10-03T16:18:40Z",
-      "kind": "run",
-      "text": "cat tsconfig.json"
-    },
     {
       "t": "2026-10-03T16:18:43Z",
       "kind": "think",
@@ -608,6 +578,36 @@
       "t": "2026-10-03T21:24:13Z",
       "kind": "edit",
       "text": "rug-radar/src/discovery.test.ts"
+    },
+    {
+      "t": "2026-10-03T21:24:19Z",
+      "kind": "read",
+      "text": "rug-radar/src/discovery.test.ts"
+    },
+    {
+      "t": "2026-10-03T21:24:21Z",
+      "kind": "think",
+      "text": "This workaround is no longer needed now that a thrown error never retries \u2014 removing it so the test doesn't imply retries still matter here."
+    },
+    {
+      "t": "2026-10-03T21:24:24Z",
+      "kind": "edit",
+      "text": "rug-radar/src/discovery.test.ts"
+    },
+    {
+      "t": "2026-10-03T21:24:29Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -20 && echo \"---test---\" && time npm test 2>&1 | tail -20"
+    },
+    {
+      "t": "2026-10-03T21:24:35Z",
+      "kind": "think",
+      "text": "All 112 tests pass (1 new), clean typecheck, fast suite. Now let's re-run the live watcher-only probe to confirm this actually fixes the stall."
+    },
+    {
+      "t": "2026-10-03T21:24:36Z",
+      "kind": "run",
+      "text": "timeout 180 env NODE_OPTIONS=--experimental-websocket node --import tsx tmp-probe-watcher-only.ts 2>&1 | grep -E \"^\\[launch|^\\[status|^done|429\" | head -60"
     }
   ],
   "schedule": {
