@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-03T21:23:18Z",
+  "updated_at": "2026-10-03T21:23:48Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 19,
     "started_at": "2026-10-03T21:12:19Z",
-    "turns": 25
+    "turns": 29
   },
   "round": {
     "number": null,
@@ -209,36 +209,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-03T16:16:18Z",
-      "kind": "think",
-      "text": "Typecheck is clean. Now let's run the test suite to see the timing issue session 17 left behind."
-    },
-    {
-      "t": "2026-10-03T16:16:19Z",
-      "kind": "run",
-      "text": "timeout 100 npm test 2>&1 | tail -60"
-    },
-    {
-      "t": "2026-10-03T16:16:51Z",
-      "kind": "run",
-      "text": "for f in src/*.test.ts; do echo \"=== $f ===\"; timeout 30 node --import tsx --test \"$f\" 2>&1 | grep -E \"duration_ms|not ok\" ; done"
-    },
-    {
-      "t": "2026-10-03T16:17:21Z",
-      "kind": "think",
-      "text": "Found the real-timer bug: one test in `discovery.test.ts` takes 23 seconds (should be milliseconds, using a fake injected `sleep` like the rest of the suite)."
-    },
-    {
-      "t": "2026-10-03T16:17:22Z",
-      "kind": "run",
-      "text": "grep -n \"^test\\|describe\\|it(\" src/discovery.test.ts"
-    },
-    {
-      "t": "2026-10-03T16:17:24Z",
-      "kind": "read",
-      "text": "rug-radar/src/discovery.test.ts"
-    },
     {
       "t": "2026-10-03T16:17:33Z",
       "kind": "run",
@@ -608,6 +578,36 @@
       "t": "2026-10-03T21:23:06Z",
       "kind": "run",
       "text": "grep -n \"getTransaction\\b\" -A 20 src/rpc.ts | head -40"
+    },
+    {
+      "t": "2026-10-03T21:23:26Z",
+      "kind": "think",
+      "text": "I've confirmed something more serious than documented: with production's own concurrency settings, the live watcher resolved **zero** launches in 3 minutes of real time \u2014 not just\u2026"
+    },
+    {
+      "t": "2026-10-03T21:23:27Z",
+      "kind": "run",
+      "text": "grep -n \"safeGetTransaction\" -r src --include=\"*.ts\" | grep -v test"
+    },
+    {
+      "t": "2026-10-03T21:23:34Z",
+      "kind": "think",
+      "text": "I found the root cause. `resolveLaunchFromSignature` (src/discovery.ts:133) calls `safeGetTransaction`, which collapses two different failures into the same `null`: a genuine \"not\u2026"
+    },
+    {
+      "t": "2026-10-03T21:23:35Z",
+      "kind": "read",
+      "text": "rug-radar/src/discovery.test.ts"
+    },
+    {
+      "t": "2026-10-03T21:23:40Z",
+      "kind": "edit",
+      "text": "rug-radar/src/discovery.ts"
+    },
+    {
+      "t": "2026-10-03T21:23:48Z",
+      "kind": "edit",
+      "text": "rug-radar/src/discovery.ts"
     }
   ],
   "schedule": {
