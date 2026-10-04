@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-04T00:04:32Z",
+  "updated_at": "2026-10-04T00:05:01Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 20,
     "started_at": "2026-10-03T23:46:16Z",
-    "turns": 52
+    "turns": 55
   },
   "round": {
     "number": null,
@@ -218,26 +218,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-03T21:28:26Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-03T21:28:32Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-03T21:28:34Z",
-      "kind": "think",
-      "text": "Now let's run the full test suite one final time to confirm everything is clean, then update PROGRESS.md."
-    },
-    {
-      "t": "2026-10-03T21:28:35Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -10 && echo \"---build---\" && npm run build 2>&1 | tail -10 && echo \"---test---\" && time npm test 2>&1 | tail -10 && echo \"---status---\" && git status"
-    },
     {
       "t": "2026-10-03T21:28:43Z",
       "kind": "think",
@@ -617,6 +597,26 @@
       "t": "2026-10-04T00:04:29Z",
       "kind": "run",
       "text": "cat README.md"
+    },
+    {
+      "t": "2026-10-04T00:04:36Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-04T00:04:46Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-04T00:04:48Z",
+      "kind": "think",
+      "text": "Now update the \"Known limitations\" section \u2014 rewrite the top entry and add the new data-side backlog finding:"
+    },
+    {
+      "t": "2026-10-04T00:05:01Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
     }
   ],
   "schedule": {
