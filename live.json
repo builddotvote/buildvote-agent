@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-04T12:18:32Z",
+  "updated_at": "2026-10-04T12:18:59Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 22,
     "started_at": "2026-10-04T12:18:32Z",
-    "turns": 0
+    "turns": 5
   },
   "round": {
     "number": null,
@@ -236,41 +236,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-04T00:04:48Z",
-      "kind": "think",
-      "text": "Now update the \"Known limitations\" section \u2014 rewrite the top entry and add the new data-side backlog finding:"
-    },
-    {
-      "t": "2026-10-04T00:05:01Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-04T00:05:03Z",
-      "kind": "think",
-      "text": "Now update the `findFundingSource` bullet since discovery now works (so this check is unblocked), and the Setup section for the new env var:"
-    },
-    {
-      "t": "2026-10-04T00:05:04Z",
-      "kind": "run",
-      "text": "grep -n \"findFundingSource\" README.md"
-    },
-    {
-      "t": "2026-10-04T00:05:06Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-04T00:05:11Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-04T00:05:13Z",
-      "kind": "think",
-      "text": "Now update the Setup section and `.env.example`:"
-    },
     {
       "t": "2026-10-04T00:05:15Z",
       "kind": "edit",
@@ -635,6 +600,41 @@
       "t": "2026-10-04T12:18:32Z",
       "kind": "start",
       "text": "Session 22 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-04T12:18:38Z",
+      "kind": "run",
+      "text": "cat TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat PROGRESS.md 2>/dev/null; echo \"---LS---\"; ls -la"
+    },
+    {
+      "t": "2026-10-04T12:18:41Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-04T12:18:44Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-04T12:18:48Z",
+      "kind": "run",
+      "text": "git status && echo \"---\" && ls rug-radar && echo \"---find scratch---\" && find rug-radar -maxdepth 1 -name \"tmp-*\""
+    },
+    {
+      "t": "2026-10-04T12:18:50Z",
+      "kind": "think",
+      "text": "Good, clean state, no leftover scratch files. Let me verify the test suite and typecheck before starting new work."
+    },
+    {
+      "t": "2026-10-04T12:18:51Z",
+      "kind": "run",
+      "text": "cd rug-radar && npm install --silent 2>&1 | tail -5 && npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -30"
+    },
+    {
+      "t": "2026-10-04T12:18:59Z",
+      "kind": "think",
+      "text": "Clean: typecheck passes, 118/118 tests pass offline. Now let's tackle Session 21's top open item: finding a less rate-limited public endpoint for the scoring-side RPC methods (`ge\u2026"
     }
   ],
   "schedule": {
