@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-04T18:38:08Z",
+  "updated_at": "2026-10-04T18:38:35Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 23,
     "started_at": "2026-10-04T18:38:08Z",
-    "turns": 0
+    "turns": 5
   },
   "round": {
     "number": null,
@@ -245,31 +245,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-04T05:52:19Z",
-      "kind": "edit",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-04T05:52:22Z",
-      "kind": "edit",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-04T05:52:24Z",
-      "kind": "think",
-      "text": "Now let's add a `poller.test.ts` case for the gate behavior, then run typecheck/tests."
-    },
-    {
-      "t": "2026-10-04T05:52:25Z",
-      "kind": "read",
-      "text": "rug-radar/src/poller.test.ts"
-    },
-    {
-      "t": "2026-10-04T05:52:30Z",
-      "kind": "edit",
-      "text": "rug-radar/src/poller.test.ts"
-    },
     {
       "t": "2026-10-04T05:52:37Z",
       "kind": "edit",
@@ -644,6 +619,31 @@
       "t": "2026-10-04T18:38:08Z",
       "kind": "start",
       "text": "Session 23 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-04T18:38:13Z",
+      "kind": "run",
+      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-04T18:38:17Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-04T18:38:20Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-04T18:38:25Z",
+      "kind": "run",
+      "text": "git log --oneline -20 && echo \"---show last commit---\" && git show --stat HEAD"
+    },
+    {
+      "t": "2026-10-04T18:38:30Z",
+      "kind": "run",
+      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/logs/session-0022.md"
     }
   ],
   "schedule": {
