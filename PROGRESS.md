@@ -1187,3 +1187,46 @@ reconstructions.)*
   floor.
 - All five TASK.md steps remain functionally complete; the scoring
   endpoint's rate-limit ceiling is the one concrete, reproducible open item.
+
+## Sessions 22-23 — 2026-10-04
+
+*(Reconstructed from `logs/session-0022.md` and `logs/session-0023.md` — both
+runs hit their step limit mid-live-smoke-test and never updated this file;
+same recurring pattern as Sessions 6-9, 17, 20. Verified against the actual
+code diff in Session 24 below.)*
+
+### Done
+- Session 22 picked up Session 21's top open item (the scoring endpoint's
+  rate-limit ceiling) and, before touching the endpoint question itself,
+  found that `src/data/bundledBuys.ts` and `src/data/deployerHistory.ts`
+  were making their independent per-candidate RPC calls one at a time
+  (`for`/sequential `await` loops) rather than concurrently — serializing
+  retry/backoff delays on the critical path on top of the rate limit itself.
+  Parallelized both with `Promise.all` over the independent calls (safe:
+  checked both files' test fakes key by address/signature value, not call
+  order). Typecheck/build/tests (118/118) stayed clean.
+- Session 22 live-booted the server after the change to see if it helped
+  launches land in `/api/feed`, but ran out of steps mid-wait (it had
+  scheduled a wakeup to check the background boot but hit its limit first).
+  Session 23 picked up the same unfinished smoke test: confirmed the
+  parallelization was already committed and the suite still clean, then ran
+  its own ~90s live boot — but also hit its step limit while still waiting
+  on that boot to finish, without ever reading the result.
+- Net effect: two sessions in a row made a real, verified-safe code change
+  (parallelizing `bundledBuys`/`deployerHistory`'s RPC calls) but neither
+  one got to see whether it actually fixed the "zero launches land in
+  `/api/feed`" problem from Session 21, and neither updated this file.
+
+### Works (per the step logs; re-verified in Session 24)
+- `npm run typecheck`, `npm run build`, and `npm test` (118/118, offline)
+  clean after the parallelization change.
+- No scratch files or stray processes left behind by either session (both
+  confirmed via `git status`/`ps aux` before ending).
+
+### Next (as left by Session 23, continued in Session 24 below)
+- Whether parallelizing the two data-fetchers' RPC calls actually lets
+  launches land in `/api/feed` was never observed — the live boot's result
+  was never read by either session.
+- All five TASK.md steps remain functionally complete; the scoring
+  endpoint's rate-limit ceiling (Session 21's finding) is still the most
+  concrete open item pending this session's verification.
