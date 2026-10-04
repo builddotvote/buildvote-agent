@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-03T23:59:30Z",
+  "updated_at": "2026-10-03T23:59:59Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 20,
     "started_at": "2026-10-03T23:46:16Z",
-    "turns": 31
+    "turns": 36
   },
   "round": {
     "number": null,
@@ -218,46 +218,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-03T21:18:14Z",
-      "kind": "run",
-      "text": "NODE_OPTIONS=--experimental-websocket node --import tsx tmp-probe-watcher-only.ts 2>&1 | grep -E \"^\\[launch|^\\[status|^done\""
-    },
-    {
-      "t": "2026-10-03T21:21:21Z",
-      "kind": "run",
-      "text": "NODE_OPTIONS=--experimental-websocket node --import tsx tmp-probe-watcher-only.ts > /tmp/watcher_probe.log 2>&1 & PROBE_PID=$! sleep 90 kill $PROBE_PID 2>/dev/null wait $PROBE_PID\u2026"
-    },
-    {
-      "t": "2026-10-03T21:23:06Z",
-      "kind": "run",
-      "text": "grep -n \"getTransaction\\b\" -A 20 src/rpc.ts | head -40"
-    },
-    {
-      "t": "2026-10-03T21:23:26Z",
-      "kind": "think",
-      "text": "I've confirmed something more serious than documented: with production's own concurrency settings, the live watcher resolved **zero** launches in 3 minutes of real time \u2014 not just\u2026"
-    },
-    {
-      "t": "2026-10-03T21:23:27Z",
-      "kind": "run",
-      "text": "grep -n \"safeGetTransaction\" -r src --include=\"*.ts\" | grep -v test"
-    },
-    {
-      "t": "2026-10-03T21:23:34Z",
-      "kind": "think",
-      "text": "I found the root cause. `resolveLaunchFromSignature` (src/discovery.ts:133) calls `safeGetTransaction`, which collapses two different failures into the same `null`: a genuine \"not\u2026"
-    },
-    {
-      "t": "2026-10-03T21:23:35Z",
-      "kind": "read",
-      "text": "rug-radar/src/discovery.test.ts"
-    },
-    {
-      "t": "2026-10-03T21:23:40Z",
-      "kind": "edit",
-      "text": "rug-radar/src/discovery.ts"
-    },
     {
       "t": "2026-10-03T21:23:48Z",
       "kind": "edit",
@@ -617,6 +577,46 @@
       "t": "2026-10-03T23:59:30Z",
       "kind": "run",
       "text": "cat src/config.test.ts; echo \"---poller.test.ts---\"; cat src/poller.test.ts"
+    },
+    {
+      "t": "2026-10-03T23:59:33Z",
+      "kind": "run",
+      "text": "cat .env.example"
+    },
+    {
+      "t": "2026-10-03T23:59:36Z",
+      "kind": "think",
+      "text": "Now let's make the changes. First, `config.ts`:"
+    },
+    {
+      "t": "2026-10-03T23:59:36Z",
+      "kind": "read",
+      "text": "rug-radar/src/config.ts"
+    },
+    {
+      "t": "2026-10-03T23:59:45Z",
+      "kind": "edit",
+      "text": "rug-radar/src/config.ts"
+    },
+    {
+      "t": "2026-10-03T23:59:46Z",
+      "kind": "think",
+      "text": "Now update `config.test.ts`:"
+    },
+    {
+      "t": "2026-10-03T23:59:51Z",
+      "kind": "edit",
+      "text": "rug-radar/src/config.test.ts"
+    },
+    {
+      "t": "2026-10-03T23:59:54Z",
+      "kind": "think",
+      "text": "Now `poller.ts`:"
+    },
+    {
+      "t": "2026-10-03T23:59:59Z",
+      "kind": "edit",
+      "text": "rug-radar/src/poller.ts"
     }
   ],
   "schedule": {
