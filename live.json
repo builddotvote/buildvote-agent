@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-04T05:50:06Z",
+  "updated_at": "2026-10-04T05:50:38Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 21,
     "started_at": "2026-10-04T05:49:11Z",
-    "turns": 13
+    "turns": 17
   },
   "round": {
     "number": null,
@@ -227,36 +227,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-03T23:50:11Z",
-      "kind": "run",
-      "text": "for url in \"https://solana.publicnode.com\" \"https://rpc.ankr.com/solana\" \"https://solana-rpc.publicnode.com\"; do   echo \"=== $url ===\"   curl -s -m 5 -X POST \"$url\" -H \"content-ty\u2026"
-    },
-    {
-      "t": "2026-10-03T23:50:17Z",
-      "kind": "run",
-      "text": "for i in $(seq 1 20); do   status=$(curl -s -o /dev/null -w \"%{http_code}\" -m 5 -X POST \"https://solana-rpc.publicnode.com\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\u2026"
-    },
-    {
-      "t": "2026-10-03T23:50:20Z",
-      "kind": "think",
-      "text": "All 20 rapid requests succeeded. Let me check it supports `logsSubscribe` over websocket, which the watcher needs."
-    },
-    {
-      "t": "2026-10-03T23:50:24Z",
-      "kind": "run",
-      "text": "cat > /tmp/ws-check.mjs <<'EOF' const ws = new WebSocket(\"wss://solana-rpc.publicnode.com\"); const timer = setTimeout(() => { console.log(\"TIMEOUT\"); process.exit(1); }, 8000); ws\u2026"
-    },
-    {
-      "t": "2026-10-03T23:50:30Z",
-      "kind": "run",
-      "text": "SOLANA_RPC_URL=https://solana-rpc.publicnode.com NODE_OPTIONS=--experimental-websocket timeout 70 npx tsx tmp-probe-ratelimit.ts 2>&1 | head -60"
-    },
-    {
-      "t": "2026-10-03T23:51:46Z",
-      "kind": "run",
-      "text": "SOLANA_RPC_URL=https://solana-rpc.publicnode.com NODE_OPTIONS=--experimental-websocket timeout 70 npx tsx tmp-probe-ratelimit.ts > /tmp/probe-out.log 2>&1 & PID=$! wait $PID echo \u2026"
-    },
     {
       "t": "2026-10-03T23:53:02Z",
       "kind": "run",
@@ -626,6 +596,36 @@
       "t": "2026-10-04T05:50:02Z",
       "kind": "read",
       "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-04T05:50:10Z",
+      "kind": "run",
+      "text": "wc -l tmp-probe-ratelimit.ts tmp-probe-score-one.ts"
+    },
+    {
+      "t": "2026-10-04T05:50:12Z",
+      "kind": "think",
+      "text": "These are scratch probe scripts, consistent with the project's habit of deleting them before finishing. I'll remove them now."
+    },
+    {
+      "t": "2026-10-04T05:50:13Z",
+      "kind": "run",
+      "text": "rm tmp-probe-ratelimit.ts tmp-probe-score-one.ts && git status"
+    },
+    {
+      "t": "2026-10-04T05:50:15Z",
+      "kind": "think",
+      "text": "Now let me write up the Session 20 entry in PROGRESS.md, reconstructed from the step log and the actual diffs."
+    },
+    {
+      "t": "2026-10-04T05:50:16Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-04T05:50:38Z",
+      "kind": "edit",
+      "text": "PROGRESS.md"
     }
   ],
   "schedule": {
