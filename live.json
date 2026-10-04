@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-03T23:59:59Z",
+  "updated_at": "2026-10-04T00:00:26Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 20,
     "started_at": "2026-10-03T23:46:16Z",
-    "turns": 36
+    "turns": 41
   },
   "round": {
     "number": null,
@@ -218,46 +218,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-03T21:23:48Z",
-      "kind": "edit",
-      "text": "rug-radar/src/discovery.ts"
-    },
-    {
-      "t": "2026-10-03T21:23:53Z",
-      "kind": "edit",
-      "text": "rug-radar/src/discovery.ts"
-    },
-    {
-      "t": "2026-10-03T21:23:58Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -30"
-    },
-    {
-      "t": "2026-10-03T21:24:01Z",
-      "kind": "think",
-      "text": "Clean. Now let's run the test suite."
-    },
-    {
-      "t": "2026-10-03T21:24:01Z",
-      "kind": "run",
-      "text": "time npm test 2>&1 | tail -50"
-    },
-    {
-      "t": "2026-10-03T21:24:09Z",
-      "kind": "think",
-      "text": "Now let's add a dedicated test for this exact fix \u2014 confirming a thrown error does NOT trigger the retry loop even when retries > 0."
-    },
-    {
-      "t": "2026-10-03T21:24:13Z",
-      "kind": "edit",
-      "text": "rug-radar/src/discovery.test.ts"
-    },
-    {
-      "t": "2026-10-03T21:24:19Z",
-      "kind": "read",
-      "text": "rug-radar/src/discovery.test.ts"
-    },
     {
       "t": "2026-10-03T21:24:21Z",
       "kind": "think",
@@ -617,6 +577,46 @@
       "t": "2026-10-03T23:59:59Z",
       "kind": "edit",
       "text": "rug-radar/src/poller.ts"
+    },
+    {
+      "t": "2026-10-04T00:00:01Z",
+      "kind": "think",
+      "text": "Now update `poller.test.ts` call sites:"
+    },
+    {
+      "t": "2026-10-04T00:00:03Z",
+      "kind": "edit",
+      "text": "rug-radar/src/poller.test.ts"
+    },
+    {
+      "t": "2026-10-04T00:00:07Z",
+      "kind": "edit",
+      "text": "rug-radar/src/poller.test.ts"
+    },
+    {
+      "t": "2026-10-04T00:00:09Z",
+      "kind": "think",
+      "text": "Now `server.ts`:"
+    },
+    {
+      "t": "2026-10-04T00:00:10Z",
+      "kind": "read",
+      "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-04T00:00:23Z",
+      "kind": "edit",
+      "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-04T00:00:25Z",
+      "kind": "think",
+      "text": "Now let's check the rest of server.ts for any other `config.rpcUrl` references (e.g. startup logging) that should mention both URLs."
+    },
+    {
+      "t": "2026-10-04T00:00:26Z",
+      "kind": "run",
+      "text": "grep -n \"config.rpcUrl\\|config.discoveryRpcUrl\\|console.log\\|wsUrl\" src/server.ts"
     }
   ],
   "schedule": {
