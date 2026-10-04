@@ -35,31 +35,43 @@ export async function fetchDeployerHistoryInput(
   const signatureLimit = options.signatureLimit ?? DEFAULT_SIGNATURE_LIMIT;
   const signatures = await rpc.getSignaturesForAddress(deployer, signatureLimit);
 
-  const priorLaunches: PriorLaunch[] = [];
+  // Resolve every signature's transaction concurrently rather than one at a
+  // time: the RPC client (rpc.ts) already caps in-flight requests at its own
+  // maxConcurrent, so firing these together lets it keep that many slots busy
+  // instead of a backoff delay on signature N blocking signature N+1 from even
+  // starting (same fix and reasoning as bundledBuys.ts's data fetch).
+  const candidates = await Promise.all(
+    signatures.map(async (sig) => {
+      if (sig.err) return null;
+      const tx = await safeGetTransaction(rpc, sig.signature);
+      if (!tx) return null;
+      return findCreatedMint(tx, deployer);
+    }),
+  );
+
   const seenMints = new Set<string>([currentMint]);
-
-  for (const sig of signatures) {
-    if (sig.err) continue;
-    const tx = await safeGetTransaction(rpc, sig.signature);
-    if (!tx) continue;
-
-    const created = findCreatedMint(tx, deployer);
+  const uniqueCreated: { mint: string; bondingCurve: string }[] = [];
+  for (const created of candidates) {
     if (!created || seenMints.has(created.mint)) continue;
     seenMints.add(created.mint);
-
-    const migrated = await wasMigrated(rpc, created.bondingCurve);
-    priorLaunches.push({ mint: created.mint, migrated });
+    uniqueCreated.push(created);
   }
 
-  for (const observed of options.observedPriorLaunches ?? []) {
-    if (seenMints.has(observed.mint)) continue;
+  const uniqueObserved = (options.observedPriorLaunches ?? []).filter((observed) => {
+    if (seenMints.has(observed.mint)) return false;
     seenMints.add(observed.mint);
+    return true;
+  });
 
-    const migrated = await wasMigrated(rpc, observed.bondingCurve);
-    priorLaunches.push({ mint: observed.mint, migrated });
-  }
+  const [scannedMigrated, observedMigrated] = await Promise.all([
+    Promise.all(uniqueCreated.map((c) => wasMigrated(rpc, c.bondingCurve))),
+    Promise.all(uniqueObserved.map((o) => wasMigrated(rpc, o.bondingCurve))),
+  ]);
 
-  return priorLaunches;
+  return [
+    ...uniqueCreated.map((c, i) => ({ mint: c.mint, migrated: scannedMigrated[i] })),
+    ...uniqueObserved.map((o, i) => ({ mint: o.mint, migrated: observedMigrated[i] })),
+  ];
 }
 
 // Looks for a pump.fun create/create_v2 instruction in this transaction that

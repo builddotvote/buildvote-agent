@@ -33,30 +33,39 @@ export async function fetchBundledBuysInput(
     return delta >= 0 && delta <= windowSeconds;
   });
 
-  const buys: EarlyBuy[] = [];
-  const fundingCache = new Map<string, string | null>();
+  // Resolve every early signature's transaction concurrently rather than one
+  // at a time: the RPC client (rpc.ts) already caps in-flight requests at its
+  // own maxConcurrent, so firing these together lets it keep that many slots
+  // busy instead of a backoff delay on signature N blocking signature N+1
+  // from even starting (confirmed live — see README's "Known limitations").
+  const resolved = await Promise.all(
+    early.map(async (sig) => {
+      const tx = await safeGetTransaction(rpc, sig.signature);
+      if (!tx) return null;
+      const buyer = findTokenReceiver(tx, mint);
+      if (!buyer) return null;
+      return { buyer, secondsAfterLaunch: (sig.blockTime as number) - launchTimestampSec };
+    }),
+  );
+  const found = resolved.filter((r): r is NonNullable<typeof r> => r !== null);
 
-  for (const sig of early) {
-    const tx = await safeGetTransaction(rpc, sig.signature);
-    if (!tx) continue;
-
-    const buyer = findTokenReceiver(tx, mint);
-    if (!buyer) continue;
-
-    let fundedBy = fundingCache.get(buyer);
-    if (fundedBy === undefined) {
-      fundedBy = await findFundingSource(rpc, buyer, signatureLimit);
-      fundingCache.set(buyer, fundedBy);
-    }
-
-    buys.push({
+  // Look up each distinct buyer's funding source once, also concurrently,
+  // instead of per-occurrence — same dedup intent as the old fundingCache,
+  // just resolved as one parallel batch rather than built up sequentially.
+  const uniqueBuyers = [...new Set(found.map((f) => f.buyer))];
+  const fundingEntries = await Promise.all(
+    uniqueBuyers.map(async (buyer): Promise<[string, string | null]> => [
       buyer,
-      fundedBy,
-      secondsAfterLaunch: (sig.blockTime as number) - launchTimestampSec,
-    });
-  }
+      await findFundingSource(rpc, buyer, signatureLimit),
+    ]),
+  );
+  const fundingMap = new Map(fundingEntries);
 
-  return buys;
+  return found.map((f) => ({
+    buyer: f.buyer,
+    fundedBy: fundingMap.get(f.buyer) ?? null,
+    secondsAfterLaunch: f.secondsAfterLaunch,
+  }));
 }
 
 // The buyer is whichever owner's balance of `mint` went up in this transaction.
