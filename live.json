@@ -1,11 +1,10 @@
 {
-  "updated_at": "2026-10-04T05:55:45Z",
+  "updated_at": "2026-10-04T05:56:03Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 21,
-    "started_at": "2026-10-04T05:49:11Z",
-    "turns": 42
+    "turns": 44
   },
   "round": {
     "number": null,
@@ -223,35 +222,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 2.9783
+    },
+    {
+      "date": "2026-10-04T05:49:11Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 45,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0021.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 2.085
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-04T00:03:59Z",
-      "kind": "run",
-      "text": "cat > /tmp/probe-score-one.ts <<'EOF' import { SolanaRpcClient } from \"/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/rpc.js\"; import { scoreLaunch } from \"/home/\u2026"
-    },
-    {
-      "t": "2026-10-04T00:04:06Z",
-      "kind": "edit",
-      "text": "rug-radar/tmp-probe-score-one.ts"
-    },
-    {
-      "t": "2026-10-04T00:04:08Z",
-      "kind": "run",
-      "text": "timeout 30 npx tsx tmp-probe-score-one.ts 2>&1"
-    },
-    {
-      "t": "2026-10-04T00:04:29Z",
-      "kind": "run",
-      "text": "cat README.md"
-    },
-    {
-      "t": "2026-10-04T00:04:36Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
     {
       "t": "2026-10-04T00:04:46Z",
       "kind": "edit",
@@ -626,6 +609,31 @@
       "t": "2026-10-04T05:55:45Z",
       "kind": "think",
       "text": "Let's do a final verification pass: typecheck, build, tests, and confirm no stray scratch files remain."
+    },
+    {
+      "t": "2026-10-04T05:55:46Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10 && echo \"---status---\" && cd /home/runner/work/buildvote-agent/buildvote-agent && gi\u2026"
+    },
+    {
+      "t": "2026-10-04T05:55:54Z",
+      "kind": "think",
+      "text": "Clean state \u2014 only the intended changes. Let's also clean up the `dist/` build artifacts and verify no `.env` or stray files from testing were left behind."
+    },
+    {
+      "t": "2026-10-04T05:55:55Z",
+      "kind": "run",
+      "text": "cd rug-radar && ls -la | grep -E \"^\\-|^d\" ; echo \"---env check---\"; ls -a .env 2>/dev/null; echo \"no .env present (good) or listed above\"; cat ../.gitignore | grep -i dist"
+    },
+    {
+      "t": "2026-10-04T05:56:02Z",
+      "kind": "think",
+      "text": "`dist/` is gitignored and no `.env` was created. Everything is clean."
+    },
+    {
+      "t": "2026-10-04T05:56:03Z",
+      "kind": "done",
+      "text": "Session 21 finished \u00b7 44 steps \u00b7 covered by Claude subscription ($2.08 API value)"
     }
   ],
   "schedule": {
