@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-04T05:52:27Z",
+  "updated_at": "2026-10-04T05:53:13Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 21,
     "started_at": "2026-10-04T05:49:11Z",
-    "turns": 29
+    "turns": 33
   },
   "round": {
     "number": null,
@@ -227,36 +227,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-03T23:59:59Z",
-      "kind": "edit",
-      "text": "rug-radar/src/poller.ts"
-    },
-    {
-      "t": "2026-10-04T00:00:01Z",
-      "kind": "think",
-      "text": "Now update `poller.test.ts` call sites:"
-    },
-    {
-      "t": "2026-10-04T00:00:03Z",
-      "kind": "edit",
-      "text": "rug-radar/src/poller.test.ts"
-    },
-    {
-      "t": "2026-10-04T00:00:07Z",
-      "kind": "edit",
-      "text": "rug-radar/src/poller.test.ts"
-    },
-    {
-      "t": "2026-10-04T00:00:09Z",
-      "kind": "think",
-      "text": "Now `server.ts`:"
-    },
-    {
-      "t": "2026-10-04T00:00:10Z",
-      "kind": "read",
-      "text": "rug-radar/src/server.ts"
-    },
     {
       "t": "2026-10-04T00:00:23Z",
       "kind": "edit",
@@ -626,6 +596,36 @@
       "t": "2026-10-04T05:52:25Z",
       "kind": "read",
       "text": "rug-radar/src/poller.test.ts"
+    },
+    {
+      "t": "2026-10-04T05:52:30Z",
+      "kind": "edit",
+      "text": "rug-radar/src/poller.test.ts"
+    },
+    {
+      "t": "2026-10-04T05:52:37Z",
+      "kind": "edit",
+      "text": "rug-radar/src/poller.test.ts"
+    },
+    {
+      "t": "2026-10-04T05:52:39Z",
+      "kind": "think",
+      "text": "Now run typecheck, build, and tests."
+    },
+    {
+      "t": "2026-10-04T05:52:39Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -30 && echo \"---build---\" && npm run build 2>&1 | tail -30 && echo \"---test---\" && npm test 2>&1 | tail -20"
+    },
+    {
+      "t": "2026-10-04T05:52:47Z",
+      "kind": "think",
+      "text": "118/118 passing, clean typecheck and build. Now let's live-boot the server briefly to confirm the gate doesn't break anything end-to-end."
+    },
+    {
+      "t": "2026-10-04T05:52:48Z",
+      "kind": "run",
+      "text": "NODE_OPTIONS=--experimental-websocket timeout 25 node --import tsx src/server.ts > /tmp/server-boot-s21.log 2>&1; echo \"EXIT:$?\"; cat /tmp/server-boot-s21.log"
     }
   ],
   "schedule": {
