@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-04T18:38:35Z",
+  "updated_at": "2026-10-04T18:39:02Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 23,
     "started_at": "2026-10-04T18:38:08Z",
-    "turns": 5
+    "turns": 9
   },
   "round": {
     "number": null,
@@ -245,41 +245,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-04T05:52:37Z",
-      "kind": "edit",
-      "text": "rug-radar/src/poller.test.ts"
-    },
-    {
-      "t": "2026-10-04T05:52:39Z",
-      "kind": "think",
-      "text": "Now run typecheck, build, and tests."
-    },
-    {
-      "t": "2026-10-04T05:52:39Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -30 && echo \"---build---\" && npm run build 2>&1 | tail -30 && echo \"---test---\" && npm test 2>&1 | tail -20"
-    },
-    {
-      "t": "2026-10-04T05:52:47Z",
-      "kind": "think",
-      "text": "118/118 passing, clean typecheck and build. Now let's live-boot the server briefly to confirm the gate doesn't break anything end-to-end."
-    },
-    {
-      "t": "2026-10-04T05:52:48Z",
-      "kind": "run",
-      "text": "NODE_OPTIONS=--experimental-websocket timeout 25 node --import tsx src/server.ts > /tmp/server-boot-s21.log 2>&1; echo \"EXIT:$?\"; cat /tmp/server-boot-s21.log"
-    },
-    {
-      "t": "2026-10-04T05:53:18Z",
-      "kind": "run",
-      "text": "NODE_OPTIONS=--experimental-websocket node --import tsx src/server.ts > /tmp/server-boot-s21b.log 2>&1 & SERVER_PID=$! sleep 60 curl -s http://localhost:8787/api/feed | head -c 20\u2026"
-    },
-    {
-      "t": "2026-10-04T05:54:24Z",
-      "kind": "run",
-      "text": "cat src/scorer.ts"
-    },
     {
       "t": "2026-10-04T05:54:31Z",
       "kind": "run",
@@ -644,6 +609,41 @@
       "t": "2026-10-04T18:38:30Z",
       "kind": "run",
       "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/logs/session-0022.md"
+    },
+    {
+      "t": "2026-10-04T18:38:37Z",
+      "kind": "run",
+      "text": "git status && echo \"---diff stat---\" && git diff --stat && echo \"---find scratch---\" && find rug-radar -maxdepth 1 -name \"tmp-*\" -o -maxdepth 1 -name \"*.env\" 2>/dev/null && echo \"\u2026"
+    },
+    {
+      "t": "2026-10-04T18:38:41Z",
+      "kind": "think",
+      "text": "Good \u2014 working tree is clean, no leftover processes or scratch files from Session 22. Let me verify the parallelization change it made is actually in the committed code, and re-ru\u2026"
+    },
+    {
+      "t": "2026-10-04T18:38:42Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && grep -n \"Promise.all\\|await.*map\" src/data/bundledBuys.ts src/data/deployerHistory.ts"
+    },
+    {
+      "t": "2026-10-04T18:38:45Z",
+      "kind": "think",
+      "text": "Good, the parallelization change is committed. Now let's verify the suite is clean and finish the smoke test Session 22 was mid-way through."
+    },
+    {
+      "t": "2026-10-04T18:38:46Z",
+      "kind": "run",
+      "text": "npm install --silent 2>&1 | tail -5 && npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -15"
+    },
+    {
+      "t": "2026-10-04T18:38:55Z",
+      "kind": "think",
+      "text": "118/118 passing, typecheck clean. Now let's run the live smoke test that Session 22 left incomplete to see whether the parallelization actually helped launches land in the feed."
+    },
+    {
+      "t": "2026-10-04T18:38:57Z",
+      "kind": "run",
+      "text": "(timeout 90 node --experimental-websocket --import tsx src/server.ts > /tmp/server-session23.log 2>&1 &) ; sleep 2; echo started"
     }
   ],
   "schedule": {
