@@ -9,9 +9,11 @@ signals, the combined score, launch discovery, and the live feed page — and
 have been sanity-checked against live mainnet-beta, not just offline
 fixtures. Discovery now runs primarily over a websocket (real-time, not
 polling-and-missing-most-of-it) with the old signature poller kept as a
-backstop. See `../PROGRESS.md` for the full history and "Known limitations"
-below for what's still rough (mainly: the public RPC's rate limit, which no
-amount of client-side queuing fully escapes).
+backstop, and (session 20) over a second public RPC endpoint that isn't
+rate-limited into uselessness like the official one currently is. See
+`../PROGRESS.md` for the full history and "Known limitations" below for
+what's still rough (now mainly: the *data/scoring* RPC's rate limit, since
+discovery itself works).
 
 ## Data layer
 
@@ -130,44 +132,67 @@ score and per-signal reasons.
 are in flight at once per client (`maxConcurrent`), and requests
 `maxSupportedTransactionVersion: 1` (mainnet-beta now rejects `0` for most
 current transactions) — all three confirmed against live traffic, not
-guessed. `src/server.ts` builds two `SolanaRpcClient`s, each with
-`maxConcurrent: 2`, instead of one shared client: the websocket watcher's
-resolve call is latency-sensitive (it's the primary, near-real-time
-discovery path), while the backstop poller's signature scans and scoring run
-in bursts. One shared queue meant a busy poll cycle could delay the
-watcher's resolve behind a pile of poller requests; splitting the budget
-doesn't change how many requests hit the public RPC at once (still 4 total,
-same as before) — it just stops one path from starving the other's share.
+guessed.
+
+**Two public RPC endpoints, not one (session 20).** `config.ts`'s
+`discoveryRpcUrl` (env `SOLANA_DISCOVERY_RPC_URL`, defaults to
+`solana-rpc.publicnode.com`) is used only for *discovery* — the websocket
+watcher's `logsSubscribe`/`getTransaction` and the backstop poller's
+`getSignaturesForAddress` scan. `rpcUrl` (env `SOLANA_RPC_URL`, unchanged
+default `api.mainnet-beta.solana.com`) is used only for *scoring* — each
+launch's four signals, including deployer-history/bundled-buys' own
+`getTransaction` scans. Why split: a live check found the official
+endpoint's rate limit tight enough that discovery's `getTransaction` volume
+hit HTTP 429 on effectively every call (172/172 in a 90s check) and resolved
+**zero** launches; the same 90s check against `solana-rpc.publicnode.com`
+resolved 37-42 launches with **zero** 429s. It can't fully replace the
+official endpoint, though — its free tier blocks "indexed" token methods
+(`getTokenSupply`, `getTokenLargestAccounts`, both needed by holder
+concentration) behind a personal-token signup, which isn't a bare public
+endpoint in the same sense. Hence the split rather than a full swap.
+`src/server.ts` builds four `SolanaRpcClient`s (discovery × 2 paths, scoring
+× 2 paths), each `maxConcurrent: 2` — same fairness reasoning as before
+(session 11): the websocket watcher's resolve is latency-sensitive, the
+backstop poller's scans run in bursts, and splitting a budget per-path stops
+one from starving the other's share, now applied per endpoint instead of
+one shared endpoint.
 
 ### Known limitations
 
-- **The public RPC's rate limit is still the binding constraint, and is
-  currently severe enough to stall live discovery almost entirely.**
-  Previously documented as "occasional 429s, reduced but not eliminated" —
-  a live check this session (session 19) found something worse: running
-  `LaunchWatcher` alone, at production's own `maxConcurrent: 2`, for 3
-  straight minutes against real mainnet-beta resolved **zero** launches,
-  logging a 429 for essentially every `getTransaction` call. Investigating
-  why surfaced a real, now-fixed bug that was making it worse: a thrown 429
-  error (after `rpc.ts`'s own 4 retries were exhausted) was swallowed by
+- **Discovery's rate-limit wall (sessions 8-19) is fixed by pointing
+  discovery at a different public endpoint (session 20) — but fixing it
+  exposed a new bottleneck on the scoring side.** The official endpoint
+  (`api.mainnet-beta.solana.com`) was confirmed live to resolve **zero**
+  launches over a 3-minute `LaunchWatcher` check (session 19) and a 90s
+  re-check this session (172/172 `getTransaction` calls hit 429). Switching
+  discovery's RPC to `solana-rpc.publicnode.com` (see "Live feed" above)
+  resolved 37-42 launches with zero 429s in the same 90s window — discovery
+  now actually works. Booting the real server end-to-end afterward, though,
+  found that discovery *working* now pushes far more launches into scoring
+  than before (previously there was almost nothing to score), and scoring
+  still runs over the official, rate-limited endpoint (`rpcUrl`, needed for
+  `getTokenSupply`/`getTokenLargestAccounts` that the discovery endpoint
+  blocks — see "Live feed" above). A 100-second live boot saw 18 signal
+  failures (mostly `getTokenLargestAccounts` 429s) and zero launches land in
+  `/api/feed` — not a hang (an isolated, single `getTokenSupply` call against
+  the same endpoint at the same time succeeded in 157ms), but a queue of
+  scoring work arriving faster than `maxConcurrent: 2` can drain against a
+  rate-limited endpoint. This is a new, concrete finding, not yet fixed:
+  worth either a backpressure mechanism (cap how many launches can be
+  pending scoring at once, dropping/skipping the rest — the feed already
+  tolerates missed launches) or accepting slower, lower-coverage scoring as
+  inherent to combining "free discovery endpoint" with "free data endpoint
+  with different limits," same category of tradeoff as the rate limit itself.
+- Previously documented here (session 19): a thrown 429 error (after
+  `rpc.ts`'s own 4 retries were exhausted) used to be swallowed by
   `safeGetTransaction` to the same `null` as a genuine "not found yet"
   result, so `resolveLaunchFromSignature`'s not-found retry loop retried a
   rate-limit exhaustion exactly like replication lag — up to 5 more rounds,
-  each re-running `rpc.ts`'s own 4-retry backoff, i.e. up to ~20-25 real HTTP
-  calls for one signature, hammering an endpoint that had just asked for a
-  slower pace. Fixed in `resolveLaunchFromSignature` (`src/discovery.ts`): a
-  thrown error now gives up immediately instead of entering the not-found
-  retry loop (see `src/discovery.test.ts`'s "does not retry a thrown error"
-  test). Re-running the same 3-minute live check after the fix still
-  resolved zero launches — the amplification bug was real and worth fixing
-  (it was actively making a bad situation worse), but it was not the whole
-  story: the endpoint's current throttling is tight enough that even a single
-  non-amplified attempt per signature mostly fails. This fails closed, not
-  loudly either way: a dropped launch is silently under-reported rather than
-  crashing anything. A real fix needs a paid/less-restricted RPC provider,
-  out of scope for "public RPC, no keys." Worth re-checking at a different
-  time — this may partly reflect load on the free endpoint varying over time
-  rather than being a fixed ceiling.
+  each re-running `rpc.ts`'s own 4-retry backoff. Fixed in
+  `resolveLaunchFromSignature` (`src/discovery.ts`): a thrown error now gives
+  up immediately instead of entering the not-found retry loop (see
+  `src/discovery.test.ts`'s "does not retry a thrown error" test). Still
+  correct and unaffected by this session's endpoint split.
 - The old signature-polling path (`src/discovery.ts`) under-samples on its
   own — confirmed live, the pump.fun program sees roughly 500 tx/second
   across every instruction type combined, so 1000 signatures from
@@ -199,12 +224,13 @@ same as before) — it just stops one path from starving the other's share.
   contribution from the scan's).
 - `findFundingSource` (in `src/data/bundledBuys.ts`) has the same style of
   lookback-limit cap (default 50 signatures) for a buyer's funding source —
-  still not live-checked against a real long-history wallet. Attempted again
-  this session (session 19); blocked by the rate-limit finding above, which
-  turned out bigger: the websocket watcher couldn't resolve even one live
-  launch to test against in the time available. Needs the rate-limit
-  situation above to ease (or a lucky lower-traffic window) before this can
-  be attempted again.
+  still not live-checked against a real long-history wallet. Blocked in
+  sessions 16/19 because discovery couldn't resolve a live launch to test
+  against at all; that's now fixed (see the top entry above), but
+  `findFundingSource` itself calls `getSignaturesForAddress`/`getTransaction`
+  on the scoring (official, rate-limited) endpoint, so it still needs the
+  scoring-side backlog above to be manageable enough to get a result back
+  before it can be checked.
 
 ## Setup
 
@@ -215,8 +241,11 @@ npm install
 cp .env.example .env
 ```
 
-Edit `.env` if you want a different public RPC endpoint than the default
-(`https://api.mainnet-beta.solana.com`). No API keys are needed or used.
+Edit `.env` if you want different public RPC endpoints than the defaults —
+`SOLANA_RPC_URL` (scoring, default `https://api.mainnet-beta.solana.com`) and
+`SOLANA_DISCOVERY_RPC_URL` (discovery, default
+`https://solana-rpc.publicnode.com`), see "Live feed" above for why they
+differ. No API keys are needed or used for either.
 
 ## Run
 

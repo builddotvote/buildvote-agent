@@ -13,20 +13,26 @@ export interface PollState {
   sinceBlockTime: number | null;
 }
 
-type PollerRpc = PipelineRpc & Pick<SolanaRpcClient, "getSignaturesForAddress" | "getTransaction">;
+type DiscoveryRpc = Pick<SolanaRpcClient, "getSignaturesForAddress" | "getTransaction">;
 
+// Two separate RPC clients, not one: discoveryRpc (the program's signature
+// scan) and scoringRpc (each launch's four signals) point at different public
+// endpoints by default — see config.ts's discoveryRpcUrl for why. Keeping
+// them as distinct params here (rather than one combined type) means
+// server.ts controls which URL each hits.
 export async function pollOnce(
-  rpc: PollerRpc,
+  discoveryRpc: DiscoveryRpc,
+  scoringRpc: PipelineRpc,
   feed: LiveFeed,
   state: PollState,
   deployerIndex?: DeployerIndex,
 ): Promise<void> {
-  const { launches, newestBlockTime } = await findNewLaunches(rpc, state.sinceBlockTime);
+  const { launches, newestBlockTime } = await findNewLaunches(discoveryRpc, state.sinceBlockTime);
   state.sinceBlockTime = newestBlockTime;
 
   for (const launch of launches) {
     try {
-      feed.add(await scoreLaunch(rpc, launch, deployerIndex));
+      feed.add(await scoreLaunch(scoringRpc, launch, deployerIndex));
     } catch (err) {
       console.error(`failed to score launch ${launch.mint}:`, err instanceof Error ? err.message : err);
     }

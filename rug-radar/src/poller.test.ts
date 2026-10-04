@@ -79,7 +79,7 @@ test("first poll seeds the watermark and scores nothing", async () => {
   const feed = new LiveFeed();
   const state = { sinceBlockTime: null };
 
-  await pollOnce(fakeRpc(signatures), feed, state);
+  await pollOnce(fakeRpc(signatures), fakeRpc(signatures), feed, state);
 
   assert.equal(state.sinceBlockTime, 1700000000);
   assert.deepEqual(feed.list(), []);
@@ -92,7 +92,7 @@ test("a later poll scores newly discovered launches into the feed", async () => 
   const feed = new LiveFeed();
   const state = { sinceBlockTime: 1700000000 };
 
-  await pollOnce(fakeRpc(signatures), feed, state);
+  await pollOnce(fakeRpc(signatures), fakeRpc(signatures), feed, state);
 
   assert.equal(state.sinceBlockTime, 1700000100);
   assert.equal(feed.list().length, 1);

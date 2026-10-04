@@ -1,0 +1,88 @@
+# Session 20: Rug radar: live launch scoring
+
+- Started: 2026-10-03T23:46:16Z
+- Ended: 2026-10-04T00:05:23Z
+- Steps: 60
+- Model turns: 61
+- Billing: Claude subscription (API value $2.9783, not billed)
+- Outcome: step limit reached
+
+## Steps
+
+- `run` cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md 2>/dev/null; echo "---PROGRESS---"; cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md 2>/dev/null
+- `read` PROGRESS.md
+- `run` git status && echo "---" && ls rug-radar && echo "---find tmp files---" && find rug-radar -maxdepth 1 -iname "tmp*" -o -iname "probe*" 2>/dev/null
+- `think` Repo is clean, no leftover scratch files. Let me verify the test suite and typecheck are in the state the last session claimed.
+- `run` cd rug-radar && npm install --silent 2>&1 | tail -5 && echo "---typecheck---" && npm run typecheck 2>&1 | tail -20 && echo "---test---" && time npm test 2>&1 | tail -30
+- `run` cd rug-radar && sed -n '1,80p' src/poller.ts
+- `run` pwd
+- `read` rug-radar/src/poller.ts
+- `read` rug-radar/src/discovery.ts
+- `run` sed -n '1,60p' src/config.ts
+- `run` sed -n '1,60p' src/server.ts
+- `run` sed -n '1,50p' src/rpc.ts | head -60
+- `think` Now let me write a scratch probe to check the current rate-limit state against both discovery paths.
+- `edit` rug-radar/tmp-probe-ratelimit.ts
+- `run` grep -n "list\|class LiveFeed" src/feed.ts | head -10; echo "---"; grep -n "start\|stop\|class LaunchWatcher" src/wsDiscovery.ts | head -10
+- `think` Good, method names match. Now let's run the probe.
+- `run` NODE_OPTIONS=--experimental-websocket timeout 130 npx tsx tmp-probe-ratelimit.ts 2>&1
+- `run` grep -n "maxConcurrent\|queue\|class SolanaRpcClient\|retries\|429\|constructor" src/rpc.ts | head -60
+- `read` rug-radar/src/rpc.ts
+- `run` for url in "https://solana.publicnode.com" "https://rpc.ankr.com/solana" "https://solana-rpc.publicnode.com"; do   echo "=== $url ==="   curl -s -m 5 -X POST "$url" -H "content-type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"getSlot","params":[]}'   echo done
+- `run` for i in $(seq 1 20); do   status=$(curl -s -o /dev/null -w "%{http_code}" -m 5 -X POST "https://solana-rpc.publicnode.com" -H "content-type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"getSlot","params":[]}')   echo -n "$status " done echo
+- `think` All 20 rapid requests succeeded. Let me check it supports `logsSubscribe` over websocket, which the watcher needs.
+- `run` cat > /tmp/ws-check.mjs <<'EOF' const ws = new WebSocket("wss://solana-rpc.publicnode.com"); const timer = setTimeout(() => { console.log("TIMEOUT"); process.exit(1); }, 8000); ws.addEventListener("open", () => {   ws.send(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "logsSubscribe", params: [{ mentions: ["6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"] }, { commitment: "confirmed" }] })); }); l…
+- `run` SOLANA_RPC_URL=https://solana-rpc.publicnode.com NODE_OPTIONS=--experimental-websocket timeout 70 npx tsx tmp-probe-ratelimit.ts 2>&1 | head -60
+- `run` SOLANA_RPC_URL=https://solana-rpc.publicnode.com NODE_OPTIONS=--experimental-websocket timeout 70 npx tsx tmp-probe-ratelimit.ts > /tmp/probe-out.log 2>&1 & PID=$! wait $PID echo "EXIT:$?" cat /tmp/probe-out.log
+- `run` SOLANA_RPC_URL=https://solana-rpc.publicnode.com NODE_OPTIONS=--experimental-websocket timeout 115 npx tsx tmp-probe-ratelimit.ts > /tmp/probe-out2.log 2>&1 echo "EXIT:$?" cat /tmp/probe-out2.log
+- `edit` rug-radar/tmp-probe-ratelimit.ts
+- `edit` rug-radar/tmp-probe-ratelimit.ts
+- `run` npx tsc --noEmit tmp-probe-ratelimit.ts 2>&1 | head -30
+- `run` npx tsc --noEmit -p tsconfig.json 2>&1 | head -30
+- `think` Clean. Now let's run it against the alternative endpoint to confirm full pipeline scoring works without 429s.
+- `run` SOLANA_RPC_URL=https://solana-rpc.publicnode.com NODE_OPTIONS=--experimental-websocket timeout 130 npx tsx tmp-probe-ratelimit.ts > /tmp/probe-out3.log 2>&1 echo "EXIT:$?" cat /tmp/probe-out3.log
+- `read` rug-radar/src/pipeline.ts
+- `run` echo "=== getTokenSupply (USDC) ===" curl -s -m 5 -X POST "https://solana-rpc.publicnode.com" -H "content-type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"getTokenSupply","params":["EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"]}' echo echo "=== getTokenLargestAccounts (USDC) ===" curl -s -m 5 -X POST "https://solana-rpc.publicnode.com" -H "content-type: application/json" -d '{"jsonr…
+- `read` rug-radar/src/wsDiscovery.ts
+- `run` cat src/config.test.ts; echo "---poller.test.ts---"; cat src/poller.test.ts
+- `run` cat .env.example
+- `think` Now let's make the changes. First, `config.ts`:
+- `read` rug-radar/src/config.ts
+- `edit` rug-radar/src/config.ts
+- `think` Now update `config.test.ts`:
+- `edit` rug-radar/src/config.test.ts
+- `think` Now `poller.ts`:
+- `edit` rug-radar/src/poller.ts
+- `think` Now update `poller.test.ts` call sites:
+- `edit` rug-radar/src/poller.test.ts
+- `edit` rug-radar/src/poller.test.ts
+- `think` Now `server.ts`:
+- `read` rug-radar/src/server.ts
+- `edit` rug-radar/src/server.ts
+- `think` Now let's check the rest of server.ts for any other `config.rpcUrl` references (e.g. startup logging) that should mention both URLs.
+- `run` grep -n "config.rpcUrl\|config.discoveryRpcUrl\|console.log\|wsUrl" src/server.ts
+- `read` rug-radar/src/server.ts
+- `edit` rug-radar/src/server.ts
+- `think` Now let's typecheck and run the full offline test suite.
+- `run` npm run typecheck 2>&1 | tail -30
+- `think` Clean. Now the test suite:
+- `run` npm test 2>&1 | tail -20
+- `think` 112/112 passing, no test-count change needed since config.test.ts just extended existing tests. Now let's live-boot the real server to confirm the wiring works end-to-end against both endpoints.
+- `run` NODE_OPTIONS=--experimental-websocket timeout 25 node --import tsx src/server.ts > /tmp/server-boot.log 2>&1 echo "EXIT:$?" cat /tmp/server-boot.log
+- `run` NODE_OPTIONS=--experimental-websocket node --import tsx src/server.ts > /tmp/server-boot2.log 2>&1 & SERVER_PID=$! sleep 25 curl -s http://localhost:8787/api/feed | head -c 2000 echo kill $SERVER_PID 2>/dev/null wait $SERVER_PID 2>/dev/null echo "---log tail---" tail -20 /tmp/server-boot2.log
+- `run` NODE_OPTIONS=--experimental-websocket node --import tsx src/server.ts > /tmp/server-boot3.log 2>&1 & SERVER_PID=$! sleep 100 curl -s http://localhost:8787/api/feed | head -c 3000 echo kill $SERVER_PID 2>/dev/null wait $SERVER_PID 2>/dev/null echo "---counts---" grep -c "429" /tmp/server-boot3.log grep -c "signal .* failed" /tmp/server-boot3.log grep -c "failed to score launch" /tmp/server-boot3.l…
+- `run` cat > /tmp/probe-score-one.ts <<'EOF' import { SolanaRpcClient } from "/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/rpc.js"; import { scoreLaunch } from "/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/pipeline.js";  const rpc = new SolanaRpcClient("https://api.mainnet-beta.solana.com", fetch, { maxConcurrent: 2 });  // A real, recent-ish launch structure is nee…
+- `edit` rug-radar/tmp-probe-score-one.ts
+- `run` timeout 30 npx tsx tmp-probe-score-one.ts 2>&1
+- `run` cat README.md
+- `edit` rug-radar/README.md
+- `edit` rug-radar/README.md
+- `think` Now update the "Known limitations" section — rewrite the top entry and add the new data-side backlog finding:
+- `edit` rug-radar/README.md
+- `think` Now update the `findFundingSource` bullet since discovery now works (so this check is unblocked), and the Setup section for the new env var:
+- `run` grep -n "findFundingSource" README.md
+- `read` rug-radar/README.md
+- `edit` rug-radar/README.md
+- `think` Now update the Setup section and `.env.example`:
+- `edit` rug-radar/README.md
+- `edit` rug-radar/.env.example

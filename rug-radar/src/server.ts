@@ -21,26 +21,26 @@ const pollState: PollState = { sinceBlockTime: null };
 // deployerIndex.ts for why this exists.
 const deployerIndex = new DeployerIndex();
 
-// Two separate clients, each with half the previous shared budget
-// (maxConcurrent: 2 apiece, same total of 4 in flight against the RPC as
-// before), rather than one client used by both paths. The watcher's resolve
-// call is latency-sensitive (it's the primary, near-real-time discovery
-// path); the backstop poller's signature scans and scoring can run in
-// bursts. Sharing one queue meant a busy poll cycle could delay the
-// watcher's resolve behind a pile of poller requests. Splitting the budget
-// doesn't change how many requests hit the public RPC at once — it just
-// stops one path from starving the other's share of it.
-const watcherRpc = new SolanaRpcClient(config.rpcUrl, fetch, { maxConcurrent: 2 });
-const pollRpc = new SolanaRpcClient(config.rpcUrl, fetch, { maxConcurrent: 2 });
+// Four clients, not one: discovery (finding/resolving launches — high
+// volume, needs config.discoveryRpcUrl) and scoring (each launch's four
+// signals — needs config.rpcUrl for token methods discoveryRpcUrl's free
+// tier blocks, see config.ts) are split per discovery path, each
+// maxConcurrent: 2. This preserves session 11's fairness fix (the watcher's
+// latency-sensitive calls no longer queue behind the backstop poller's bursts,
+// or vice versa) while also keeping the two endpoints' traffic separate.
+const watcherDiscoveryRpc = new SolanaRpcClient(config.discoveryRpcUrl, fetch, { maxConcurrent: 2 });
+const watcherScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, { maxConcurrent: 2 });
+const pollDiscoveryRpc = new SolanaRpcClient(config.discoveryRpcUrl, fetch, { maxConcurrent: 2 });
+const pollScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, { maxConcurrent: 2 });
 
 // Primary discovery is the websocket watcher (near-instant, sees every
 // create as it happens). The poller below stays on as a backstop for
 // launches created while the socket is down (startup, or a reconnect gap).
-const wsUrl = config.wsUrl ?? deriveWsUrl(config.rpcUrl);
-const watcher = new LaunchWatcher(wsUrl, watcherRpc, {
+const wsUrl = config.wsUrl ?? deriveWsUrl(config.discoveryRpcUrl);
+const watcher = new LaunchWatcher(wsUrl, watcherDiscoveryRpc, {
   onLaunch: (launch) => {
     if (feed.has(launch.mint)) return;
-    scoreLaunch(watcherRpc, launch, deployerIndex)
+    scoreLaunch(watcherScoringRpc, launch, deployerIndex)
       .then((score) => feed.add(score))
       .catch((err) => {
         console.error(`failed to score launch ${launch.mint}:`, err instanceof Error ? err.message : err);
@@ -57,7 +57,7 @@ const watcher = new LaunchWatcher(wsUrl, watcherRpc, {
 const POLL_INTERVAL_MS = 15_000;
 
 function poll(): void {
-  pollOnce(pollRpc, feed, pollState, deployerIndex).catch((err) => {
+  pollOnce(pollDiscoveryRpc, pollScoringRpc, feed, pollState, deployerIndex).catch((err) => {
     console.error("poll failed:", err instanceof Error ? err.message : err);
   });
 }
@@ -82,7 +82,8 @@ const server = createServer(async (req, res) => {
 
 server.listen(config.port, () => {
   console.log(`rug-radar listening on http://localhost:${config.port}`);
-  console.log(`using RPC: ${config.rpcUrl}`);
+  console.log(`using data RPC: ${config.rpcUrl}`);
+  console.log(`using discovery RPC: ${config.discoveryRpcUrl}`);
   console.log(`using WS: ${wsUrl}`);
   watcher.start();
   poll();
