@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { pollOnce } from "./poller.js";
 import { LiveFeed } from "./feed.js";
+import { ScoringGate } from "./scoringGate.js";
 import { PUMP_FUN_PROGRAM_ID } from "./pumpfun.js";
 import { base58Encode } from "./base58.js";
 import type { ParsedTransaction, SignatureInfo } from "./rpc.js";
@@ -97,4 +98,33 @@ test("a later poll scores newly discovered launches into the feed", async () => 
   assert.equal(state.sinceBlockTime, 1700000100);
   assert.equal(feed.list().length, 1);
   assert.equal(feed.list()[0].mint, MINT);
+});
+
+test("a full scoring gate drops the launch instead of scoring it", async () => {
+  const signatures: SignatureInfo[] = [
+    { signature: "sigCreate", slot: 2, err: null, memo: null, blockTime: 1700000100 },
+  ];
+  const feed = new LiveFeed();
+  const state = { sinceBlockTime: 1700000000 };
+  const gate = new ScoringGate(0);
+
+  await pollOnce(fakeRpc(signatures), fakeRpc(signatures), feed, state, undefined, gate);
+
+  assert.equal(state.sinceBlockTime, 1700000100);
+  assert.deepEqual(feed.list(), []);
+});
+
+test("a scoring gate with room releases its slot after scoring", async () => {
+  const signatures: SignatureInfo[] = [
+    { signature: "sigCreate", slot: 2, err: null, memo: null, blockTime: 1700000100 },
+  ];
+  const feed = new LiveFeed();
+  const state = { sinceBlockTime: 1700000000 };
+  const gate = new ScoringGate(1);
+
+  await pollOnce(fakeRpc(signatures), fakeRpc(signatures), feed, state, undefined, gate);
+
+  assert.equal(feed.list().length, 1);
+  // Slot released after use: a second cycle with a new launch still scores.
+  assert.equal(gate.tryAcquire(), true);
 });

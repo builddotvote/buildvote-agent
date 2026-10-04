@@ -157,32 +157,51 @@ backstop poller's scans run in bursts, and splitting a budget per-path stops
 one from starving the other's share, now applied per endpoint instead of
 one shared endpoint.
 
+**A scoring backpressure gate (session 21).** `src/scoringGate.ts`'s
+`ScoringGate` caps how many launches can be scoring at once (3), shared by
+the websocket watcher's `onLaunch` callback and the backstop poller
+(`pollOnce`'s optional `scoringGate` param) in `src/server.ts`, since both
+paths' scoring ultimately hits the same rate-limited scoring endpoint. A
+launch beyond the cap is dropped (logged as "too many pending scores"), not
+queued — queuing was the problem session 20 found (an ever-growing backlog
+that never drained). See "Known limitations" below for what this does and
+doesn't fix.
+
 ### Known limitations
 
 - **Discovery's rate-limit wall (sessions 8-19) is fixed by pointing
-  discovery at a different public endpoint (session 20) — but fixing it
-  exposed a new bottleneck on the scoring side.** The official endpoint
-  (`api.mainnet-beta.solana.com`) was confirmed live to resolve **zero**
-  launches over a 3-minute `LaunchWatcher` check (session 19) and a 90s
-  re-check this session (172/172 `getTransaction` calls hit 429). Switching
-  discovery's RPC to `solana-rpc.publicnode.com` (see "Live feed" above)
-  resolved 37-42 launches with zero 429s in the same 90s window — discovery
-  now actually works. Booting the real server end-to-end afterward, though,
-  found that discovery *working* now pushes far more launches into scoring
-  than before (previously there was almost nothing to score), and scoring
-  still runs over the official, rate-limited endpoint (`rpcUrl`, needed for
+  discovery at a different public endpoint (session 20); the scoring side's
+  bottleneck it exposed (session 20) now has backpressure (session 21), but
+  the underlying scoring-endpoint rate limit is still the binding
+  constraint.** The official endpoint (`api.mainnet-beta.solana.com`) was
+  confirmed live to resolve **zero** launches over a 3-minute `LaunchWatcher`
+  check (session 19) and a 90s re-check (172/172 `getTransaction` calls hit
+  429, session 20). Switching discovery's RPC to `solana-rpc.publicnode.com`
+  (see "Live feed" above) resolved 37-42 launches with zero 429s in the same
+  90s window — discovery now actually works. Booting the real server
+  end-to-end afterward (session 20), though, found that discovery *working*
+  now pushes far more launches into scoring than before, and scoring still
+  runs over the official, rate-limited endpoint (`rpcUrl`, needed for
   `getTokenSupply`/`getTokenLargestAccounts` that the discovery endpoint
-  blocks — see "Live feed" above). A 100-second live boot saw 18 signal
-  failures (mostly `getTokenLargestAccounts` 429s) and zero launches land in
-  `/api/feed` — not a hang (an isolated, single `getTokenSupply` call against
-  the same endpoint at the same time succeeded in 157ms), but a queue of
-  scoring work arriving faster than `maxConcurrent: 2` can drain against a
-  rate-limited endpoint. This is a new, concrete finding, not yet fixed:
-  worth either a backpressure mechanism (cap how many launches can be
-  pending scoring at once, dropping/skipping the rest — the feed already
-  tolerates missed launches) or accepting slower, lower-coverage scoring as
-  inherent to combining "free discovery endpoint" with "free data endpoint
-  with different limits," same category of tradeoff as the rate limit itself.
+  blocks — see "Live feed" above); a 100-second boot saw 18 signal failures
+  and zero launches land in `/api/feed`, not a hang but a queue of scoring
+  work arriving faster than `maxConcurrent: 2` can drain. **Session 21**
+  built the backpressure mechanism session 20 proposed:
+  `src/scoringGate.ts`'s `ScoringGate` caps how many launches can be scoring
+  at once (3, shared across both the websocket watcher and the backstop
+  poller in `src/server.ts`, since both hit the same scoring endpoint); a
+  launch beyond the cap is dropped immediately (logged, not queued) rather
+  than piling up. Live-confirmed this bounds the backlog as intended (a 60s
+  boot logged 23 clean "too many pending scores" skips instead of an
+  ever-growing queue, and 429s/signal-failures dropped from session 20's 18
+  in 100s to 17+3 in 60s) — but **did not** get a single launch to land in
+  `/api/feed` within that 60s window either. The gate fixes "the backlog
+  grows forever and nothing ever surfaces why," not "the official endpoint
+  can sustain enough throughput to finish scoring a launch." That remaining
+  gap needs the same kind of fix discovery got (session 20): a different
+  public endpoint for scoring's token methods, or accepting that free,
+  keyless scoring against the official endpoint may not keep up with
+  real-time discovery at all right now.
 - Previously documented here (session 19): a thrown 429 error (after
   `rpc.ts`'s own 4 retries were exhausted) used to be swallowed by
   `safeGetTransaction` to the same `null` as a genuine "not found yet"

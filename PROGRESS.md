@@ -1023,3 +1023,167 @@ below; see that entry for final state.)*
 - All five TASK.md steps remain functionally complete; the rate-limit
   ceiling (now confirmed more severe than previously documented, independent
   of the amplification bug this session fixed) is the main open item.
+
+## Session 20 — 2026-10-03
+
+*(Reconstructed from `logs/session-0020.md` — this run hit its step limit
+right after its last README edit and never updated this file. Verified
+against the actual code/README diff in Session 21, same approach as prior
+reconstructions.)*
+
+### Done
+- Picked up Session 19's confirmed finding (the official public RPC's rate
+  limit stalls discovery almost entirely) and found a real fix: live-checked
+  several alternative public endpoints and found `solana-rpc.publicnode.com`
+  handles the same `getTransaction` volume discovery needs with **zero**
+  429s (37-42 launches resolved in a 90s `LaunchWatcher`-only check, vs.
+  **zero** resolved and 172/172 calls hitting 429 on
+  `api.mainnet-beta.solana.com` in the same window) and supports
+  `logsSubscribe` over websocket. It can't fully replace the official
+  endpoint, though — its free tier blocks "indexed" token methods
+  (`getTokenSupply`, `getTokenLargestAccounts`, needed by holder
+  concentration) behind a personal-token signup.
+- Split config into two RPC URLs instead of one: `src/config.ts` gained
+  `discoveryRpcUrl` (env `SOLANA_DISCOVERY_RPC_URL`, defaults to
+  `solana-rpc.publicnode.com`) alongside the existing `rpcUrl` (env
+  `SOLANA_RPC_URL`, unchanged default, now used only for per-launch
+  scoring). `src/poller.ts`'s `pollOnce()` takes separate `discoveryRpc`/
+  `scoringRpc` params instead of one client. `src/server.ts` now builds four
+  `SolanaRpcClient`s (discovery × 2 paths, scoring × 2 paths, each
+  `maxConcurrent: 2`, same per-path fairness reasoning as Session 11's
+  split, now applied per endpoint) and passes the right one to the watcher
+  vs. the backstop poller. Updated `config.test.ts`, `poller.test.ts`,
+  `.env.example` to match.
+- Live-booted the real server end-to-end after the wiring change and found a
+  new, concrete bottleneck one layer down: with discovery actually working
+  now, far more launches reach scoring than before, and scoring still runs
+  over the official rate-limited endpoint (needed for the token methods the
+  discovery endpoint blocks). A 100-second boot saw 18 signal failures
+  (mostly `getTokenLargestAccounts` 429s) and **zero** launches land in
+  `/api/feed` — confirmed not a hang (an isolated `getTokenSupply` call
+  against the same endpoint at the same time succeeded in 157ms), but
+  scoring work arriving faster than `maxConcurrent: 2` can drain against a
+  rate-limited endpoint. Documented as a new, unfixed finding rather than
+  attempted — fixing the first bottleneck exposed this one, and the fix
+  (backpressure, e.g. capping pending-scoring count and dropping the rest)
+  is a different-shaped change than this session's endpoint split.
+- Updated `rug-radar/README.md`: "Live feed" section gained a "Two public RPC
+  endpoints, not one" subsection with the live numbers above; "Known
+  limitations" top entry rewritten to describe discovery's fix and the new
+  scoring-side bottleneck it exposed; "Setup" section documents the new
+  `SOLANA_DISCOVERY_RPC_URL` env var.
+- Ran out of steps before updating this file. Left two scratch probe files
+  committed (`rug-radar/tmp-probe-ratelimit.ts`, `rug-radar/tmp-probe-score-one.ts`)
+  — same step-limit-interrupts-cleanup pattern as Sessions 17 and 19;
+  deleted in Session 21 (see below).
+
+### Works (per the step log; re-verified in Session 21)
+- `npm run typecheck` and `npm test` (112/112, offline, unchanged count —
+  `config.test.ts` extended existing tests rather than adding new ones)
+  clean after the config/poller/server changes.
+- Live-booted the real server twice: once confirming the endpoint split
+  resolves launches via discovery, once (100s) surfacing the scoring-side
+  429 bottleneck above.
+
+### Next
+- The scoring-side bottleneck found this session (discovery now works, but
+  scoring over the official rate-limited endpoint can't keep up with the
+  resulting volume) is the most concrete open item — needs a backpressure
+  mechanism (e.g. cap in-flight/pending scoring count, drop the rest; the
+  feed already tolerates missed launches) or an accepted-tradeoff writeup if
+  that's not worth building.
+- `findFundingSource`'s lookback-limit live check (open since Session 4) is
+  still blocked — it calls `getSignaturesForAddress`/`getTransaction` on the
+  scoring endpoint, so it needs the new bottleneck above resolved (or at
+  least eased) before a result can come back to check against.
+- All five TASK.md steps remain functionally complete; the scoring-side rate
+  limit (not the discovery-side one, now fixed) is the main open item.
+
+## Session 21 — 2026-10-04
+
+### Done
+- Found Session 20 had left real, verified work (the two-RPC-endpoint split
+  fixing discovery) but never updated this file, and left two scratch probe
+  files committed (`rug-radar/tmp-probe-ratelimit.ts`,
+  `rug-radar/tmp-probe-score-one.ts`). Verified the repo first (typecheck,
+  build, 112/112 tests clean; the `config.ts`/`poller.ts`/`server.ts`/
+  `.env.example`/README changes Session 20's log described were all
+  actually present and consistent), then deleted both scratch files and
+  backfilled the Session 20 entry above from `logs/session-0020.md`.
+- Picked up Session 20's most concrete open item — the scoring-side
+  bottleneck it found (discovery now works, but far more launches reach
+  scoring than before, and scoring over the official rate-limited endpoint
+  couldn't drain the resulting queue: 18 signal failures, zero launches
+  landed in `/api/feed` over 100s) — and built the backpressure mechanism
+  it proposed instead of just accepting the gap:
+  - `src/scoringGate.ts` — `ScoringGate`: caps how many launches can be
+    scoring at once; `tryAcquire()` returns false once at the cap (caller
+    should drop the launch, not queue it) and `release()` frees a slot.
+    Deliberately drops rather than queues — queuing was the exact bug found
+    in Session 20 (an unbounded backlog against a rate-limited endpoint
+    never drains). `src/scoringGate.test.ts` — 4 offline tests (acquire up
+    to cap, reject over cap, release frees a slot, a cap of 0 rejects
+    immediately).
+  - `src/poller.ts` — `pollOnce()` gained an optional `scoringGate` param:
+    when passed, checks `tryAcquire()` before scoring each launch found in
+    that cycle, skips (logs "too many pending scores") if full, releases in
+    a `finally` either way. Existing tests unaffected (param is optional);
+    2 new tests in `poller.test.ts` (a full gate drops the launch and still
+    advances the watermark; a gate with room releases its slot so a later
+    acquire succeeds).
+  - `src/server.ts` — one `ScoringGate(3)` shared across both discovery
+    paths (the websocket watcher's `onLaunch` callback and the backstop
+    poller's `pollOnce` call), since both ultimately score against the same
+    rate-limited scoring endpoint. The watcher's callback now checks
+    `tryAcquire()` before calling `scoreLaunch`, skipping (same log message)
+    if full, and releases in a `.finally()`.
+- Live-booted the real server twice after wiring the gate in (public
+  mainnet-beta, no keys): a 25s boot and a 60s boot. Confirmed the gate
+  behaves as designed — the 60s boot logged 23 clean "too many pending
+  scores" skips (backlog stays bounded, with a clear reason logged) instead
+  of Session 20's silent, ever-growing queue, and 429s/signal-failures
+  dropped from Session 20's 18-in-100s to 17+3-in-60s (less contention per
+  scoring attempt). **Honest result, not oversold:** zero launches still
+  landed in `/api/feed` within either boot's window. The gate fixes "the
+  backlog grows forever with no visibility into why" — it does not fix "the
+  official scoring endpoint can sustain enough throughput to finish scoring
+  a launch at all" right now. Documented this distinction clearly in the
+  README rather than claiming the scoring bottleneck is resolved.
+- Updated `rug-radar/README.md`: "Live feed" section gained a short
+  "A scoring backpressure gate (session 21)" paragraph; "Known limitations"
+  top entry extended with this session's fix and its honest live-boot
+  result (bounded backlog, still zero scores landed in the test windows).
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 118/118 passing (6 new: 4 in `scoringGate.test.ts`, 2 in
+  `poller.test.ts`), all offline, ~2.5s.
+- Live-booted `npm`-equivalent (`node --import tsx src/server.ts`) twice
+  against public mainnet-beta, no keys, no `.env` written: 25s and 60s —
+  server boots, logs both RPC/WS URLs, gate skips are logged clearly,
+  `/api/feed` keeps responding, no crash, no leftover process.
+- `git status` after cleanup shows only the intended
+  `scoringGate.ts`/`scoringGate.test.ts`/`poller.ts`/`poller.test.ts`/
+  `server.ts`/README/PROGRESS changes plus the two scratch-file deletions —
+  no stray files.
+
+### Next
+- The scoring-side rate limit itself (not the backlog-growth problem, now
+  fixed) is the main remaining gap: zero launches landed in `/api/feed`
+  across two live-boot windows even with the gate bounding the backlog.
+  Worth the same kind of fix discovery got in Session 20 — finding an
+  alternative public endpoint whose free tier isn't as tight for
+  `getTokenSupply`/`getTokenLargestAccounts`/`getTransaction` (the token
+  methods `solana-rpc.publicnode.com` itself blocks without a signup) —
+  rather than tuning the gate's cap of 3 further, which only trades backlog
+  size for drop rate without touching the underlying throughput ceiling.
+- `findFundingSource`'s lookback-limit live check (open since Session 4) is
+  still blocked on the same root cause — needs a launch to actually finish
+  scoring (with real early-buy signal data available) before it can be
+  checked against a long-history wallet.
+- Worth re-running the live-boot check at a different time of day, same
+  caveat Session 19 raised about its own rate-limit finding — the official
+  endpoint's throttling could vary with load rather than being a fixed
+  floor.
+- All five TASK.md steps remain functionally complete; the scoring
+  endpoint's rate-limit ceiling is the one concrete, reproducible open item.
