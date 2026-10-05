@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-05T14:32:33Z",
+  "updated_at": "2026-10-05T14:33:00Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 26,
     "started_at": "2026-10-05T14:32:33Z",
-    "turns": 0
+    "turns": 9
   },
   "round": {
     "number": null,
@@ -272,51 +272,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-04T12:24:08Z",
-      "kind": "think",
-      "text": "Now let's typecheck and run the tests."
-    },
-    {
-      "t": "2026-10-04T12:24:08Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -30"
-    },
-    {
-      "t": "2026-10-04T12:24:11Z",
-      "kind": "run",
-      "text": "npm test 2>&1 | tail -40"
-    },
-    {
-      "t": "2026-10-04T12:24:16Z",
-      "kind": "think",
-      "text": "All 118 tests still pass, typecheck clean. Let's run the build check too, then do a live smoke test to confirm the latency improvement actually helps in practice."
-    },
-    {
-      "t": "2026-10-04T12:24:16Z",
-      "kind": "run",
-      "text": "npm run build 2>&1 | tail -20"
-    },
-    {
-      "t": "2026-10-04T12:24:20Z",
-      "kind": "think",
-      "text": "Build is clean. Now let's live-boot the server to confirm this actually helps launches land in the feed within a reasonable window."
-    },
-    {
-      "t": "2026-10-04T12:24:21Z",
-      "kind": "run",
-      "text": "(timeout 70 node --experimental-websocket --import tsx src/server.ts > /tmp/server-session22.log 2>&1 &) ; sleep 2; echo started"
-    },
-    {
-      "t": "2026-10-04T12:24:26Z",
-      "kind": "run",
-      "text": "sleep 68; echo \"--- log tail ---\"; tail -60 /tmp/server-session22.log; echo \"--- feed ---\"; curl -s -m 5 http://localhost:8787/api/feed | head -c 2000"
-    },
-    {
-      "t": "2026-10-04T12:24:28Z",
-      "kind": "run",
-      "text": "sleep 65; tail -60 /tmp/server-session22.log; echo \"--- feed ---\"; curl -s -m 5 http://localhost:8787/api/feed | head -c 2000"
-    },
     {
       "t": "2026-10-04T12:24:30Z",
       "kind": "run",
@@ -671,6 +626,51 @@
       "t": "2026-10-05T14:32:33Z",
       "kind": "start",
       "text": "Session 26 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-05T14:32:38Z",
+      "kind": "run",
+      "text": "cat TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat PROGRESS.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-05T14:32:40Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-05T14:32:41Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-05T14:32:46Z",
+      "kind": "run",
+      "text": "git log --oneline -20 && echo \"---\" && ls rug-radar/logs/ | tail -20"
+    },
+    {
+      "t": "2026-10-05T14:32:48Z",
+      "kind": "run",
+      "text": "find . -iname \"logs\" -not -path \"*/node_modules/*\" 2>/dev/null; echo \"---\"; find . -iname \"session-00*\" -not -path \"*/node_modules/*\" 2>/dev/null | sort | tail -10; echo \"---git l\u2026"
+    },
+    {
+      "t": "2026-10-05T14:32:50Z",
+      "kind": "run",
+      "text": "git log --all --oneline | wc -l; git show --stat HEAD | head -50; echo \"---\"; git status"
+    },
+    {
+      "t": "2026-10-05T14:32:52Z",
+      "kind": "read",
+      "text": "logs/session-0024.md"
+    },
+    {
+      "t": "2026-10-05T14:32:54Z",
+      "kind": "read",
+      "text": "logs/session-0025.md"
+    },
+    {
+      "t": "2026-10-05T14:32:59Z",
+      "kind": "run",
+      "text": "ps aux | grep -i server.ts | grep -v grep; echo \"---log25---\"; ls -la /tmp/server-session25.log 2>/dev/null && tail -100 /tmp/server-session25.log; echo \"---log24---\"; ls -la /tmp\u2026"
     }
   ],
   "schedule": {
