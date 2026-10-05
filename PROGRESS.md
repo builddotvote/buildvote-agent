@@ -1328,3 +1328,104 @@ happening — see below.)*
   scoring before it can be checked against a long-history wallet.
 - All five TASK.md steps remain functionally complete; the scoring endpoint's
   rate-limit ceiling is the one concrete, reproducible open item.
+
+## Session 27 — 2026-10-05
+
+### Done
+- Re-verified the repo first (118/118 tests, clean typecheck/build), then
+  picked up Session 26's top open item: finding a less-throttled public
+  endpoint for scoring's `getTokenSupply`/`getTokenLargestAccounts`/
+  `getTransaction` calls. Live-checked 9 candidate free endpoints for
+  `getTokenSupply` support with no key/signup: `rpc.ankr.com/solana` (needs
+  an API key even for its "public" path), `endpoints.omniatech.io` (521,
+  dead), `solana.drpc.org` ("chain is not available on free plan"),
+  `solana-mainnet.rpc.extrnode.com`/`api.metaplex.solana.com`/
+  `solana-api.projectserum.com`/`solana.public-rpc.com` (all dead, no
+  response), `free.rpcpool.com` (403 forbidden), and re-confirmed
+  `solana-rpc.publicnode.com` still blocks indexed token methods without a
+  personal token (Session 20's finding, unchanged). **No free, keyless
+  alternative exists for these specific methods right now** — this avenue
+  looks exhausted, not just under-explored.
+- Found a different, real win instead: read pump.fun's public program docs
+  (`pump-fun/pump-public-docs`, `docs/PUMP_PROGRAM_README.md`) and confirmed
+  the bonding curve account's `token_total_supply` field (already decoded by
+  `pumpfun.ts`'s `decodeBondingCurve`, used by the liquidity signal) is
+  copied from the `Global` account at mint creation and never touched by
+  `buy`/`sell` instructions — i.e. it's the same value holder-concentration
+  was separately fetching via `getTokenSupply`, just already sitting unused
+  in data the liquidity signal fetches anyway.
+  - `src/data/bondingCurve.ts` (new) — `fetchBondingCurveAccount()`: the
+    `getAccountInfo` + `decodeBondingCurve` pair factored out of
+    `src/data/liquidity.ts` so it can be shared. `src/data/bondingCurve.test.ts`
+    — 2 offline tests (decodes, throws on missing account).
+  - `src/data/liquidity.ts` — `fetchLiquidityInput()` gained an optional
+    `knownCurve` param; uses it instead of fetching when provided. 1 new test
+    in `liquidity.test.ts` (passing a known curve skips the RPC call
+    entirely — asserts via a `getAccountInfo` that throws if called).
+  - `src/data/holderConcentration.ts` — `fetchHolderConcentrationInput()`
+    gained an optional `knownTotalSupply` param; skips `getTokenSupply`
+    entirely when provided, calling only `getTokenLargestAccounts`. 1 new
+    test in `holderConcentration.test.ts` (same "throws if called" pattern).
+  - `src/pipeline.ts` — `scoreLaunch()` now fetches the bonding curve once
+    (`fetchBondingCurveAccount`, caught/defaulted to `undefined` on failure)
+    before running the four signals, and passes it into both
+    `fetchLiquidityInput` and `fetchHolderConcentrationInput`. Each signal
+    still falls back to its own fetch if the shared one failed, so a single
+    shared-fetch failure doesn't take both signals down — confirmed by the
+    pre-existing "drops a signal that fails to fetch" test, unchanged. 1 new
+    test in `pipeline.test.ts` asserting `getTokenSupply` is never called
+    when the shared curve fetch succeeds.
+  - Net effect: one whole RPC call (`getTokenSupply`) removed per launch
+    scored, every time (not just a corner case) — on top of being more
+    direct (reading the actual on-chain account instead of round-tripping
+    through the SPL token program's own supply query).
+- Live-verified with a **synchronous** 85s foreground boot (same pattern
+  Session 26 adopted after the ScheduleWakeup/sandbox-reset lesson — no
+  backgrounding, no wakeup): public mainnet-beta, no keys, no `.env`.
+  Result: discovery found launches, the scoring gate capped cleanly, most
+  `getTransaction`/`getTokenLargestAccounts` calls still hit 429 (26 in the
+  log), but **one launch landed in `/api/feed`**
+  (`BDt1hrUNbmYP4qEwV6jD9Mw9LP44kiivHFVWMTRm3xam`, score 40: deployer-history,
+  bundled-buys, and liquidity signals present; holder-concentration itself
+  still failed on a 429 from its remaining `getTokenLargestAccounts` call,
+  which this change doesn't touch). This is the **first non-zero live-boot
+  feed result recorded in this file since Session 20** — Sessions 21 and 26
+  both explicitly got zero. Killed the server and its process afterward
+  (confirmed via `ps aux`), deleted the temp log file.
+- Updated `rug-radar/README.md`: "Holder concentration" signal entry and a
+  new `src/data/bondingCurve.ts` paragraph describe the shared fetch; "Known
+  limitations" top entry extended with the 9-endpoint dead-end list and this
+  session's fix + live numbers.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 123/123 passing (5 new: 2 in `bondingCurve.test.ts`, 1 each in
+  `liquidity.test.ts`/`holderConcentration.test.ts`/`pipeline.test.ts`), all
+  offline, ~3s.
+- Live-booted the real server synchronously (85s, public mainnet-beta, no
+  keys, no `.env`) and read the result in the same session that started
+  it — one launch landed in `/api/feed`, see "Done" above for details.
+- `git status`/`ps aux` after cleanup show only the intended code/test/
+  README/PROGRESS changes — no stray files, no leftover server process.
+
+### Next
+- The scoring endpoint's rate-limit ceiling is still the headline open item —
+  this session only removed one of several calls per launch; `getTransaction`
+  (deployer-history, bundled-buys) and `getTokenLargestAccounts`
+  (holder-concentration) still hit 429 on most attempts in the live check.
+  The 9-endpoint search this session found no free/keyless replacement for
+  the official endpoint's token methods — worth re-checking occasionally
+  (free-tier offerings change) rather than repeating immediately. A
+  different angle worth considering next: whether `getTokenLargestAccounts`
+  can be dropped the same way `getTokenSupply` was, e.g. approximating holder
+  concentration from data the already-fetched bonding curve or early-buy
+  signal provides instead of a dedicated indexed call — not scoped this
+  session, would need checking whether that data is actually sufficient
+  before attempting it.
+- `findFundingSource`'s lookback-limit live check (open since Session 4) is
+  still blocked — the one launch that landed this session didn't have early
+  buy data available yet (`bundled-buys` scored 0, "no early buy data
+  available"); still needs a launch old enough to have accumulated some.
+- All five TASK.md steps remain functionally complete; the scoring endpoint's
+  rate-limit ceiling (now one call lighter per launch, concretely helping at
+  least one launch land) is the one open item worth continued focus.

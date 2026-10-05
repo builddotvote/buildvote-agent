@@ -102,6 +102,23 @@ test("records the current launch so a later launch from the same deployer sees i
   ]);
 });
 
+test("shares the bonding curve fetch between liquidity and holder-concentration, skipping getTokenSupply", async () => {
+  let getTokenSupplyCalls = 0;
+  const rpc = {
+    ...baseFakeRpc(),
+    async getTokenSupply() {
+      getTokenSupplyCalls++;
+      return { amount: "1000000000", decimals: 6, uiAmount: 1000, uiAmountString: "1000" };
+    },
+  };
+
+  const score = await scoreLaunch(rpc, LAUNCH);
+
+  assert.equal(getTokenSupplyCalls, 0);
+  const holderConcentration = score.signals.find((s) => s.name === "holder-concentration");
+  assert.ok(holderConcentration);
+});
+
 test("drops a signal that fails to fetch instead of failing the whole launch", async () => {
   const rpc = {
     ...baseFakeRpc(),

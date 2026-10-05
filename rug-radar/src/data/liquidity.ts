@@ -1,20 +1,18 @@
 import type { SolanaRpcClient } from "../rpc.js";
-import { decodeBondingCurve } from "../pumpfun.js";
+import type { BondingCurveAccount } from "../pumpfun.js";
 import type { LiquidityInput } from "../signals/liquidity.js";
+import { fetchBondingCurveAccount } from "./bondingCurve.js";
 
 type AccountInfoFetcher = Pick<SolanaRpcClient, "getAccountInfo">;
 
 export async function fetchLiquidityInput(
   rpc: AccountInfoFetcher,
   bondingCurveAddress: string,
+  // Pass an already-fetched curve (e.g. from pipeline.ts, shared with
+  // holder-concentration) to skip fetching it again here.
+  knownCurve?: BondingCurveAccount,
 ): Promise<LiquidityInput> {
-  const account = await rpc.getAccountInfo(bondingCurveAddress, "base64");
-  if (!account) {
-    throw new Error(`bonding curve account not found: ${bondingCurveAddress}`);
-  }
-
-  const [base64Data] = account.data as [string, string];
-  const curve = decodeBondingCurve(base64Data);
+  const curve = knownCurve ?? (await fetchBondingCurveAccount(rpc, bondingCurveAddress));
   return {
     complete: curve.complete,
     realSolReserves: curve.realSolReserves,

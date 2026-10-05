@@ -7,6 +7,7 @@ import { fetchDeployerHistoryInput } from "./data/deployerHistory.js";
 import { fetchBundledBuysInput } from "./data/bundledBuys.js";
 import { fetchHolderConcentrationInput } from "./data/holderConcentration.js";
 import { fetchLiquidityInput } from "./data/liquidity.js";
+import { fetchBondingCurveAccount } from "./data/bondingCurve.js";
 import { scoreDeployerHistory } from "./signals/deployerHistory.js";
 import { scoreBundledBuys } from "./signals/bundledBuys.js";
 import { scoreHolderConcentration } from "./signals/holderConcentration.js";
@@ -38,6 +39,14 @@ export async function scoreLaunch(
   deployerIndex?.record(launch);
   const observedPriorLaunches = deployerIndex?.getPriorLaunches(launch.deployer, launch.mint) ?? [];
 
+  // Fetched once and shared with both liquidity and holder-concentration
+  // below: holder-concentration needs only tokenTotalSupply from it, which
+  // saves a separate getTokenSupply call against the rate-limited scoring
+  // RPC (one less call per launch scored). Each signal still falls back to
+  // fetching its own copy if this fails, so one shared-fetch failure here
+  // doesn't take either signal down by itself.
+  const curve = await fetchBondingCurveAccount(rpc, launch.bondingCurve).catch(() => undefined);
+
   const results = await Promise.all([
     safeSignal("deployer-history", async () => {
       const priorLaunches = await fetchDeployerHistoryInput(rpc, launch.deployer, launch.mint, {
@@ -55,14 +64,16 @@ export async function scoreLaunch(
       return scoreBundledBuys({ earlyBuys });
     }),
     safeSignal("holder-concentration", async () => {
-      const input = await fetchHolderConcentrationInput(rpc, launch.mint, [
-        launch.bondingCurve,
-        ...KNOWN_PROGRAM_ACCOUNT_ADDRESSES,
-      ]);
+      const input = await fetchHolderConcentrationInput(
+        rpc,
+        launch.mint,
+        [launch.bondingCurve, ...KNOWN_PROGRAM_ACCOUNT_ADDRESSES],
+        curve?.tokenTotalSupply,
+      );
       return scoreHolderConcentration(input);
     }),
     safeSignal("liquidity", async () => {
-      const input = await fetchLiquidityInput(rpc, launch.bondingCurve);
+      const input = await fetchLiquidityInput(rpc, launch.bondingCurve, curve);
       return scoreLiquidity(input);
     }),
   ]);

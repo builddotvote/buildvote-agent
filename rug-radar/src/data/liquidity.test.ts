@@ -42,3 +42,23 @@ test("throws when the bonding curve account does not exist", async () => {
   const fakeRpc = { getAccountInfo: async () => null };
   await assert.rejects(() => fetchLiquidityInput(fakeRpc, "MissingAddress"));
 });
+
+test("skips the RPC call entirely when a known curve is passed in", async () => {
+  const fakeRpc = {
+    getAccountInfo: async () => {
+      throw new Error("should not be called when knownCurve is provided");
+    },
+  };
+
+  const input = await fetchLiquidityInput(fakeRpc, "CurveAddress", {
+    virtualTokenReserves: 0n,
+    virtualSolReserves: 0n,
+    realTokenReserves: 0n,
+    realSolReserves: 8_000_000_000n,
+    tokenTotalSupply: 1_000_000_000n,
+    complete: false,
+    creator: "Creator111111111111111111111111111111111",
+  });
+  assert.equal(input.complete, false);
+  assert.equal(input.realSolReserves, 8_000_000_000n);
+});

@@ -61,12 +61,26 @@ account list).
 3. **Holder concentration** — top 10 holder share, excluding the bonding
    curve and known program accounts. **Built:** `src/signals/holderConcentration.ts`
    (pure scoring function) + `src/data/holderConcentration.ts` (gathers the
-   input via `rpc.ts`).
+   input via `rpc.ts`). Total supply can be passed in from an already-decoded
+   bonding curve account instead of a separate `getTokenSupply` call — see
+   `src/data/bondingCurve.ts` below and "Known limitations" (session 27).
 4. **Liquidity and migration status** — real SOL reserves still backing the
    bonding curve, and whether it has graduated to an AMM. **Built:**
    `src/signals/liquidity.ts` (pure scoring function) + `src/data/liquidity.ts`
    (fetches the bonding curve account via `rpc.ts` and decodes it with
    `pumpfun.ts`).
+
+`src/data/bondingCurve.ts` (session 27) — `fetchBondingCurveAccount()`: the
+`getAccountInfo` + `decodeBondingCurve` pair factored out of liquidity's data
+fetch so it can be shared. `pipeline.ts` fetches a launch's bonding curve
+account once and passes the decoded result to both `fetchLiquidityInput`
+(which needs all of it) and `fetchHolderConcentrationInput` (which only needs
+`tokenTotalSupply` from it — the field is fixed at creation and never changed
+by buy/sell, per the bonding curve layout in `pumpfun.ts`). This removes one
+whole RPC call (`getTokenSupply`) per launch scored, on top of being more
+direct than round-tripping through the SPL token program's own supply query.
+Both signals still fall back to fetching their own copy if the shared fetch
+fails, so one failure doesn't take down both.
 
 Each signal lives in its own module under `src/signals/` with offline tests
 using recorded sample data — no live network calls in tests. Data-gathering
@@ -224,6 +238,33 @@ doesn't fix.
   `getTokenSupply`/`getTokenLargestAccounts`/`getTransaction` calls (not yet
   found — `solana-rpc.publicnode.com` itself blocks the indexed token
   methods scoring needs without a signup, per session 20).
+  **Session 27** live-checked 9 more candidate free public endpoints
+  (`rpc.ankr.com/solana`, `endpoints.omniatech.io`, `solana.drpc.org`,
+  `solana-mainnet.rpc.extrnode.com`, `api.metaplex.solana.com`,
+  `solana-api.projectserum.com`, `free.rpcpool.com`, `solana.public-rpc.com`,
+  re-confirmed `solana-rpc.publicnode.com`) for `getTokenSupply` support
+  without a key or signup: all either require a key/plan upgrade, explicitly
+  block indexed token methods, or don't resolve/respond at all. No free,
+  keyless alternative to the official endpoint for these token methods was
+  found — this avenue looks exhausted for now, worth re-checking later rather
+  than repeating immediately. Instead, found and fixed a smaller, real win
+  on the call-count side: pump.fun's bonding curve account already carries
+  `token_total_supply` (confirmed against the program's public docs — it's
+  copied from the `Global` account at creation and never touched by
+  buy/sell), so holder concentration's `getTokenSupply` call was redundant
+  whenever liquidity's bonding-curve fetch for the same mint already ran.
+  `src/data/bondingCurve.ts` factors that fetch out so `pipeline.ts` can run
+  it once and hand the result to both signals, cutting one whole RPC call
+  per launch scored. Live-verified with a synchronous 85s boot (same
+  foreground pattern as session 26, public mainnet-beta, no keys): **one
+  launch landed in `/api/feed`** (score 40: deployer-history, bundled-buys,
+  and liquidity all present; holder-concentration still failed on a 429 from
+  the remaining `getTokenLargestAccounts` call, which this change doesn't
+  touch) — the first time since session 20 that a live-boot check in this
+  file recorded a non-zero feed. One fewer call per launch does not fix the
+  rate-limit ceiling itself (holder-concentration's other call and
+  deployer-history/bundled-buys' own scans still hit 429s in the same run),
+  but it is a measurable, verified improvement, not just a theoretical one.
 - Previously documented here (session 19): a thrown 429 error (after
   `rpc.ts`'s own 4 retries were exhausted) used to be swallowed by
   `safeGetTransaction` to the same `null` as a genuine "not found yet"
