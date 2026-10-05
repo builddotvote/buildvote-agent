@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-05T22:05:11Z",
+  "updated_at": "2026-10-05T22:05:37Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 27,
     "started_at": "2026-10-05T22:00:34Z",
-    "turns": 31
+    "turns": 37
   },
   "round": {
     "number": null,
@@ -281,56 +281,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-05T05:35:33Z",
-      "kind": "run",
-      "text": "git log --oneline -5 && echo --- && git show --stat HEAD | head -50"
-    },
-    {
-      "t": "2026-10-05T05:35:37Z",
-      "kind": "run",
-      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/logs/session-0024.md 2>/dev/null; echo \"---count---\"; git log --oneline | wc -l"
-    },
-    {
-      "t": "2026-10-05T05:35:41Z",
-      "kind": "run",
-      "text": "ps aux | grep -i server.ts | grep -v grep; echo \"---log---\"; ls -la /tmp/server-session24.log 2>/dev/null; cat /tmp/server-session24.log 2>/dev/null | tail -100"
-    },
-    {
-      "t": "2026-10-05T05:35:51Z",
-      "kind": "run",
-      "text": "git status && echo \"---queue---\" && cat queue.json 2>/dev/null && echo \"---rug-radar ls---\" && ls rug-radar"
-    },
-    {
-      "t": "2026-10-05T05:35:53Z",
-      "kind": "think",
-      "text": "Repo is clean, fresh sandbox. Picking up where Session 24 left off: verifying the repo, then finishing the live smoke test that Sessions 22-24 started but never observed the resul\u2026"
-    },
-    {
-      "t": "2026-10-05T05:35:54Z",
-      "kind": "run",
-      "text": "cd rug-radar && npm install --silent 2>&1 | tail -10 && npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -20 && npm run build 2>&1 | tail -10"
-    },
-    {
-      "t": "2026-10-05T05:36:03Z",
-      "kind": "think",
-      "text": "118/118 tests pass, typecheck and build clean. Now let me run the live smoke test to finally check whether the Session 22 parallelization fix lets launches land in the feed."
-    },
-    {
-      "t": "2026-10-05T05:36:04Z",
-      "kind": "run",
-      "text": "cd rug-radar && (timeout 90 node --experimental-websocket --import tsx src/server.ts > /tmp/server-session25.log 2>&1 &) ; sleep 2; echo started; ps aux | grep server.ts | grep -v\u2026"
-    },
-    {
-      "t": "2026-10-05T05:36:09Z",
-      "kind": "run",
-      "text": "pwd; ls"
-    },
-    {
-      "t": "2026-10-05T05:36:15Z",
-      "kind": "run",
-      "text": "(timeout 95 node --experimental-websocket --import tsx src/server.ts > /tmp/server-session25.log 2>&1 &) ; sleep 2; echo started; ps aux | grep server.ts | grep -v grep"
-    },
     {
       "t": "2026-10-05T05:36:19Z",
       "kind": "think",
@@ -680,6 +630,56 @@
       "t": "2026-10-05T22:05:11Z",
       "kind": "think",
       "text": "Now add a test to liquidity.test.ts for the `knownCurve` shortcut, and to holderConcentration.test.ts for `knownTotalSupply`:"
+    },
+    {
+      "t": "2026-10-05T22:05:15Z",
+      "kind": "edit",
+      "text": "rug-radar/src/data/liquidity.test.ts"
+    },
+    {
+      "t": "2026-10-05T22:05:20Z",
+      "kind": "edit",
+      "text": "rug-radar/src/data/holderConcentration.test.ts"
+    },
+    {
+      "t": "2026-10-05T22:05:22Z",
+      "kind": "think",
+      "text": "Now let's add a pipeline test confirming the shared curve avoids the getTokenSupply call:"
+    },
+    {
+      "t": "2026-10-05T22:05:25Z",
+      "kind": "edit",
+      "text": "rug-radar/src/pipeline.test.ts"
+    },
+    {
+      "t": "2026-10-05T22:05:27Z",
+      "kind": "think",
+      "text": "Now let's run typecheck, build, and tests."
+    },
+    {
+      "t": "2026-10-05T22:05:27Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -40"
+    },
+    {
+      "t": "2026-10-05T22:05:31Z",
+      "kind": "think",
+      "text": "Clean. Now tests:"
+    },
+    {
+      "t": "2026-10-05T22:05:31Z",
+      "kind": "run",
+      "text": "npm test 2>&1 | tail -50"
+    },
+    {
+      "t": "2026-10-05T22:05:37Z",
+      "kind": "think",
+      "text": "123/123 passing (5 new). Now let's build and run the live smoke test synchronously per Session 26's process note."
+    },
+    {
+      "t": "2026-10-05T22:05:37Z",
+      "kind": "run",
+      "text": "npm run build 2>&1 | tail -20"
     }
   ],
   "schedule": {
