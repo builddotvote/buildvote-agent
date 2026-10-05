@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-05T22:00:34Z",
+  "updated_at": "2026-10-05T22:01:02Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 27,
     "started_at": "2026-10-05T22:00:34Z",
-    "turns": 0
+    "turns": 7
   },
   "round": {
     "number": null,
@@ -281,41 +281,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-04T18:38:57Z",
-      "kind": "run",
-      "text": "(timeout 90 node --experimental-websocket --import tsx src/server.ts > /tmp/server-session23.log 2>&1 &) ; sleep 2; echo started"
-    },
-    {
-      "t": "2026-10-04T18:39:04Z",
-      "kind": "run",
-      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/queue.json 2>/dev/null"
-    },
-    {
-      "t": "2026-10-04T18:39:06Z",
-      "kind": "think",
-      "text": "That's just the idea-pool queue, not actionable here. Let's wait for the smoke test to finish."
-    },
-    {
-      "t": "2026-10-04T18:39:08Z",
-      "kind": "run",
-      "text": "sleep 85; echo \"--- log tail ---\"; tail -80 /tmp/server-session23.log; echo \"--- feed ---\"; curl -s -m 5 http://localhost:8787/api/feed | head -c 3000"
-    },
-    {
-      "t": "2026-10-04T18:39:11Z",
-      "kind": "run",
-      "text": "sleep 85; echo \"--- log tail ---\"; tail -80 /tmp/server-session23.log; echo \"--- feed ---\"; curl -s -m 5 http://localhost:8787/api/feed | head -c 3000"
-    },
-    {
-      "t": "2026-10-04T18:39:14Z",
-      "kind": "think",
-      "text": "I'll wait for that background check to finish, then update PROGRESS.md with both Session 22's backfilled entry and this session's findings."
-    },
-    {
-      "t": "2026-10-04T18:39:15Z",
-      "kind": "tool",
-      "text": "ScheduleWakeup"
-    },
     {
       "t": "2026-10-04T18:39:18Z",
       "kind": "run",
@@ -680,6 +645,41 @@
       "t": "2026-10-05T22:00:34Z",
       "kind": "start",
       "text": "Session 27 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-05T22:00:40Z",
+      "kind": "run",
+      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-05T22:00:43Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-05T22:00:43Z",
+      "kind": "read",
+      "text": "TASK.md"
+    },
+    {
+      "t": "2026-10-05T22:00:46Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-05T22:00:50Z",
+      "kind": "run",
+      "text": "cat /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/MEMORY.md 2>/dev/null || echo \"NO MEMORY FILE\""
+    },
+    {
+      "t": "2026-10-05T22:00:53Z",
+      "kind": "run",
+      "text": "git status && echo \"---\" && git log --oneline -5 && echo \"---rug-radar---\" && ls rug-radar"
+    },
+    {
+      "t": "2026-10-05T22:00:56Z",
+      "kind": "run",
+      "text": "cd rug-radar && npm install --silent 2>&1 | tail -20 && npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -30"
     }
   ],
   "schedule": {
