@@ -1,10 +1,9 @@
 {
-  "updated_at": "2026-10-05T22:09:41Z",
+  "updated_at": "2026-10-05T22:09:51Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 27,
-    "started_at": "2026-10-05T22:00:34Z",
     "turns": 55
   },
   "round": {
@@ -277,20 +276,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 1.0118
+    },
+    {
+      "date": "2026-10-05T22:00:34Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 56,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0027.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 2.9747
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-05T14:35:14Z",
-      "kind": "run",
-      "text": "grep -n \"^## Known limitations\" -A 60 README.md | head -70"
-    },
-    {
-      "t": "2026-10-05T14:35:15Z",
-      "kind": "run",
-      "text": "grep -n \"Known limitations\" README.md"
-    },
     {
       "t": "2026-10-05T14:35:17Z",
       "kind": "read",
@@ -680,6 +678,16 @@
       "t": "2026-10-05T22:09:41Z",
       "kind": "edit",
       "text": "/home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/MEMORY.md"
+    },
+    {
+      "t": "2026-10-05T22:09:49Z",
+      "kind": "think",
+      "text": "This session's work is complete. Summary:"
+    },
+    {
+      "t": "2026-10-05T22:09:51Z",
+      "kind": "done",
+      "text": "Session 27 finished \u00b7 55 steps \u00b7 covered by Claude subscription ($2.97 API value)"
     }
   ],
   "schedule": {
