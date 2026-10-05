@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-05T05:35:19Z",
+  "updated_at": "2026-10-05T05:35:46Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 25,
     "started_at": "2026-10-05T05:35:19Z",
-    "turns": 0
+    "turns": 7
   },
   "round": {
     "number": null,
@@ -263,41 +263,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-04T12:20:04Z",
-      "kind": "run",
-      "text": "sleep 5; cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar MINT=\"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\" curl -s -m 10 -o /tmp/out.json -w \"HTTP %{http_code}\\n\"\u2026"
-    },
-    {
-      "t": "2026-10-04T12:20:19Z",
-      "kind": "run",
-      "text": "sleep 5; cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar MINT=\"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\" curl -s -m 10 -o /tmp/out3.json -w \"HTTP %{http_code}\\n\u2026"
-    },
-    {
-      "t": "2026-10-04T12:20:32Z",
-      "kind": "run",
-      "text": "sleep 5; cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar MINT=\"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\" curl -s -m 10 -o /tmp/out4.json -w \"HTTP %{http_code}\\n\u2026"
-    },
-    {
-      "t": "2026-10-04T12:20:53Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar MINT=\"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\" for i in 1 2 3; do   sleep 15   echo \"attempt $i after 15s wait:\u2026"
-    },
-    {
-      "t": "2026-10-04T12:21:47Z",
-      "kind": "run",
-      "text": "sleep 60; cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar MINT=\"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\" curl -s -m 10 -o /tmp/outy.json -w \"HTTP %{http_code}\\\u2026"
-    },
-    {
-      "t": "2026-10-04T12:22:02Z",
-      "kind": "read",
-      "text": "rug-radar/src/pipeline.ts"
-    },
-    {
-      "t": "2026-10-04T12:22:09Z",
-      "kind": "read",
-      "text": "rug-radar/src/scorer.ts"
-    },
     {
       "t": "2026-10-04T12:22:21Z",
       "kind": "run",
@@ -662,6 +627,41 @@
       "t": "2026-10-05T05:35:19Z",
       "kind": "start",
       "text": "Session 25 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-05T05:35:23Z",
+      "kind": "run",
+      "text": "cat PROGRESS.md 2>/dev/null; echo \"---TASK---\"; cat TASK.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-05T05:35:26Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-05T05:35:26Z",
+      "kind": "read",
+      "text": "TASK.md"
+    },
+    {
+      "t": "2026-10-05T05:35:29Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-05T05:35:33Z",
+      "kind": "run",
+      "text": "git log --oneline -5 && echo --- && git show --stat HEAD | head -50"
+    },
+    {
+      "t": "2026-10-05T05:35:37Z",
+      "kind": "run",
+      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/logs/session-0024.md 2>/dev/null; echo \"---count---\"; git log --oneline | wc -l"
+    },
+    {
+      "t": "2026-10-05T05:35:41Z",
+      "kind": "run",
+      "text": "ps aux | grep -i server.ts | grep -v grep; echo \"---log---\"; ls -la /tmp/server-session24.log 2>/dev/null; cat /tmp/server-session24.log 2>/dev/null | tail -100"
     }
   ],
   "schedule": {
