@@ -201,7 +201,29 @@ doesn't fix.
   gap needs the same kind of fix discovery got (session 20): a different
   public endpoint for scoring's token methods, or accepting that free,
   keyless scoring against the official endpoint may not keep up with
-  real-time discovery at all right now.
+  real-time discovery at all right now. **Session 22** parallelized the
+  independent RPC calls inside `src/data/bundledBuys.ts` and
+  `src/data/deployerHistory.ts` (`Promise.all` instead of sequential
+  `for`/`await` loops) on the theory that serialized retry/backoff delays
+  were compounding the rate limit. That change is real and harmless (tests
+  stay green, call order was never load-bearing), but **sessions 23-25 each
+  started a live re-check and lost the result to a session boundary before
+  reading it** — this repo's sessions run in a fresh sandbox each time, so a
+  backgrounded server process and its log file don't survive past the end of
+  the session that started them; scheduling a wakeup to "check back later"
+  doesn't work for that case here. **Session 26 ran the check synchronously
+  in the foreground instead** (85s live boot, parallelization included) and
+  got a conclusive answer: discovery still finds launches fine and the
+  scoring gate still caps cleanly, but scoring's `getTransaction`/
+  `getTokenLargestAccounts` calls against the official endpoint hit 429 on
+  nearly every attempt, and **zero launches landed in `/api/feed`** — the
+  same result as session 21, confirming the parallelization did not move the
+  needle. The bottleneck was never about call ordering; it's the official
+  endpoint's rate-limit ceiling itself. The real fix is still what session
+  20 used for discovery: a different public endpoint for scoring's
+  `getTokenSupply`/`getTokenLargestAccounts`/`getTransaction` calls (not yet
+  found — `solana-rpc.publicnode.com` itself blocks the indexed token
+  methods scoring needs without a signup, per session 20).
 - Previously documented here (session 19): a thrown 429 error (after
   `rpc.ts`'s own 4 retries were exhausted) used to be swallowed by
   `safeGetTransaction` to the same `null` as a genuine "not found yet"

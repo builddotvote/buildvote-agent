@@ -1230,3 +1230,101 @@ code diff in Session 24 below.)*
 - All five TASK.md steps remain functionally complete; the scoring
   endpoint's rate-limit ceiling (Session 21's finding) is still the most
   concrete open item pending this session's verification.
+
+## Sessions 24-25 — 2026-10-04 / 2026-10-05
+
+*(Reconstructed from `logs/session-0024.md` and `logs/session-0025.md` — both
+runs used `ScheduleWakeup` to "check back later" on a backgrounded live-boot
+server process, then hit their step limit, or ended, before the wakeup fired.
+Neither updated this file. Session 26 discovered the actual reason this kept
+happening — see below.)*
+
+### Done
+- Session 24 re-verified the repo (118/118 tests, clean typecheck/build),
+  confirmed no leftover scratch files or processes from Sessions 22-23,
+  backfilled their PROGRESS.md entries (now above), then started its own 90s
+  backgrounded live boot to finally observe whether Session 22's RPC
+  parallelization let launches land in `/api/feed` — and used `ScheduleWakeup`
+  to check back once it finished. The session ended (summary written) before
+  that wakeup fired, so the result was never read.
+- Session 25 started fresh, found no trace of Session 24's background process
+  or its log file (`/tmp/server-session24.log` didn't exist), re-verified the
+  repo again (118/118, clean), and started its own 95s backgrounded live boot
+  with the same `ScheduleWakeup` "check back later" pattern — which again
+  ended before the wakeup fired, with the same never-read result.
+
+### Works
+- `npm run typecheck`, `npm run build`, `npm test` (118/118, offline) clean in
+  both sessions — no production code changed, only this file and the repeated
+  (never-completed) live-boot attempts.
+
+### Next (diagnosed and acted on in Session 26 below)
+- Two sessions in a row lost a live-boot result to the same pattern: background
+  the server, `ScheduleWakeup`, end the session before the wakeup fires. Worth
+  checking whether `ScheduleWakeup` actually resumes in the same sandbox for
+  this project, since a background process and its log file apparently don't
+  survive to the next session either way.
+- Whether Session 22's RPC parallelization actually helps the scoring
+  bottleneck is still unobserved.
+
+## Session 26 — 2026-10-05
+
+### Done
+- Found the root cause of Sessions 24-25's repeated failure to observe their
+  own live-boot results: this project's sessions each run in a **fresh
+  sandbox** (confirmed: the auto-memory directory this harness normally
+  expects to already exist, didn't; `/tmp/server-session24.log` and
+  `/tmp/server-session25.log` were both gone; `ps aux` showed no leftover
+  server process at session start). `ScheduleWakeup` does not resume into the
+  same sandbox for this project, so a backgrounded process and its log file
+  are both gone by the time the wakeup fires — the "check back later" pattern
+  cannot work here for anything backgrounded. **Fix: ran the live smoke test
+  synchronously in the foreground instead** (a single Bash call with the
+  server started, `sleep 85`, then logs/feed read and the process killed, all
+  in one call), so the result is observed within the session that started it,
+  no wakeup needed.
+- Re-verified the repo first (118/118 tests, clean typecheck/build — no
+  production code changed since Session 22), then ran that synchronous 85s
+  live boot (public mainnet-beta, no keys) and finally got the conclusive
+  answer Sessions 22-25 were chasing: discovery still finds launches fine and
+  `ScoringGate` still caps cleanly (clean "too many pending scores" skips
+  logged), but scoring's `getTransaction`/`getTokenLargestAccounts` calls
+  against the official endpoint hit HTTP 429 on nearly every attempt, and
+  **zero launches landed in `/api/feed`** — same result as Session 21.
+  Session 22's RPC-call parallelization does not move the needle; the
+  bottleneck was never about call ordering, it's the official scoring
+  endpoint's rate-limit ceiling itself, unchanged since Session 20/21.
+- Updated `rug-radar/README.md`'s "Known limitations" top entry with this
+  finding (parallelization confirmed insufficient, the sandbox-reset reason
+  three sessions lost the result, and the synchronous re-check's numbers).
+
+### Works
+- `npm run typecheck`, `npm run build`, `npm test` (118/118, offline) clean in
+  `/rug-radar` — no production code changed this session, only README/
+  PROGRESS.
+- Live-booted the real server synchronously (85s, public mainnet-beta, no
+  `.env`, no keys) and actually read the result in the same session that
+  started it — see "Done" above.
+- `git status` after this session shows only the intended README/PROGRESS
+  changes — no leftover scratch files or processes (server was explicitly
+  killed at the end of the synchronous Bash call).
+
+### Next
+- The scoring endpoint's rate-limit ceiling is still the one concrete, now
+  doubly-confirmed open item. The real fix is the same shape as Session 20's
+  discovery fix: find an alternative public endpoint for scoring's
+  `getTokenSupply`/`getTokenLargestAccounts`/`getTransaction` calls that isn't
+  as tightly throttled (`solana-rpc.publicnode.com`, already used for
+  discovery, blocks the indexed token methods scoring needs without a signup —
+  so it can't just be reused as-is). Worth its own focused session: live-check
+  2-3 alternative free endpoints the way Session 20 did for discovery.
+- **Process note for future sessions:** don't background a live-boot/smoke
+  test and `ScheduleWakeup` to check it later — the sandbox resets between
+  sessions in this project, so the process and its logs will be gone. Run
+  live checks synchronously in the foreground (one Bash call with `sleep N`
+  inside it) so the result is read before the session ends.
+- `findFundingSource`'s lookback-limit live check (open since Session 4) is
+  still blocked on the same root cause — needs a launch to actually finish
+  scoring before it can be checked against a long-history wallet.
+- All five TASK.md steps remain functionally complete; the scoring endpoint's
+  rate-limit ceiling is the one concrete, reproducible open item.
