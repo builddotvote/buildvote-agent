@@ -1,11 +1,10 @@
 {
-  "updated_at": "2026-10-05T05:36:12Z",
+  "updated_at": "2026-10-05T05:36:27Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 25,
-    "started_at": "2026-10-05T05:35:19Z",
-    "turns": 11
+    "turns": 13
   },
   "round": {
     "number": null,
@@ -259,35 +258,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 0.6468
+    },
+    {
+      "date": "2026-10-05T05:35:19Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 14,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0025.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 0.5721
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-04T12:23:43Z",
-      "kind": "think",
-      "text": "Good, these fakes key by address/signature value, not call-order \u2014 parallelizing is safe. Let me check the bundledBuys test file too."
-    },
-    {
-      "t": "2026-10-04T12:23:43Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/bundledBuys.test.ts"
-    },
-    {
-      "t": "2026-10-04T12:23:47Z",
-      "kind": "think",
-      "text": "Now implementing the fix: parallelizing the independent RPC calls within `bundledBuys.ts` and `deployerHistory.ts` data fetchers so they use the RPC client's existing concurrency \u2026"
-    },
-    {
-      "t": "2026-10-04T12:23:56Z",
-      "kind": "edit",
-      "text": "rug-radar/src/data/bundledBuys.ts"
-    },
-    {
-      "t": "2026-10-04T12:23:58Z",
-      "kind": "think",
-      "text": "Now the same pattern for `deployerHistory.ts`:"
-    },
     {
       "t": "2026-10-04T12:24:06Z",
       "kind": "edit",
@@ -662,6 +645,31 @@
       "t": "2026-10-05T05:36:09Z",
       "kind": "run",
       "text": "pwd; ls"
+    },
+    {
+      "t": "2026-10-05T05:36:15Z",
+      "kind": "run",
+      "text": "(timeout 95 node --experimental-websocket --import tsx src/server.ts > /tmp/server-session25.log 2>&1 &) ; sleep 2; echo started; ps aux | grep server.ts | grep -v grep"
+    },
+    {
+      "t": "2026-10-05T05:36:19Z",
+      "kind": "think",
+      "text": "Server is running. I'll check back once the 95s smoke test window completes rather than polling now."
+    },
+    {
+      "t": "2026-10-05T05:36:22Z",
+      "kind": "tool",
+      "text": "ScheduleWakeup"
+    },
+    {
+      "t": "2026-10-05T05:36:25Z",
+      "kind": "think",
+      "text": "I've kicked off a 95-second live smoke test against the real server (public mainnet-beta, no keys) to finally check whether Session 22's RPC-parallelization fix lets launches land\u2026"
+    },
+    {
+      "t": "2026-10-05T05:36:27Z",
+      "kind": "done",
+      "text": "Session 25 finished \u00b7 13 steps \u00b7 covered by Claude subscription ($0.57 API value)"
     }
   ],
   "schedule": {
