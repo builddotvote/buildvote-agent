@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-05T14:34:56Z",
+  "updated_at": "2026-10-05T14:35:25Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 26,
     "started_at": "2026-10-05T14:32:33Z",
-    "turns": 14
+    "turns": 20
   },
   "round": {
     "number": null,
@@ -272,41 +272,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-04T12:24:48Z",
-      "kind": "done",
-      "text": "Session 22 finished \u00b7 38 steps \u00b7 covered by Claude subscription ($2.28 API value)"
-    },
-    {
-      "t": "2026-10-04T18:38:08Z",
-      "kind": "start",
-      "text": "Session 23 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-04T18:38:13Z",
-      "kind": "run",
-      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md 2>/dev/null"
-    },
-    {
-      "t": "2026-10-04T18:38:17Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-04T18:38:20Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-04T18:38:25Z",
-      "kind": "run",
-      "text": "git log --oneline -20 && echo \"---show last commit---\" && git show --stat HEAD"
-    },
-    {
-      "t": "2026-10-04T18:38:30Z",
-      "kind": "run",
-      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/logs/session-0022.md"
-    },
     {
       "t": "2026-10-04T18:38:37Z",
       "kind": "run",
@@ -671,6 +636,41 @@
       "t": "2026-10-05T14:33:31Z",
       "kind": "run",
       "text": "(node --experimental-websocket --import tsx src/server.ts > /tmp/server-session26.log 2>&1 & echo $! > /tmp/server26.pid) && sleep 85 && echo \"--- log tail ---\" && tail -150 /tmp/\u2026"
+    },
+    {
+      "t": "2026-10-05T14:35:11Z",
+      "kind": "think",
+      "text": "Confirmed, synchronously this time (85s live boot, public mainnet-beta, no keys): discovery works fine \u2014 many launches found, the scoring gate correctly caps and logs \"too many pe\u2026"
+    },
+    {
+      "t": "2026-10-05T14:35:11Z",
+      "kind": "run",
+      "text": "grep -n \"Known limitations\" -A 60 README.md | head -100"
+    },
+    {
+      "t": "2026-10-05T14:35:12Z",
+      "kind": "run",
+      "text": "grep -n \"Known limitations\" -A 120 README.md | tail -80"
+    },
+    {
+      "t": "2026-10-05T14:35:14Z",
+      "kind": "run",
+      "text": "grep -n \"^## Known limitations\" -A 60 README.md | head -70"
+    },
+    {
+      "t": "2026-10-05T14:35:15Z",
+      "kind": "run",
+      "text": "grep -n \"Known limitations\" README.md"
+    },
+    {
+      "t": "2026-10-05T14:35:17Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-05T14:35:25Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
     }
   ],
   "schedule": {
