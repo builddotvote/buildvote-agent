@@ -1545,3 +1545,85 @@ happening — see below.)*
 - `findFundingSource`'s lookback-limit live check (open since Session 4) is
   still blocked on the same root cause — unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 30 — 2026-10-06
+
+### Done
+- Re-verified the repo first (128/128 tests after `npm install` restored
+  `node_modules`, clean typecheck/build), then picked up step (1) from
+  Session 29's "Next" — a `wsLogParser.ts`-style detector for buy/sell log
+  lines, needed before the balance index can tell which transactions to
+  decode. Before writing it, re-read the real captured log fixture it would
+  need to recognize (`wsLogParser.test.ts`'s `REAL_CREATE_V2_LOGS`, from
+  session 5) and found it already contains `"Program log: Instruction:
+  BuyV2"` — not `"Instruction: Buy"`. That sent this session down a
+  different, more important path than originally planned.
+- Fetched the public Anchor IDL (`pump-fun/pump-public-docs`, `idl/pump.json`)
+  to check: is `buy_v2` a real, separate instruction from `buy`, and did
+  session 29's `decodeTradeInstruction` account for it? Confirmed via a
+  direct download + `python3 -m json` parse of the raw IDL (not a webfetch
+  summary — see below for why that distinction mattered) that `buy_v2` and
+  `sell_v2` are genuinely separate instructions with their own
+  discriminators and an unrelated account layout (`mint` is `base_mint` at
+  account index 1, `bonding_curve` at 10, `user` at 13, vs. 2/3/6 for the
+  plain `buy`/`sell` session 29 implemented). Session 29's decoder would
+  have silently returned `null` for every real `buy_v2`/`sell_v2`
+  transaction — not a crash, but exactly the kind of quiet gap that would
+  have undercounted real trades once wired into a balance index, worth
+  fixing before building more on top of it.
+- **Caught a tool-reliability issue worth flagging**: a first attempt used
+  WebFetch's AI-summarized read of `idl/pump.json` to get the `sell` and
+  `sell_v2` discriminator byte arrays. It reported `sell` as
+  `[51, 230, 139, 6, 167, 200, 19, 62]` and `sell_v2` as
+  `[233, 84, 59, 188, 5, 23, 235, 200]`. Downloading the raw JSON directly
+  (`curl` + `python3 -c 'json.load(...)'`, no summarizing model in the loop)
+  showed both were fabricated: the real `sell` discriminator is
+  `[51, 230, 133, 164, 1, 127, 131, 173]` (matching what was already in
+  `pumpfun.ts` since session 29 — that one was right) and the real `sell_v2`
+  is `[93, 246, 130, 60, 231, 233, 64, 178]`. Did not trust the summary for
+  the `buy`/`buy_v2` values either, in fact re-verified everything used in
+  this session's code change against the raw parse. Deleted the temporary
+  `/tmp/pump_idl.json` download after use (not committed, not needed after
+  verification).
+- `src/pumpfun.ts` — `decodeTradeInstruction` now also matches `buy_v2`
+  (`[184, 23, 238, 97, 103, 197, 211, 61]`) and `sell_v2`
+  (`[93, 246, 130, 60, 231, 233, 64, 178]`), using a second account-index
+  layout (`mint: 1, bondingCurve: 10, user: 13`) shared between the two v2
+  variants, the same way `buy`/`sell` already shared theirs. `kind` still
+  collapses to `"buy"`/`"sell"` regardless of v2-ness — a future balance
+  index only needs trade direction, not which account-layout variant moved
+  the tokens. 2 new offline tests in `pumpfun.test.ts` (one per v2 variant),
+  built the same way as the existing buy/sell tests (fixture instruction
+  data + fixture accounts, no RPC call).
+- Did not get to step (1) (the wsLogParser buy/sell detector) itself this
+  session — the discriminator-correctness detour was worth doing first and
+  filled the session; it's still next (see below), now on a decoder that
+  actually covers real trade traffic instead of roughly half of it.
+- Updated `rug-radar/README.md`'s data-layer section with the buy_v2/sell_v2
+  fix, why it mattered (real traffic, not a rare variant — session 5's own
+  captured fixture already had one), and the webfetch-summary lesson for
+  future sessions reading on-chain specs through a summarizing tool.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 130/130 passing (2 new, both in `pumpfun.test.ts`), all
+  offline, ~3s.
+- `git status` after this session shows only the intended `pumpfun.ts`/
+  `pumpfun.test.ts`/README/PROGRESS changes — no stray files (temp IDL
+  download was outside the repo and removed).
+
+### Next
+- Step (1) from Session 29's plan — a `wsLogParser.ts`-style detector for
+  buy/sell log lines (all four variants: `Buy`/`Sell`/`BuyV2`/`SellV2`,
+  tracking the invoke/success stack the same way `detectCreateInstruction`
+  does) — is still the next concrete step toward the balance index, now
+  unblocked by a decoder that actually covers all four variants. Steps (2)
+  (in-memory `deployer -> mint -> balance` index) and (3) (wiring into the
+  websocket watcher, deciding how holder-concentration should use it) remain
+  after that, unstarted, same as Session 29 left them.
+- The scoring endpoint's rate-limit ceiling is unchanged — still the
+  headline open item; this session's fix makes the eventual balance index
+  more correct once built, but doesn't touch the ceiling on its own yet.
+- `findFundingSource`'s lookback-limit live check (open since Session 4) is
+  still blocked on the same root cause — unchanged this session.
+- All five TASK.md steps remain functionally complete.

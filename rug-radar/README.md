@@ -32,9 +32,10 @@ pubkey bytes from account data back into the addresses everyone recognizes.
 
 `src/pumpfun.ts` has the pump.fun program ID, the bonding curve account
 layout (`decodeBondingCurve`), the `create`/`create_v2` instruction layout
-(`decodeCreateInstruction`), and the `buy`/`sell` instruction layout
-(`decodeTradeInstruction`, session 29) — all per the program's public Anchor
-IDL at [pump-fun/pump-public-docs](https://github.com/pump-fun/pump-public-docs)
+(`decodeCreateInstruction`), and the `buy`/`sell`/`buy_v2`/`sell_v2`
+instruction layout (`decodeTradeInstruction`, session 29/30) — all per the
+program's public Anchor IDL at
+[pump-fun/pump-public-docs](https://github.com/pump-fun/pump-public-docs)
 (`idl/pump.json`). The bonding curve is a PDA per mint (seeds
 `["bonding-curve", mint]`); rather than re-deriving it, both the liquidity
 signal and deployer history read the address straight out of the relevant
@@ -44,12 +45,38 @@ account list).
 `decodeTradeInstruction` reads the kind (`buy`/`sell`), `mint`/`bondingCurve`/
 `user` accounts, and the token `amount` traded out of a buy or sell
 instruction — confirmed against the public IDL's discriminators and account
-order (not guessed). Not wired into anything yet: it's groundwork for the
-self-built holder/balance index floated in session 28's "Known limitations"
-as an alternative to the rate-limited `getTokenLargestAccounts` call — that
-index (tracking per-wallet balances from live buy/sell log lines, same shape
-as `deployerIndex.ts` but for balances instead of launch counts) is a bigger
-change than one session and hasn't been started beyond this decoder.
+order (not guessed; see session 30 below for a case where a webfetch summary
+of this same IDL *was* effectively a guess and had to be caught). Not wired
+into anything yet: it's groundwork for the self-built holder/balance index
+floated in session 28's "Known limitations" as an alternative to the
+rate-limited `getTokenLargestAccounts` call — that index (tracking per-wallet
+balances from live buy/sell log lines, same shape as `deployerIndex.ts` but
+for balances instead of launch counts) is a bigger change than one session
+and hasn't been started beyond this decoder.
+
+Session 30 found that `buy`/`sell` alone cover only part of real trade
+traffic: the program's IDL also defines `buy_v2`/`sell_v2`, a separate pair
+of instructions with their own discriminators and an unrelated account
+layout (`mint` is `base_mint` at account index 1, `bonding_curve` at 10,
+`user` at 13, vs. 2/3/6 for `buy`/`sell`). This isn't a rarely-used variant:
+`wsLogParser.test.ts`'s `REAL_CREATE_V2_LOGS` fixture, captured live in
+session 5, already contains `"Program log: Instruction: BuyV2"` from a real
+create_v2 launch's own bundled dev buy — session 29's decoder would have
+silently returned `null` for it (discriminator mismatch), not a crash, but a
+quiet gap that would have undercounted real trades once wired into the
+balance index. `decodeTradeInstruction` now matches all four discriminators
+and picks the right account layout per match. Caught via IDL fetching: the
+first webfetch summary of `idl/pump.json` reported a `sell` discriminator of
+`[51, 230, 139, 6, 167, 200, 19, 62]` and a `sell_v2` of
+`[233, 84, 59, 188, 5, 23, 235, 200]`, both wrong (the summarizing model
+fabricated plausible-looking byte arrays); downloading the raw JSON and
+parsing it directly gave the real values used in the code
+(`sell`: `[51, 230, 133, 164, 1, 127, 131, 173]` — matching what was already
+in the code since session 29 — and `sell_v2`:
+`[93, 246, 130, 60, 231, 233, 64, 178]`). Lesson for future sessions reading
+this IDL (or any other on-chain spec) via a summarizing fetch tool: treat
+byte arrays and other exact values from a summary as unverified until
+cross-checked against the raw source.
 
 ## Signals
 

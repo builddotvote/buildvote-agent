@@ -116,17 +116,32 @@ export function decodeCreateInstruction(
   return { mint, bondingCurve, user };
 }
 
-// "buy" and "sell" discriminators and their shared account layout, per the
-// same public IDL. The two variants list accounts in a different order
-// overall (e.g. creator_vault/token_program swap places), but mint,
-// bonding_curve, and user sit at the same index in both, so one layout
-// covers both. The first instruction arg in both is `amount` — the token
-// amount traded, in the mint's raw base units — which is what a future
+// "buy"/"sell" and "buy_v2"/"sell_v2" discriminators, per the same public
+// IDL (fetched and parsed directly from the IDL JSON, not from a webfetch
+// summary — see rug-radar/README.md; an earlier summarized read of this same
+// file hallucinated two of the four discriminator byte arrays below, caught
+// only by re-parsing the raw JSON directly).
+//
+// "buy"/"sell" list accounts in a different order from each other overall
+// (e.g. creator_vault/token_program swap places), but mint, bonding_curve,
+// and user sit at the same index in both, so one layout covers both.
+// "buy_v2"/"sell_v2" are a separate, unrelated instruction pair added later
+// (confirmed live: a real captured create_v2 + bundled dev buy transaction,
+// see wsLogParser.test.ts's REAL_CREATE_V2_LOGS, logs "Instruction: BuyV2",
+// not "Instruction: Buy" — v2 is not a rarely-used variant, at least one real
+// create_v2 launch's own dev buy used it) — different discriminators and a
+// different account layout (mint is `base_mint` at index 1, bonding_curve at
+// 10, user at 13), but that layout is itself shared between buy_v2 and
+// sell_v2. The first instruction arg is `amount` in all four variants — the
+// token amount traded, in the mint's raw base units — which is what a future
 // per-wallet balance index needs; later args (max_sol_cost/min_sol_output,
 // track_volume) aren't read here.
 const BUY_DISCRIMINATOR = [102, 6, 61, 18, 1, 218, 235, 234];
 const SELL_DISCRIMINATOR = [51, 230, 133, 164, 1, 127, 131, 173];
+const BUY_V2_DISCRIMINATOR = [184, 23, 238, 97, 103, 197, 211, 61];
+const SELL_V2_DISCRIMINATOR = [93, 246, 130, 60, 231, 233, 64, 178];
 const TRADE_ACCOUNT_INDEX = { mint: 2, bondingCurve: 3, user: 6 };
+const TRADE_V2_ACCOUNT_INDEX = { mint: 1, bondingCurve: 10, user: 13 };
 
 export interface TradeInstruction {
   kind: "buy" | "sell";
@@ -137,9 +152,10 @@ export interface TradeInstruction {
 }
 
 // Reads the kind (buy/sell), mint/bondingCurve/user accounts, and token
-// amount out of a pump.fun "buy" or "sell" instruction. Returns null if the
-// discriminator doesn't match either variant, the account list is too
-// short, or the data is too short to contain the amount arg.
+// amount out of a pump.fun "buy", "sell", "buy_v2", or "sell_v2" instruction.
+// Returns null if the discriminator doesn't match any of the four variants,
+// the account list is too short, or the data is too short to contain the
+// amount arg.
 export function decodeTradeInstruction(
   dataBase58: string,
   accounts: string[],
@@ -151,20 +167,24 @@ export function decodeTradeInstruction(
     return null;
   }
 
-  const kind = matchesDiscriminator(data, BUY_DISCRIMINATOR)
-    ? "buy"
+  const match = matchesDiscriminator(data, BUY_DISCRIMINATOR)
+    ? { kind: "buy" as const, layout: TRADE_ACCOUNT_INDEX }
     : matchesDiscriminator(data, SELL_DISCRIMINATOR)
-      ? "sell"
-      : null;
-  if (!kind) return null;
+      ? { kind: "sell" as const, layout: TRADE_ACCOUNT_INDEX }
+      : matchesDiscriminator(data, BUY_V2_DISCRIMINATOR)
+        ? { kind: "buy" as const, layout: TRADE_V2_ACCOUNT_INDEX }
+        : matchesDiscriminator(data, SELL_V2_DISCRIMINATOR)
+          ? { kind: "sell" as const, layout: TRADE_V2_ACCOUNT_INDEX }
+          : null;
+  if (!match) return null;
 
-  const mint = accounts[TRADE_ACCOUNT_INDEX.mint];
-  const bondingCurve = accounts[TRADE_ACCOUNT_INDEX.bondingCurve];
-  const user = accounts[TRADE_ACCOUNT_INDEX.user];
+  const mint = accounts[match.layout.mint];
+  const bondingCurve = accounts[match.layout.bondingCurve];
+  const user = accounts[match.layout.user];
   if (!mint || !bondingCurve || !user) return null;
 
   if (data.length < DISCRIMINATOR_BYTES + U64_BYTES) return null;
   const amount = Buffer.from(data).readBigUInt64LE(DISCRIMINATOR_BYTES);
 
-  return { kind, mint, bondingCurve, user, amount };
+  return { kind: match.kind, mint, bondingCurve, user, amount };
 }

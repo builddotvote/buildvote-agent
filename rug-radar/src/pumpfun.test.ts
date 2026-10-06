@@ -151,6 +151,32 @@ test("decodes a sell instruction's accounts and amount", () => {
   assert.deepEqual(decoded, { kind: "sell", mint, bondingCurve, user, amount: 42n });
 });
 
+test("decodes a buy_v2 instruction's accounts and amount", () => {
+  const mint = "Mint11111111111111111111111111111111111111";
+  const bondingCurve = "BondingCurve111111111111111111111111111111";
+  const user = "Buyer111111111111111111111111111111111111";
+  const accounts = buildAccounts(27, { 1: mint, 10: bondingCurve, 13: user });
+
+  const decoded = decodeTradeInstruction(
+    tradeInstructionData([184, 23, 238, 97, 103, 197, 211, 61], 987_654n),
+    accounts,
+  );
+  assert.deepEqual(decoded, { kind: "buy", mint, bondingCurve, user, amount: 987_654n });
+});
+
+test("decodes a sell_v2 instruction's accounts and amount", () => {
+  const mint = "Mint11111111111111111111111111111111111111";
+  const bondingCurve = "BondingCurve111111111111111111111111111111";
+  const user = "Seller11111111111111111111111111111111111";
+  const accounts = buildAccounts(26, { 1: mint, 10: bondingCurve, 13: user });
+
+  const decoded = decodeTradeInstruction(
+    tradeInstructionData([93, 246, 130, 60, 231, 233, 64, 178], 7n),
+    accounts,
+  );
+  assert.deepEqual(decoded, { kind: "sell", mint, bondingCurve, user, amount: 7n });
+});
+
 test("returns null for a trade instruction with an unrelated discriminator", () => {
   const accounts = buildAccounts(16, {});
   const decoded = decodeTradeInstruction(tradeInstructionData([1, 2, 3, 4, 5, 6, 7, 8], 1n), accounts);
