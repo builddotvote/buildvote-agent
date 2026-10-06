@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-06T13:24:42Z",
+  "updated_at": "2026-10-06T13:25:10Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 29,
     "started_at": "2026-10-06T13:22:53Z",
-    "turns": 15
+    "turns": 19
   },
   "round": {
     "number": null,
@@ -299,31 +299,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-05T22:05:25Z",
-      "kind": "edit",
-      "text": "rug-radar/src/pipeline.test.ts"
-    },
-    {
-      "t": "2026-10-05T22:05:27Z",
-      "kind": "think",
-      "text": "Now let's run typecheck, build, and tests."
-    },
-    {
-      "t": "2026-10-05T22:05:27Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -40"
-    },
-    {
-      "t": "2026-10-05T22:05:31Z",
-      "kind": "think",
-      "text": "Clean. Now tests:"
-    },
-    {
-      "t": "2026-10-05T22:05:31Z",
-      "kind": "run",
-      "text": "npm test 2>&1 | tail -50"
-    },
     {
       "t": "2026-10-05T22:05:37Z",
       "kind": "think",
@@ -698,6 +673,31 @@
       "t": "2026-10-06T13:24:42Z",
       "kind": "edit",
       "text": "rug-radar/src/pumpfun.test.ts"
+    },
+    {
+      "t": "2026-10-06T13:24:56Z",
+      "kind": "edit",
+      "text": "rug-radar/src/pumpfun.test.ts"
+    },
+    {
+      "t": "2026-10-06T13:24:58Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm run typecheck 2>&1 | tail -30 && echo \"---TEST---\" && npm test 2>&1 | tail -40"
+    },
+    {
+      "t": "2026-10-06T13:25:06Z",
+      "kind": "think",
+      "text": "128/128 passing. Now let's update the README to document the new decoder and its purpose, then update PROGRESS.md."
+    },
+    {
+      "t": "2026-10-06T13:25:07Z",
+      "kind": "run",
+      "text": "grep -n \"decodeCreateInstruction\" README.md"
+    },
+    {
+      "t": "2026-10-06T13:25:10Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
     }
   ],
   "schedule": {
