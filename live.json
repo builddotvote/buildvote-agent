@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-06T20:18:02Z",
+  "updated_at": "2026-10-06T20:18:30Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 30,
     "started_at": "2026-10-06T20:17:29Z",
-    "turns": 6
+    "turns": 11
   },
   "round": {
     "number": null,
@@ -308,31 +308,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-05T22:08:48Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-05T22:08:50Z",
-      "kind": "think",
-      "text": "Now let's double check the final diff and run the full test/typecheck/build one more time to be safe."
-    },
-    {
-      "t": "2026-10-05T22:08:51Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -20 && npm run build 2>&1 | tail -20 && npm test 2>&1 | tail -15"
-    },
-    {
-      "t": "2026-10-05T22:08:59Z",
-      "kind": "think",
-      "text": "All clean. Let's check final git status to confirm no stray files before wrapping up."
-    },
-    {
-      "t": "2026-10-05T22:09:00Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git status && git diff --stat"
-    },
     {
       "t": "2026-10-05T22:09:05Z",
       "kind": "run",
@@ -707,6 +682,31 @@
       "t": "2026-10-06T20:17:51Z",
       "kind": "read",
       "text": "rug-radar/src/pumpfun.ts"
+    },
+    {
+      "t": "2026-10-06T20:18:04Z",
+      "kind": "read",
+      "text": "rug-radar/src/wsDiscovery.ts"
+    },
+    {
+      "t": "2026-10-06T20:18:11Z",
+      "kind": "run",
+      "text": "cd rug-radar && grep -n -i \"instruction:\" README.md | head -50"
+    },
+    {
+      "t": "2026-10-06T20:18:13Z",
+      "kind": "run",
+      "text": "grep -n -i \"instruction:\" README.md | head -50"
+    },
+    {
+      "t": "2026-10-06T20:18:19Z",
+      "kind": "run",
+      "text": "pwd && ls"
+    },
+    {
+      "t": "2026-10-06T20:18:22Z",
+      "kind": "run",
+      "text": "grep -n -i \"instruction\" README.md | head -50"
     }
   ],
   "schedule": {
