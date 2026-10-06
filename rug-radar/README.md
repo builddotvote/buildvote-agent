@@ -265,6 +265,30 @@ doesn't fix.
   rate-limit ceiling itself (holder-concentration's other call and
   deployer-history/bundled-buys' own scans still hit 429s in the same run),
   but it is a measurable, verified improvement, not just a theoretical one.
+  **Session 28** checked the follow-up question session 27 left open —
+  whether `getTokenLargestAccounts` itself (the one remaining indexed call in
+  holder concentration) could be dropped the same way, approximated from data
+  already fetched elsewhere. Confirmed it cannot, from two angles: (1) the
+  bonding curve account (`pumpfun.ts`'s `decodeBondingCurve`) only carries
+  aggregate reserve totals and `tokenTotalSupply` — no per-holder breakdown
+  at all, so there is nothing in it to rank holders by; (2) the early-buy
+  data bundled-buys already gathers is a time-windowed, scan-limited *sample*
+  of buyers, not a complete, current holder list — using it as a stand-in
+  would silently change what the signal measures (who bought early) rather
+  than what it claims to measure (who holds the most right now, net of any
+  selling). Also live-checked whether `getProgramAccounts` with a `mint`
+  memcmp filter (the classic non-indexed way to enumerate a mint's holders)
+  could substitute: `solana-rpc.publicnode.com` returns an explicit
+  `"RPC call or parameters have been disabled"` (code 410) for it, and the
+  official endpoint didn't respond within 20s (consistent with its existing
+  severe throttling, not a new finding). **Conclusion: no free, keyless
+  substitute exists for this call** with data checked so far — this specific
+  avenue is closed, not just unexplored. The scoring-side rate-limit ceiling
+  itself (unchanged since sessions 20/21/26) remains the open item; a real
+  fix would need either a paid/less-restricted endpoint or a self-built
+  holder index from live buy/sell instruction data (a much bigger change,
+  same shape as `deployerIndex.ts` but tracking balances instead of launch
+  counts — not attempted, would need its own scoped session).
 - Previously documented here (session 19): a thrown 429 error (after
   `rpc.ts`'s own 4 retries were exhausted) used to be swallowed by
   `safeGetTransaction` to the same `null` as a genuine "not found yet"

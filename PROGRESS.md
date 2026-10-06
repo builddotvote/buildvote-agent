@@ -1429,3 +1429,59 @@ happening — see below.)*
 - All five TASK.md steps remain functionally complete; the scoring endpoint's
   rate-limit ceiling (now one call lighter per launch, concretely helping at
   least one launch land) is the one open item worth continued focus.
+
+## Session 28 — 2026-10-06
+
+### Done
+- Re-verified the repo first (123/123 tests, clean typecheck/build), then
+  picked up the specific follow-up question Session 27 left open: can
+  `getTokenLargestAccounts` (the one remaining indexed RPC call in holder
+  concentration) be dropped or approximated the same way `getTokenSupply` was,
+  using data already fetched elsewhere? Checked rather than guessed, and the
+  answer is no:
+  1. Re-read `pumpfun.ts`'s `decodeBondingCurve` — the bonding curve account
+     only has aggregate reserve totals and `tokenTotalSupply`, no per-holder
+     breakdown at all. Nothing to rank holders by.
+  2. The early-buy data `bundledBuys` already gathers is a time-windowed,
+     scan-limited sample of buyers, not a complete/current holder list — using
+     it as a stand-in would quietly change what the signal measures (who
+     bought early) instead of what it claims to measure (who holds the most
+     right now, net of selling).
+  3. Live-checked `getProgramAccounts` with a mint `memcmp` filter — the
+     classic non-indexed way to enumerate a mint's holders — as a possible
+     substitute call: `solana-rpc.publicnode.com` returns an explicit
+     `"RPC call or parameters have been disabled"` (code 410); the official
+     endpoint didn't respond at all within 20s (consistent with its existing
+     severe throttling, not a new finding).
+  No production code changed this session — this was a bounded research
+  question with a negative (but conclusive and now-documented) answer, closing
+  an open item rather than leaving it to be re-derived again later.
+- Updated `rug-radar/README.md`'s "Known limitations" top entry with this
+  finding and conclusion, and what a real fix would actually require (a
+  paid/less-restricted endpoint, or a much bigger self-built holder index from
+  live buy/sell instruction data — not attempted, would need its own scoped
+  session).
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 123/123 passing (unchanged — no code changes this session), all
+  offline, ~3s.
+- `git status` after this session shows only the intended README/PROGRESS
+  changes — no stray files.
+
+### Next
+- The scoring endpoint's rate-limit ceiling is still the headline open item.
+  With the `getTokenLargestAccounts`-approximation avenue now confirmed
+  closed, the two remaining directions are: (a) accept the free/keyless
+  constraint and keep documenting the ceiling as-is, or (b) a genuinely bigger
+  change — a self-built holder/balance index fed by the websocket watcher's
+  already-subscribed buy/sell log lines, same shape as `deployerIndex.ts` but
+  tracking per-wallet balances instead of launch counts. (b) is a real feature
+  (decoding buy/sell instruction amounts, maintaining balances, handling
+  partial/missed events), not a small step — worth scoping as its own focused
+  session rather than starting without a clear plan.
+- `findFundingSource`'s lookback-limit live check (open since Session 4) is
+  still blocked on the same root cause (needs a launch to finish scoring with
+  real early-buy data available) — unchanged this session.
+- All five TASK.md steps remain functionally complete; the scoring endpoint's
+  rate-limit ceiling is still the one concrete, reproducible open item.
