@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-06T06:21:06Z",
+  "updated_at": "2026-10-06T06:21:32Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 28,
     "started_at": "2026-10-06T06:17:10Z",
-    "turns": 7
+    "turns": 8
   },
   "round": {
     "number": null,
@@ -290,11 +290,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-05T22:00:40Z",
-      "kind": "run",
-      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md 2>/dev/null"
-    },
     {
       "t": "2026-10-05T22:00:43Z",
       "kind": "read",
@@ -689,6 +684,11 @@
       "t": "2026-10-06T06:17:38Z",
       "kind": "run",
       "text": "npm run typecheck 2>&1 | tail -30 && echo \"===BUILD===\" && npm run build 2>&1 | tail -30 && echo \"===TEST===\" && npm test 2>&1 | tail -40"
+    },
+    {
+      "t": "2026-10-06T06:21:16Z",
+      "kind": "run",
+      "text": "cat src/data/holderConcentration.ts"
     }
   ],
   "schedule": {
