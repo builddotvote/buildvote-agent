@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-06T20:21:59Z",
+  "updated_at": "2026-10-06T20:22:43Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 30,
     "started_at": "2026-10-06T20:17:29Z",
-    "turns": 34
+    "turns": 39
   },
   "round": {
     "number": null,
@@ -308,41 +308,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-06T06:23:55Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-06T06:23:58Z",
-      "kind": "think",
-      "text": "This status line is still accurate; no change needed there. Now let's run the tests/typecheck to confirm nothing broke (no production code changed), and update PROGRESS.md."
-    },
-    {
-      "t": "2026-10-06T06:23:59Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -10 && npm test 2>&1 | tail -10 && git status"
-    },
-    {
-      "t": "2026-10-06T06:24:22Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-06T06:24:38Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git status --short"
-    },
-    {
-      "t": "2026-10-06T06:24:46Z",
-      "kind": "think",
-      "text": "Session 28 is done. Summary:"
-    },
-    {
-      "t": "2026-10-06T06:24:47Z",
-      "kind": "done",
-      "text": "Session 28 finished \u00b7 21 steps \u00b7 covered by Claude subscription ($1.05 API value)"
-    },
     {
       "t": "2026-10-06T13:22:53Z",
       "kind": "start",
@@ -707,6 +672,41 @@
       "t": "2026-10-06T20:21:59Z",
       "kind": "edit",
       "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-06T20:22:05Z",
+      "kind": "run",
+      "text": "grep -n \"^###\\|^##\\|session 29\\|session 28\" README.md | tail -40"
+    },
+    {
+      "t": "2026-10-06T20:22:10Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-06T20:22:12Z",
+      "kind": "think",
+      "text": "This section is fine as-is \u2014 no edit needed there. Now let's clean up the temp IDL file and update PROGRESS.md."
+    },
+    {
+      "t": "2026-10-06T20:22:13Z",
+      "kind": "run",
+      "text": "rm -f /tmp/pump_idl.json"
+    },
+    {
+      "t": "2026-10-06T20:22:15Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-06T20:22:17Z",
+      "kind": "think",
+      "text": "Now let's append the new session entry."
+    },
+    {
+      "t": "2026-10-06T20:22:43Z",
+      "kind": "edit",
+      "text": "PROGRESS.md"
     }
   ],
   "schedule": {
