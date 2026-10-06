@@ -1,11 +1,10 @@
 {
-  "updated_at": "2026-10-06T06:24:22Z",
+  "updated_at": "2026-10-06T06:24:47Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 28,
-    "started_at": "2026-10-06T06:17:10Z",
-    "turns": 20
+    "turns": 21
   },
   "round": {
     "number": null,
@@ -286,25 +285,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 2.9747
+    },
+    {
+      "date": "2026-10-06T06:17:10Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 22,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0028.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 1.0533
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-05T22:02:50Z",
-      "kind": "run",
-      "text": "curl -s -m 15 \"https://raw.githubusercontent.com/pump-fun/pump-public-docs/main/docs/PUMP_PROGRAM_README.md\" | sed -n '1,160p'"
-    },
-    {
-      "t": "2026-10-05T22:03:05Z",
-      "kind": "read",
-      "text": "rug-radar/src/pumpfun.ts"
-    },
-    {
-      "t": "2026-10-05T22:03:08Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/holderConcentration.ts"
-    },
     {
       "t": "2026-10-05T22:03:13Z",
       "kind": "read",
@@ -689,6 +682,21 @@
       "t": "2026-10-06T06:24:22Z",
       "kind": "edit",
       "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-06T06:24:38Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git status --short"
+    },
+    {
+      "t": "2026-10-06T06:24:46Z",
+      "kind": "think",
+      "text": "Session 28 is done. Summary:"
+    },
+    {
+      "t": "2026-10-06T06:24:47Z",
+      "kind": "done",
+      "text": "Session 28 finished \u00b7 21 steps \u00b7 covered by Claude subscription ($1.05 API value)"
     }
   ],
   "schedule": {
