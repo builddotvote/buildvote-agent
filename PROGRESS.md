@@ -1485,3 +1485,63 @@ happening — see below.)*
   real early-buy data available) — unchanged this session.
 - All five TASK.md steps remain functionally complete; the scoring endpoint's
   rate-limit ceiling is still the one concrete, reproducible open item.
+
+## Session 29 — 2026-10-06
+
+### Done
+- Re-verified the repo first (123/123 tests, clean typecheck/build), then
+  picked up option (b) from Session 28's "Next" — scoping the self-built
+  holder/balance index — but only its first, boundable piece rather than the
+  whole feature: decoding pump.fun's `buy`/`sell` instructions.
+  - Fetched the public Anchor IDL (`pump-fun/pump-public-docs`, `idl/pump.json`,
+    same source used for `create`/`create_v2` since Session 5) and confirmed
+    the real discriminators and account order rather than guessing: `buy`
+    `[102,6,61,18,1,218,235,234]`, `sell` `[51,230,133,164,1,127,131,173]`.
+    The two variants order their full account list differently overall, but
+    `mint` (index 2), `bonding_curve` (index 3), and `user` (index 6) sit at
+    the same index in both, so one shared layout covers both. Both instructions'
+    first arg is `amount` (u64 LE token amount, right after the 8-byte
+    discriminator) — the field a future per-wallet balance index needs.
+  - `src/pumpfun.ts` — added `decodeTradeInstruction(dataBase58, accounts)`:
+    returns `{ kind: "buy"|"sell", mint, bondingCurve, user, amount }` or
+    `null` if the discriminator doesn't match either variant, the account
+    list is too short, or the data is too short to hold the amount arg.
+    6 new offline tests in `src/pumpfun.test.ts` (buy, sell, unrelated
+    discriminator, short account list, short instruction data).
+  - Deliberately did not wire this into anything yet (no index, no
+    websocket-watcher changes, no new signal) — the full balance-index
+    feature is multiple further sessions' worth (maintaining per-wallet
+    balances across buy/sell/transfer events, handling missed/out-of-order
+    events, deciding how holder-concentration would consume it), consistent
+    with Session 28's own "worth scoping as its own focused session" note.
+  - Updated `rug-radar/README.md`'s data-layer section with
+    `decodeTradeInstruction` and why it exists but isn't wired in yet.
+- No live-RPC check this session — this was pure offline decoding logic
+  against a hand-confirmed public spec, same category of work as the
+  `create`/`create_v2` decoder in Session 5, which also didn't need one.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 128/128 passing (6 new, all in `pumpfun.test.ts`), all
+  offline, ~3s.
+- `git status` after this session shows only the intended `pumpfun.ts`/
+  `pumpfun.test.ts`/README/PROGRESS changes — no stray files.
+
+### Next
+- The balance-index feature itself (per-wallet token balances from live
+  buy/sell log lines, feeding holder concentration as an alternative to the
+  rate-limited `getTokenLargestAccounts`) is still unbuilt beyond this
+  session's decoder. Next steps in order: (1) a `wsLogParser.ts`-style
+  detector for buy/sell log lines (same "track Anchor's own invoke/success
+  nesting, don't substring-match" care as `detectCreateInstruction`), (2) an
+  in-memory balance index (`deployer -> mint -> balance` shape, same FIFO-
+  bounded pattern as `deployerIndex.ts`), (3) wiring it into the websocket
+  watcher and deciding how/whether holder-concentration should prefer it over
+  (or alongside) the existing RPC call. Not started — each is its own
+  decision point, not a mechanical follow-on.
+- The scoring endpoint's rate-limit ceiling is otherwise unchanged — still
+  the headline open item; this session's decoder doesn't touch it yet on its
+  own (it has to be wired into the index above before it helps).
+- `findFundingSource`'s lookback-limit live check (open since Session 4) is
+  still blocked on the same root cause — unchanged this session.
+- All five TASK.md steps remain functionally complete.

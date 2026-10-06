@@ -115,3 +115,56 @@ export function decodeCreateInstruction(
 
   return { mint, bondingCurve, user };
 }
+
+// "buy" and "sell" discriminators and their shared account layout, per the
+// same public IDL. The two variants list accounts in a different order
+// overall (e.g. creator_vault/token_program swap places), but mint,
+// bonding_curve, and user sit at the same index in both, so one layout
+// covers both. The first instruction arg in both is `amount` — the token
+// amount traded, in the mint's raw base units — which is what a future
+// per-wallet balance index needs; later args (max_sol_cost/min_sol_output,
+// track_volume) aren't read here.
+const BUY_DISCRIMINATOR = [102, 6, 61, 18, 1, 218, 235, 234];
+const SELL_DISCRIMINATOR = [51, 230, 133, 164, 1, 127, 131, 173];
+const TRADE_ACCOUNT_INDEX = { mint: 2, bondingCurve: 3, user: 6 };
+
+export interface TradeInstruction {
+  kind: "buy" | "sell";
+  mint: string;
+  bondingCurve: string;
+  user: string;
+  amount: bigint;
+}
+
+// Reads the kind (buy/sell), mint/bondingCurve/user accounts, and token
+// amount out of a pump.fun "buy" or "sell" instruction. Returns null if the
+// discriminator doesn't match either variant, the account list is too
+// short, or the data is too short to contain the amount arg.
+export function decodeTradeInstruction(
+  dataBase58: string,
+  accounts: string[],
+): TradeInstruction | null {
+  let data: Uint8Array;
+  try {
+    data = base58Decode(dataBase58);
+  } catch {
+    return null;
+  }
+
+  const kind = matchesDiscriminator(data, BUY_DISCRIMINATOR)
+    ? "buy"
+    : matchesDiscriminator(data, SELL_DISCRIMINATOR)
+      ? "sell"
+      : null;
+  if (!kind) return null;
+
+  const mint = accounts[TRADE_ACCOUNT_INDEX.mint];
+  const bondingCurve = accounts[TRADE_ACCOUNT_INDEX.bondingCurve];
+  const user = accounts[TRADE_ACCOUNT_INDEX.user];
+  if (!mint || !bondingCurve || !user) return null;
+
+  if (data.length < DISCRIMINATOR_BYTES + U64_BYTES) return null;
+  const amount = Buffer.from(data).readBigUInt64LE(DISCRIMINATOR_BYTES);
+
+  return { kind, mint, bondingCurve, user, amount };
+}

@@ -31,14 +31,25 @@ when looking at real holders.
 pubkey bytes from account data back into the addresses everyone recognizes.
 
 `src/pumpfun.ts` has the pump.fun program ID, the bonding curve account
-layout (`decodeBondingCurve`), and the `create`/`create_v2` instruction
-layout (`decodeCreateInstruction`), per the program's public Anchor IDL at
-[pump-fun/pump-public-docs](https://github.com/pump-fun/pump-public-docs)
+layout (`decodeBondingCurve`), the `create`/`create_v2` instruction layout
+(`decodeCreateInstruction`), and the `buy`/`sell` instruction layout
+(`decodeTradeInstruction`, session 29) — all per the program's public Anchor
+IDL at [pump-fun/pump-public-docs](https://github.com/pump-fun/pump-public-docs)
 (`idl/pump.json`). The bonding curve is a PDA per mint (seeds
 `["bonding-curve", mint]`); rather than re-deriving it, both the liquidity
 signal and deployer history read the address straight out of the relevant
 transaction (the bonding curve account itself, or the `create` instruction's
 account list).
+
+`decodeTradeInstruction` reads the kind (`buy`/`sell`), `mint`/`bondingCurve`/
+`user` accounts, and the token `amount` traded out of a buy or sell
+instruction — confirmed against the public IDL's discriminators and account
+order (not guessed). Not wired into anything yet: it's groundwork for the
+self-built holder/balance index floated in session 28's "Known limitations"
+as an alternative to the rate-limited `getTokenLargestAccounts` call — that
+index (tracking per-wallet balances from live buy/sell log lines, same shape
+as `deployerIndex.ts` but for balances instead of launch counts) is a bigger
+change than one session and hasn't been started beyond this decoder.
 
 ## Signals
 

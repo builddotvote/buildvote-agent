@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { decodeBondingCurve, decodeCreateInstruction } from "./pumpfun.js";
+import { decodeBondingCurve, decodeCreateInstruction, decodeTradeInstruction } from "./pumpfun.js";
 import { base58Decode, base58Encode } from "./base58.js";
 
 // Builds a fixture buffer matching the real BondingCurve account layout
@@ -113,5 +113,62 @@ test("returns null for an instruction with an unrelated discriminator", () => {
 test("returns null when the account list is too short for the matched variant", () => {
   const accounts = buildAccounts(3, {});
   const decoded = decodeCreateInstruction(instructionData([24, 30, 200, 40, 5, 28, 7, 119]), accounts);
+  assert.equal(decoded, null);
+});
+
+// Encodes discriminator + amount (u64 LE) + trailing filler, matching the
+// real buy/sell instruction data layout (amount is the first arg).
+function tradeInstructionData(discriminator: number[], amount: bigint, trailingBytes = 9): string {
+  const buf = Buffer.alloc(discriminator.length + 8 + trailingBytes);
+  Buffer.from(discriminator).copy(buf, 0);
+  buf.writeBigUInt64LE(amount, discriminator.length);
+  return base58Encode(buf);
+}
+
+test("decodes a buy instruction's accounts and amount", () => {
+  const mint = "Mint11111111111111111111111111111111111111";
+  const bondingCurve = "BondingCurve111111111111111111111111111111";
+  const user = "Buyer111111111111111111111111111111111111";
+  const accounts = buildAccounts(16, { 2: mint, 3: bondingCurve, 6: user });
+
+  const decoded = decodeTradeInstruction(
+    tradeInstructionData([102, 6, 61, 18, 1, 218, 235, 234], 123_456_789n),
+    accounts,
+  );
+  assert.deepEqual(decoded, { kind: "buy", mint, bondingCurve, user, amount: 123_456_789n });
+});
+
+test("decodes a sell instruction's accounts and amount", () => {
+  const mint = "Mint11111111111111111111111111111111111111";
+  const bondingCurve = "BondingCurve111111111111111111111111111111";
+  const user = "Seller11111111111111111111111111111111111";
+  const accounts = buildAccounts(14, { 2: mint, 3: bondingCurve, 6: user });
+
+  const decoded = decodeTradeInstruction(
+    tradeInstructionData([51, 230, 133, 164, 1, 127, 131, 173], 42n),
+    accounts,
+  );
+  assert.deepEqual(decoded, { kind: "sell", mint, bondingCurve, user, amount: 42n });
+});
+
+test("returns null for a trade instruction with an unrelated discriminator", () => {
+  const accounts = buildAccounts(16, {});
+  const decoded = decodeTradeInstruction(tradeInstructionData([1, 2, 3, 4, 5, 6, 7, 8], 1n), accounts);
+  assert.equal(decoded, null);
+});
+
+test("returns null when the account list is too short for a trade instruction", () => {
+  const accounts = buildAccounts(3, {});
+  const decoded = decodeTradeInstruction(
+    tradeInstructionData([102, 6, 61, 18, 1, 218, 235, 234], 1n),
+    accounts,
+  );
+  assert.equal(decoded, null);
+});
+
+test("returns null when trade instruction data is too short to hold the amount arg", () => {
+  const accounts = buildAccounts(16, { 2: "Mint1", 3: "Curve1", 6: "User1" });
+  const tooShort = base58Encode(Buffer.from([102, 6, 61, 18, 1, 218, 235, 234, 1, 2, 3]));
+  const decoded = decodeTradeInstruction(tooShort, accounts);
   assert.equal(decoded, null);
 });
