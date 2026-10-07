@@ -1627,3 +1627,57 @@ happening — see below.)*
 - `findFundingSource`'s lookback-limit live check (open since Session 4) is
   still blocked on the same root cause — unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 31 — 2026-10-07
+
+### Done
+- Re-verified the repo first (`npm install` to restore `node_modules`,
+  130/130 tests, clean typecheck/build), then picked up step (1) from
+  Session 29/30's plan — a `wsLogParser.ts`-style detector for buy/sell log
+  lines, the next piece toward the self-built holder/balance index.
+  - Refactored `src/wsLogParser.ts`'s invoke-stack walk (previously inlined
+    in `detectCreateInstruction`) into a shared `ownLogLines(programId, logs)`
+    helper that returns just the log lines the given program emitted about
+    itself (top-of-stack === programId), so a second detector doesn't
+    duplicate the stack-tracking loop. `detectCreateInstruction`'s behavior
+    is unchanged (same inputs/outputs, existing tests pass without edits).
+  - Added `detectTradeInstruction(programId, logs)`: matches
+    `Buy`/`BuyV2`/`Sell`/`SellV2` log lines the same stack-aware way, returns
+    `"buy"`/`"sell"`/`null` (collapsing v2-ness the same way
+    `decodeTradeInstruction` already does — a detector only needs trade
+    direction to decide whether `getTransaction` is worth calling).
+  - 7 new offline tests in `wsLogParser.test.ts`: reused the existing
+    `REAL_CREATE_V2_LOGS` fixture (captured live in session 5) to confirm it
+    detects the bundled dev `BuyV2` inside that real create_v2 transaction —
+    the same line `detectCreateInstruction` correctly ignores — plus plain
+    buy/sell, `SellV2`, a same-named-instruction-under-an-unrelated-program
+    negative case, a create-only negative case, and empty logs.
+- Not wired into `wsDiscovery.ts` yet — still just the detector, same
+  "build the piece, don't wire until the next session" pacing used for
+  `decodeTradeInstruction` in session 29. Steps (2) (in-memory
+  `deployer -> mint -> balance` index) and (3) (wiring into the websocket
+  watcher, deciding how holder-concentration should use it) remain
+  unstarted.
+- Updated `rug-radar/README.md`: documents `detectTradeInstruction` and the
+  `ownLogLines` refactor under the `decodeTradeInstruction` writeup.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 137/137 passing (7 new, all in `wsLogParser.test.ts`), all
+  offline, ~1.8s.
+- `git status` after this session shows only the intended `wsLogParser.ts`/
+  `wsLogParser.test.ts`/README/PROGRESS changes — no stray files.
+
+### Next
+- Step (2): an in-memory `deployer -> mint -> balance` index (same
+  FIFO-bounded pattern as `deployerIndex.ts`) fed by `detectTradeInstruction`
+  — still unstarted. Step (3): wiring it into the websocket watcher and
+  deciding how/whether holder-concentration should prefer it over (or
+  alongside) the existing rate-limited `getTokenLargestAccounts` call —
+  also unstarted.
+- The scoring endpoint's rate-limit ceiling is otherwise unchanged — still
+  the headline open item; this session's detector doesn't touch it on its
+  own (needs the index + wiring above before it helps).
+- `findFundingSource`'s lookback-limit live check (open since Session 4) is
+  still blocked on the same root cause — unchanged this session.
+- All five TASK.md steps remain functionally complete.

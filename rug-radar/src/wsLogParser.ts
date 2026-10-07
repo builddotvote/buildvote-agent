@@ -13,13 +13,18 @@
 // emits, and only matches while the top of that stack is the given program.
 
 export type CreateVariant = "create" | "create_v2";
+export type TradeKind = "buy" | "sell";
 
 const INVOKE_RE = /^Program (\S+) invoke \[\d+\]$/;
 const RETURN_RE = /^Program \S+ (success|failed)/;
 
-export function detectCreateInstruction(programId: string, logs: string[]): CreateVariant | null {
+// Walks the invoke stack and returns only the "Program log:" lines the given
+// program emitted about itself (top of stack == programId) — shared by every
+// detector below so each one just matches instruction names against this
+// already-filtered, CPI-safe list.
+function ownLogLines(programId: string, logs: string[]): string[] {
   const stack: string[] = [];
-  let found: CreateVariant | null = null;
+  const own: string[] = [];
 
   for (const line of logs) {
     const invoke = INVOKE_RE.exec(line);
@@ -31,10 +36,34 @@ export function detectCreateInstruction(programId: string, logs: string[]): Crea
       stack.pop();
       continue;
     }
-    if (stack[stack.length - 1] !== programId) continue;
+    if (stack[stack.length - 1] === programId) own.push(line);
+  }
 
+  return own;
+}
+
+export function detectCreateInstruction(programId: string, logs: string[]): CreateVariant | null {
+  let found: CreateVariant | null = null;
+
+  for (const line of ownLogLines(programId, logs)) {
     if (line === "Program log: Instruction: Create") found = "create";
     else if (line === "Program log: Instruction: CreateV2") found = "create_v2";
+  }
+
+  return found;
+}
+
+// Buy/BuyV2 and Sell/SellV2 are distinct account layouts (see pumpfun.ts's
+// decodeTradeInstruction) but collapse to the same trade direction here,
+// same as decodeTradeInstruction's own kind field — a log-line detector only
+// needs to decide whether a getTransaction call is worth making, not which
+// variant moved the tokens.
+export function detectTradeInstruction(programId: string, logs: string[]): TradeKind | null {
+  let found: TradeKind | null = null;
+
+  for (const line of ownLogLines(programId, logs)) {
+    if (line === "Program log: Instruction: Buy" || line === "Program log: Instruction: BuyV2") found = "buy";
+    else if (line === "Program log: Instruction: Sell" || line === "Program log: Instruction: SellV2") found = "sell";
   }
 
   return found;

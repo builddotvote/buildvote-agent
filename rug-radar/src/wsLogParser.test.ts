@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { detectCreateInstruction } from "./wsLogParser.js";
+import { detectCreateInstruction, detectTradeInstruction } from "./wsLogParser.js";
 
 const PUMP_FUN_PROGRAM_ID = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";
 
@@ -91,4 +91,60 @@ test("a buy-only transaction (no create) returns null", () => {
 
 test("empty logs return null", () => {
   assert.equal(detectCreateInstruction(PUMP_FUN_PROGRAM_ID, []), null);
+});
+
+test("detects the bundled dev BuyV2 inside a real create_v2 transaction", () => {
+  // Same captured transaction as the "detects a real CreateV2" test above —
+  // it is a create_v2 *and* a bundled first buy in one tx, so this should
+  // see the BuyV2 the create detector correctly ignores.
+  assert.equal(detectTradeInstruction(PUMP_FUN_PROGRAM_ID, REAL_CREATE_V2_LOGS), "buy");
+});
+
+test("detects the plain (non-V2) sell variant", () => {
+  const logs = [
+    "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [1]",
+    "Program log: Instruction: Sell",
+    "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success",
+  ];
+  assert.equal(detectTradeInstruction(PUMP_FUN_PROGRAM_ID, logs), "sell");
+});
+
+test("detects the plain (non-V2) buy variant", () => {
+  const logs = [
+    "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [1]",
+    "Program log: Instruction: Buy",
+    "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success",
+  ];
+  assert.equal(detectTradeInstruction(PUMP_FUN_PROGRAM_ID, logs), "buy");
+});
+
+test("detects SellV2", () => {
+  const logs = [
+    "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [1]",
+    "Program log: Instruction: SellV2",
+    "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success",
+  ];
+  assert.equal(detectTradeInstruction(PUMP_FUN_PROGRAM_ID, logs), "sell");
+});
+
+test("ignores a same-looking Buy instruction name under an unrelated program", () => {
+  const logs = [
+    "Program 11111111111111111111111111111111 invoke [1]",
+    "Program log: Instruction: Buy",
+    "Program 11111111111111111111111111111111 success",
+  ];
+  assert.equal(detectTradeInstruction(PUMP_FUN_PROGRAM_ID, logs), null);
+});
+
+test("a create-only transaction (no trade) returns null", () => {
+  const logs = [
+    "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [1]",
+    "Program log: Instruction: Create",
+    "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success",
+  ];
+  assert.equal(detectTradeInstruction(PUMP_FUN_PROGRAM_ID, logs), null);
+});
+
+test("trade: empty logs return null", () => {
+  assert.equal(detectTradeInstruction(PUMP_FUN_PROGRAM_ID, []), null);
 });

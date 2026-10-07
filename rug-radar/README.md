@@ -78,6 +78,15 @@ this IDL (or any other on-chain spec) via a summarizing fetch tool: treat
 byte arrays and other exact values from a summary as unverified until
 cross-checked against the raw source.
 
+Session 31 added the next piece toward the balance index: `src/wsLogParser.ts`
+now also exports `detectTradeInstruction(programId, logs)`, the same
+invoke-stack-aware check `detectCreateInstruction` uses but matching
+`Buy`/`BuyV2`/`Sell`/`SellV2` log lines instead of `Create`/`CreateV2` (both
+share a new internal `ownLogLines()` helper rather than duplicating the stack
+walk). Not wired into `wsDiscovery.ts` yet — still only the balance index's
+groundwork, same "decoder before index" ordering as `decodeTradeInstruction`
+in session 29/30.
+
 ## Signals
 
 1. **Deployer history** — how many tokens this wallet launched before and how
