@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-07T19:00:27Z",
+  "updated_at": "2026-10-07T19:00:56Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 33,
     "started_at": "2026-10-07T18:56:25Z",
-    "turns": 12
+    "turns": 16
   },
   "round": {
     "number": null,
@@ -335,36 +335,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-07T00:40:32Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-07T00:40:33Z",
-      "kind": "run",
-      "text": "cat /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/MEMORY.md 2>/dev/null"
-    },
-    {
-      "t": "2026-10-07T00:40:38Z",
-      "kind": "run",
-      "text": "ls -la /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/ 2>&1"
-    },
-    {
-      "t": "2026-10-07T00:40:42Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && ls -la && echo \"---src---\" && ls src && echo \"---git status---\" && git status"
-    },
-    {
-      "t": "2026-10-07T00:40:44Z",
-      "kind": "think",
-      "text": "Repo matches PROGRESS.md's state. Let me install deps and verify the test suite before making changes."
-    },
-    {
-      "t": "2026-10-07T00:40:45Z",
-      "kind": "run",
-      "text": "npm install --silent 2>&1 | tail -20 && npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -20"
-    },
     {
       "t": "2026-10-07T00:40:51Z",
       "kind": "think",
@@ -734,6 +704,36 @@
       "t": "2026-10-07T19:00:27Z",
       "kind": "think",
       "text": "Confirmed: log lines carry no account/mint info \u2014 only instruction names. This means Session 32's sketched plan (\"run `detectTradeInstruction` on the full program-wide `mentions` \u2026"
+    },
+    {
+      "t": "2026-10-07T19:00:29Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.ts"
+    },
+    {
+      "t": "2026-10-07T19:00:30Z",
+      "kind": "think",
+      "text": "Now let's implement. First, refactor `discovery.ts` to add a shared retry-resolve helper and a trade-resolving function:"
+    },
+    {
+      "t": "2026-10-07T19:00:33Z",
+      "kind": "edit",
+      "text": "rug-radar/src/discovery.ts"
+    },
+    {
+      "t": "2026-10-07T19:00:51Z",
+      "kind": "edit",
+      "text": "rug-radar/src/discovery.ts"
+    },
+    {
+      "t": "2026-10-07T19:00:53Z",
+      "kind": "think",
+      "text": "Now let's rewrite `wsDiscovery.ts` to support per-mint scoped subscriptions:"
+    },
+    {
+      "t": "2026-10-07T19:00:56Z",
+      "kind": "edit",
+      "text": "rug-radar/src/wsDiscovery.ts"
     }
   ],
   "schedule": {
