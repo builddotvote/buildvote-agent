@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-07T00:40:20Z",
+  "updated_at": "2026-10-07T00:40:48Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 31,
     "started_at": "2026-10-07T00:40:20Z",
-    "turns": 0
+    "turns": 8
   },
   "round": {
     "number": null,
@@ -317,51 +317,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-06T13:23:09Z",
-      "kind": "run",
-      "text": "git log --oneline -20 && echo \"---STATUS---\" && git status"
-    },
-    {
-      "t": "2026-10-06T13:23:35Z",
-      "kind": "think",
-      "text": "I'll start by verifying the repo is in the state PROGRESS.md describes, then decide on this session's scope."
-    },
-    {
-      "t": "2026-10-06T13:23:37Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --silent 2>&1 | tail -20 && echo \"---TYPECHECK---\" && npm run typecheck 2>&1 | tail -20 && echo \"---T\u2026"
-    },
-    {
-      "t": "2026-10-06T13:23:46Z",
-      "kind": "think",
-      "text": "Good, repo matches PROGRESS.md: 123/123 passing, clean typecheck. Now let me look at the current pumpfun.ts decoding and the known IDL to scope a well-bounded step: decoding buy/s\u2026"
-    },
-    {
-      "t": "2026-10-06T13:23:47Z",
-      "kind": "read",
-      "text": "rug-radar/src/pumpfun.ts"
-    },
-    {
-      "t": "2026-10-06T13:23:53Z",
-      "kind": "run",
-      "text": "grep -n \"Known limitations\" -A 60 README.md | head -100"
-    },
-    {
-      "t": "2026-10-06T13:23:53Z",
-      "kind": "tool",
-      "text": "ToolSearch"
-    },
-    {
-      "t": "2026-10-06T13:23:59Z",
-      "kind": "run",
-      "text": "cd /tmp && curl -s -m 20 \"https://raw.githubusercontent.com/pump-fun/pump-public-docs/main/idl/pump.json\" -o pump_idl.json && echo \"fetched: $(wc -c < pump_idl.json) bytes\" || ech\u2026"
-    },
-    {
-      "t": "2026-10-06T13:24:04Z",
-      "kind": "run",
-      "text": "cd /tmp && python3 -c \" import json idl = json.load(open('pump_idl.json')) for instr in idl.get('instructions', []):     if instr['name'] in ('buy', 'sell'):         print('---', \u2026"
-    },
     {
       "t": "2026-10-06T13:24:12Z",
       "kind": "run",
@@ -716,6 +671,51 @@
       "t": "2026-10-07T00:40:20Z",
       "kind": "start",
       "text": "Session 31 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-07T00:40:25Z",
+      "kind": "run",
+      "text": "echo \"--- TASK.md ---\" && cat TASK.md 2>/dev/null && echo \"--- PROGRESS.md ---\" && cat PROGRESS.md 2>/dev/null && echo \"--- ls ---\" && ls -la"
+    },
+    {
+      "t": "2026-10-07T00:40:28Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-07T00:40:29Z",
+      "kind": "run",
+      "text": "find /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/ -type f 2>/dev/null | head -50"
+    },
+    {
+      "t": "2026-10-07T00:40:32Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-07T00:40:33Z",
+      "kind": "run",
+      "text": "cat /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/MEMORY.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-07T00:40:38Z",
+      "kind": "run",
+      "text": "ls -la /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/ 2>&1"
+    },
+    {
+      "t": "2026-10-07T00:40:42Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && ls -la && echo \"---src---\" && ls src && echo \"---git status---\" && git status"
+    },
+    {
+      "t": "2026-10-07T00:40:44Z",
+      "kind": "think",
+      "text": "Repo matches PROGRESS.md's state. Let me install deps and verify the test suite before making changes."
+    },
+    {
+      "t": "2026-10-07T00:40:45Z",
+      "kind": "run",
+      "text": "npm install --silent 2>&1 | tail -20 && npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -20"
     }
   ],
   "schedule": {
