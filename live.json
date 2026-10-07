@@ -1,11 +1,10 @@
 {
-  "updated_at": "2026-10-07T00:42:54Z",
+  "updated_at": "2026-10-07T00:43:09Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 31,
-    "started_at": "2026-10-07T00:40:20Z",
-    "turns": 22
+    "turns": 23
   },
   "round": {
     "number": null,
@@ -313,30 +312,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 1.735
+    },
+    {
+      "date": "2026-10-07T00:40:20Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 24,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0031.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 1.1399
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-06T20:17:38Z",
-      "kind": "run",
-      "text": "wc -l PROGRESS.md TASK.md && echo \"---tail---\" && tail -150 PROGRESS.md"
-    },
-    {
-      "t": "2026-10-06T20:17:40Z",
-      "kind": "run",
-      "text": "cat TASK.md"
-    },
-    {
-      "t": "2026-10-06T20:17:43Z",
-      "kind": "think",
-      "text": "Good, picking up from Session 29. The plan laid out: step 1 of the balance-index feature is a `wsLogParser.ts`-style detector for buy/sell log lines. Let me check the existing cod\u2026"
-    },
-    {
-      "t": "2026-10-06T20:17:44Z",
-      "kind": "run",
-      "text": "cd rug-radar && find src -type f | sort"
-    },
     {
       "t": "2026-10-06T20:17:47Z",
       "kind": "read",
@@ -716,6 +704,26 @@
       "t": "2026-10-07T00:42:54Z",
       "kind": "edit",
       "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-07T00:42:56Z",
+      "kind": "think",
+      "text": "Now let's run the full check once more to confirm everything is clean, and check `git status`/`git diff` summary."
+    },
+    {
+      "t": "2026-10-07T00:42:57Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10 && echo \"---git status---\" && cd .. && git status"
+    },
+    {
+      "t": "2026-10-07T00:43:07Z",
+      "kind": "think",
+      "text": "Clean: only the intended files changed, no stray scratch files. Per project rules the runner handles commit/push, so I'll stop here."
+    },
+    {
+      "t": "2026-10-07T00:43:09Z",
+      "kind": "done",
+      "text": "Session 31 finished \u00b7 23 steps \u00b7 covered by Claude subscription ($1.14 API value)"
     }
   ],
   "schedule": {
