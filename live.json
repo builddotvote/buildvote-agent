@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-07T00:41:48Z",
+  "updated_at": "2026-10-07T00:42:22Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 31,
     "started_at": "2026-10-07T00:40:20Z",
-    "turns": 15
+    "turns": 20
   },
   "round": {
     "number": null,
@@ -317,41 +317,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-06T13:25:22Z",
-      "kind": "think",
-      "text": "Now let's update PROGRESS.md with the Session 29 entry."
-    },
-    {
-      "t": "2026-10-06T13:25:41Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-06T13:25:46Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-06T13:25:54Z",
-      "kind": "think",
-      "text": "Now let's do a final full verification pass (typecheck, build, test, git status) to confirm everything is clean before finishing."
-    },
-    {
-      "t": "2026-10-06T13:25:57Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -10 && echo \"---BUILD---\" && npm run build 2>&1 | tail -10 && echo \"---TEST---\" && npm test 2>&1 | tail -8 && echo \"---GIT STATUS---\" && cd /home/run\u2026"
-    },
-    {
-      "t": "2026-10-06T13:26:11Z",
-      "kind": "think",
-      "text": "Everything is clean: typecheck, build, and tests (128/128) pass, and `git status` shows only the intended files changed (no scratch files, no `.env`, no leftover processes \u2014 this \u2026"
-    },
-    {
-      "t": "2026-10-06T13:26:14Z",
-      "kind": "done",
-      "text": "Session 29 finished \u00b7 23 steps \u00b7 covered by Claude subscription ($1.44 API value)"
-    },
     {
       "t": "2026-10-06T20:17:29Z",
       "kind": "start",
@@ -716,6 +681,41 @@
       "t": "2026-10-07T00:41:48Z",
       "kind": "run",
       "text": "grep -n \"wsLogParser\\|detectCreateInstruction\\|decodeTradeInstruction\" README.md | head -40"
+    },
+    {
+      "t": "2026-10-07T00:41:52Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-07T00:41:54Z",
+      "kind": "run",
+      "text": "grep -n \"wsLogParser\\|wsDiscovery\\|LaunchWatcher\\|Live feed\" README.md"
+    },
+    {
+      "t": "2026-10-07T00:41:57Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-07T00:42:01Z",
+      "kind": "think",
+      "text": "Now let me add a note documenting `detectTradeInstruction` right after the existing `wsLogParser.ts`/create-detection paragraph in \"Live feed\", and update the data-layer section."
+    },
+    {
+      "t": "2026-10-07T00:42:07Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-07T00:42:09Z",
+      "kind": "think",
+      "text": "Now let's update PROGRESS.md with this session's entry."
+    },
+    {
+      "t": "2026-10-07T00:42:22Z",
+      "kind": "edit",
+      "text": "PROGRESS.md"
     }
   ],
   "schedule": {
