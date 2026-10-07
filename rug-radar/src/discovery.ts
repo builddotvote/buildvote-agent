@@ -3,7 +3,8 @@
 // private endpoints — just repeated calls to the same public
 // getSignaturesForAddress/getTransaction methods the other data/* modules use.
 
-import { decodeCreateInstruction, PUMP_FUN_PROGRAM_ID } from "./pumpfun.js";
+import { decodeCreateInstruction, decodeTradeInstruction, PUMP_FUN_PROGRAM_ID } from "./pumpfun.js";
+import type { TradeInstruction } from "./pumpfun.js";
 import type { ParsedTransaction, SolanaRpcClient } from "./rpc.js";
 
 export interface DiscoveredLaunch {
@@ -126,15 +127,17 @@ function defaultSleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Fetches one transaction and, if it contains a pump.fun create/create_v2
-// instruction, decodes it into a DiscoveredLaunch. Shared by the polling
-// path above and wsDiscovery.ts's real-time path — both end up with just a
-// signature and need the same decode.
-export async function resolveLaunchFromSignature(
+// Shared by resolveLaunchFromSignature and resolveTradeFromSignature: both
+// just need "fetch this signature's transaction, retrying a genuine
+// not-found on replication lag but giving up immediately on a thrown error
+// (see ResolveLaunchOptions), then decode whatever's there" — only the
+// decode step differs between a create and a trade.
+async function resolveWithRetry<T>(
   rpc: SignatureFetcher,
   signature: string,
-  options: ResolveLaunchOptions = {},
-): Promise<DiscoveredLaunch | null> {
+  decode: (tx: ParsedTransaction, blockTime: number) => T | null,
+  options: ResolveLaunchOptions,
+): Promise<T | null> {
   const retries = options.retries ?? DEFAULT_RESOLVE_RETRIES;
   const baseDelayMs = options.baseDelayMs ?? DEFAULT_RESOLVE_BASE_DELAY_MS;
   const sleep = options.sleep ?? defaultSleep;
@@ -148,12 +151,45 @@ export async function resolveLaunchFromSignature(
       return null;
     }
     if (tx && tx.blockTime !== null) {
-      const created = findCreateInstruction(tx);
-      return created ? { ...created, createdAt: tx.blockTime, signature } : null;
+      return decode(tx, tx.blockTime);
     }
     if (attempt >= retries) return null;
     await sleep(baseDelayMs * 2 ** attempt);
   }
+}
+
+// Fetches one transaction and, if it contains a pump.fun create/create_v2
+// instruction, decodes it into a DiscoveredLaunch. Shared by the polling
+// path above and wsDiscovery.ts's real-time path — both end up with just a
+// signature and need the same decode.
+export async function resolveLaunchFromSignature(
+  rpc: SignatureFetcher,
+  signature: string,
+  options: ResolveLaunchOptions = {},
+): Promise<DiscoveredLaunch | null> {
+  return resolveWithRetry(
+    rpc,
+    signature,
+    (tx, blockTime) => {
+      const created = findCreateInstruction(tx);
+      return created ? { ...created, createdAt: blockTime, signature } : null;
+    },
+    options,
+  );
+}
+
+// Same shape as resolveLaunchFromSignature, for a pump.fun buy/sell
+// instruction instead of a create. Used by wsDiscovery.ts's per-mint trade
+// subscriptions (see LaunchWatcher.trackMint) — never called against the
+// program-wide `mentions` stream, since that would mean a getTransaction
+// call for a large share of all pump.fun traffic network-wide, not just the
+// launches this process is actually scoring.
+export async function resolveTradeFromSignature(
+  rpc: SignatureFetcher,
+  signature: string,
+  options: ResolveLaunchOptions = {},
+): Promise<TradeInstruction | null> {
+  return resolveWithRetry(rpc, signature, (tx) => findTradeInstruction(tx), options);
 }
 
 function findCreateInstruction(
@@ -166,6 +202,16 @@ function findCreateInstruction(
     if (decoded) {
       return { mint: decoded.mint, deployer: decoded.user, bondingCurve: decoded.bondingCurve };
     }
+  }
+  return null;
+}
+
+function findTradeInstruction(tx: ParsedTransaction): TradeInstruction | null {
+  const instructions = tx.transaction.message.instructions ?? [];
+  for (const ix of instructions) {
+    if (ix.programId !== PUMP_FUN_PROGRAM_ID || !("data" in ix)) continue;
+    const decoded = decodeTradeInstruction(ix.data, ix.accounts);
+    if (decoded) return decoded;
   }
   return null;
 }

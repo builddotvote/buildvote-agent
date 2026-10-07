@@ -105,6 +105,55 @@ this over (or alongside) the rate-limited `getTokenLargestAccounts` call is
 the next step, along with actually feeding it from the websocket watcher's
 trade notifications.
 
+Session 33 found a real problem with that plan before implementing it:
+session 32's sketch was "run `detectTradeInstruction` on the websocket
+watcher's existing program-wide `mentions` stream and `getTransaction` every
+match." Checked first rather than built: log lines never carry account
+addresses (confirmed by reading `wsLogParser.ts`'s own log-line fixtures —
+just `Program X invoke/success` and instruction names), so there's no way to
+know *which mint* a trade notification is for without already fetching the
+transaction. Doing that for every trade on the program-wide stream would
+mean a `getTransaction` call for a large share of *all* pump.fun traffic
+network-wide (buy/sell volume dwarfs create volume) — far worse for the
+rate-limit ceiling (see "Known limitations" below) than the single
+`getTokenLargestAccounts` call per launch this is meant to avoid.
+
+Fixed by scoping subscriptions instead of guessing blind: `wsDiscovery.ts`'s
+`LaunchWatcher` gained `trackMint(mint, bondingCurve)` / `untrackMint(mint)`,
+each opening/closing a *second kind* of `logsSubscribe` — filtered to one
+mint's own bonding curve account, not the whole program — over the same
+websocket connection. Only that mint's own trades get pushed, so volume
+scales with how many launches this process is actively tracking, not the
+whole chain. Required actually routing by the pubsub `subscription` id
+(previously ignored entirely, since there was only ever one subscription):
+subscribe acks are now matched by request id to learn each subscription's
+id, and incoming `logsNotification`s are routed to the program-wide create
+handler or the right mint's trade handler by that id. Re-subscribes every
+tracked mint (fresh ids) alongside the program on every reconnect, same as
+the existing create path. A matched trade notification resolves via the new
+`resolveTradeFromSignature` (`discovery.ts`, sharing a `resolveWithRetry`
+helper with `resolveLaunchFromSignature` — same not-found-vs-thrown-error
+retry behavior from session 19, now shared instead of duplicated) and fires
+`onTrade`. 11 new offline tests in `wsDiscovery.test.ts` (subscribe-on-track,
+pre-connect tracking, trade resolution, a non-trade notification on a
+tracked mint's subscription not calling `getTransaction`, untrack stops
+routing and sends `logsUnsubscribe`, resubscribe-on-reconnect); 4 existing
+tests needed a subscribe-ack emitted first to keep testing real behavior now
+that routing depends on it (previously they worked by accident, since
+there was only one subscription to route to).
+
+Still not wired into `server.ts` or the holder-concentration signal. Beyond
+"not started yet," there's a real design question first: `server.ts` calls
+`scoreLaunch` exactly once, immediately in the `onLaunch` callback — before
+any trade could have been observed for that mint even if `trackMint` fired
+in the same callback. `BalanceIndex` would be empty at the one moment
+holder-concentration actually runs, so naively preferring it over
+`getTokenLargestAccounts` would never help the common case without also
+changing *when* holder-concentration runs for a given launch (e.g. a delayed
+or periodic re-score once enough trades have been observed) — a bigger,
+separate decision than the subscription plumbing itself, left for a future
+session rather than guessed at here.
+
 ## Signals
 
 1. **Deployer history** — how many tokens this wallet launched before and how

@@ -1744,3 +1744,89 @@ happening — see below.)*
 - `findFundingSource`'s lookback-limit live check (open since Session 4) is
   still blocked on the same root cause — unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 33 — 2026-10-07
+
+### Done
+- Re-verified the repo first (`npm install` to restore `node_modules`,
+  146/146 tests, clean typecheck/build), then picked up step (3) from
+  Session 29/30/31/32's plan — wiring `BalanceIndex` into the websocket
+  watcher — but checked the plan before building it, and found a real
+  problem with it as sketched: Session 32's "Next" said to run
+  `detectTradeInstruction` over the watcher's existing program-wide
+  `mentions` stream and call `getTransaction` on every match. Confirmed
+  (by reading `wsLogParser.ts`'s own log-line fixtures) that log lines never
+  carry account addresses — there's no way to know which mint a trade
+  belongs to without already fetching the transaction. Doing that for every
+  trade on the program-wide stream (buy/sell volume dwarfs create volume)
+  would multiply `getTransaction` calls across most of pump.fun's traffic
+  network-wide — far worse for the rate-limit ceiling than the single
+  `getTokenLargestAccounts` call per launch this is meant to avoid. Did not
+  implement the sketched plan; built the actually-needed mechanism instead.
+- `src/wsDiscovery.ts` — `LaunchWatcher` gained `trackMint(mint,
+  bondingCurve)` / `untrackMint(mint)`: a *second kind* of `logsSubscribe`,
+  scoped to one mint's own bonding curve account (not the whole program), so
+  trade volume scales with how many launches this process is tracking, not
+  the whole chain. Required routing incoming notifications by the pubsub
+  `subscription` id (previously ignored — there was only ever one
+  subscription to route to): subscribe acks are now matched by request id to
+  learn each subscription's id; `logsNotification`s route to the existing
+  create handler or the right mint's new trade handler by that id. All
+  tracked mints are re-subscribed (fresh ids) alongside the program on every
+  reconnect. New `onTrade` callback option fires on a resolved trade for a
+  tracked mint.
+  - `src/discovery.ts` — factored `resolveLaunchFromSignature`'s retry loop
+    into a shared `resolveWithRetry()` helper and added
+    `resolveTradeFromSignature()` on top of it (same not-found-vs-thrown-error
+    retry behavior from session 19, now shared instead of duplicated for the
+    new trade path). `findTradeInstruction()` added alongside the existing
+    `findCreateInstruction()`.
+  - `src/wsDiscovery.test.ts` — 11 new offline tests (subscribe-on-track,
+    pre-connect tracking, trade resolution into `onTrade`, a non-trade
+    notification on a tracked mint's subscription not calling
+    `getTransaction`, `untrackMint` sending `logsUnsubscribe` and stopping
+    further routing, resubscribe-on-reconnect). 4 existing tests needed a
+    subscribe-ack emitted first to keep testing real behavior now that
+    routing depends on it — previously they passed "by accident" since there
+    was only one subscription for every notification to match against.
+- Deliberately did not wire `trackMint`/`onTrade` into `server.ts` or
+  `BalanceIndex`/`holderConcentration.ts` this session — beyond "not started
+  yet," found a real design question first: `server.ts` calls `scoreLaunch`
+  exactly once, immediately when a launch is discovered, before any trade
+  could have been observed even if `trackMint` fired in the same callback.
+  `BalanceIndex` would be empty at the one moment holder-concentration
+  actually runs, so preferring it over `getTokenLargestAccounts` as currently
+  structured would never help the common case — it needs *when*
+  holder-concentration runs to change too (e.g. a delayed/periodic re-score),
+  which is a bigger, separate decision than the subscription plumbing itself.
+  Documented rather than guessed at.
+- Updated `rug-radar/README.md`'s data-layer section with this session's
+  finding, the fix, and the open design question above.
+- No live-RPC check this session — offline mechanism + tests only, same
+  category as sessions 29/31/32's pieces toward this same feature.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 152/152 passing (11 new in `wsDiscovery.test.ts`, 4 existing
+  tests updated to emit a subscribe ack first), all offline, ~2.1s.
+- `git status` after this session shows only the intended `wsDiscovery.ts`/
+  `wsDiscovery.test.ts`/`discovery.ts`/README/PROGRESS changes — no stray
+  files.
+
+### Next
+- The open design question above is the concrete next step: decide how
+  holder-concentration should actually consume `BalanceIndex` given
+  `scoreLaunch` only runs once per launch today — likely needs a
+  delayed/periodic re-score mechanism (e.g. re-score a launch some time
+  after discovery once trades have had a chance to accumulate), not just a
+  "prefer index if non-empty" check at the existing single score time. Once
+  that's decided: wire `trackMint(launch.mint, launch.bondingCurve)` into
+  `server.ts`'s `onLaunch` handler, wire `onTrade` to `balanceIndex.recordTrade`,
+  and decide when to `untrackMint` (nothing currently evicts a tracked mint,
+  which would leak subscriptions on a long-running process — `feed.ts`'s
+  `LiveFeed` has no eviction callback today to hang this off of).
+- The scoring endpoint's rate-limit ceiling is otherwise unchanged — still
+  the headline open item.
+- `findFundingSource`'s lookback-limit live check (open since Session 4) is
+  still blocked on the same root cause — unchanged this session.
+- All five TASK.md steps remain functionally complete.
