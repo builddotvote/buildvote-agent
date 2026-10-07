@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-07T00:40:48Z",
+  "updated_at": "2026-10-07T00:41:21Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 31,
     "started_at": "2026-10-07T00:40:20Z",
-    "turns": 8
+    "turns": 11
   },
   "round": {
     "number": null,
@@ -317,26 +317,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-06T13:24:12Z",
-      "kind": "run",
-      "text": "cd /tmp && python3 -c \" import json idl = json.load(open('pump_idl.json')) for t in idl.get('types', []):     if t['name'] == 'OptionBool':         print(json.dumps(t, indent=2)) \""
-    },
-    {
-      "t": "2026-10-06T13:24:26Z",
-      "kind": "read",
-      "text": "rug-radar/src/pumpfun.test.ts"
-    },
-    {
-      "t": "2026-10-06T13:24:38Z",
-      "kind": "edit",
-      "text": "rug-radar/src/pumpfun.ts"
-    },
-    {
-      "t": "2026-10-06T13:24:40Z",
-      "kind": "think",
-      "text": "Now let's add offline tests following the existing fixture pattern."
-    },
     {
       "t": "2026-10-06T13:24:42Z",
       "kind": "edit",
@@ -716,6 +696,26 @@
       "t": "2026-10-07T00:40:45Z",
       "kind": "run",
       "text": "npm install --silent 2>&1 | tail -20 && npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -20"
+    },
+    {
+      "t": "2026-10-07T00:40:51Z",
+      "kind": "think",
+      "text": "Repo confirmed clean at 130/130 tests. Now let's look at `wsLogParser.ts` to build the buy/sell detector per the plan."
+    },
+    {
+      "t": "2026-10-07T00:40:52Z",
+      "kind": "read",
+      "text": "rug-radar/src/wsLogParser.ts"
+    },
+    {
+      "t": "2026-10-07T00:40:56Z",
+      "kind": "read",
+      "text": "rug-radar/src/wsLogParser.test.ts"
+    },
+    {
+      "t": "2026-10-07T00:41:21Z",
+      "kind": "edit",
+      "text": "rug-radar/src/wsLogParser.ts"
     }
   ],
   "schedule": {
