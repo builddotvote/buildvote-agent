@@ -87,6 +87,24 @@ walk). Not wired into `wsDiscovery.ts` yet — still only the balance index's
 groundwork, same "decoder before index" ordering as `decodeTradeInstruction`
 in session 29/30.
 
+Session 32 added the index itself: `src/balanceIndex.ts`'s `BalanceIndex`
+tracks a `mint -> wallet -> balance` map, fed by `recordTrade({ kind, mint,
+user, amount })` (the shape `decodeTradeInstruction` already returns). A buy
+adds to the wallet's balance, a sell subtracts, clamped at zero rather than
+going negative (a sell with no observed prior buy just means the wallet
+bought before this process started watching — same "only reflects what's
+been observed live" caveat as `deployerIndex.ts`). `getHolders(mint,
+excludeAddresses?)` returns every wallet with a positive balance, excluding
+the given addresses (e.g. the bonding curve), which is close to the shape
+`holderConcentration`'s `HolderBalance[]` input already expects. Bounded the
+same way as `deployerIndex.ts`: one FIFO across every `(mint, wallet)` pair
+ever seen. Still not wired into `wsDiscovery.ts` or the holder-concentration
+signal — this session only built and offline-tested the index in isolation
+(`src/balanceIndex.test.ts`); deciding how/whether the signal should prefer
+this over (or alongside) the rate-limited `getTokenLargestAccounts` call is
+the next step, along with actually feeding it from the websocket watcher's
+trade notifications.
+
 ## Signals
 
 1. **Deployer history** — how many tokens this wallet launched before and how

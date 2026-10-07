@@ -1681,3 +1681,66 @@ happening — see below.)*
 - `findFundingSource`'s lookback-limit live check (open since Session 4) is
   still blocked on the same root cause — unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 32 — 2026-10-07
+
+### Done
+- Re-verified the repo first (`npm install` to restore `node_modules`,
+  137/137 tests, clean typecheck/build), then picked up step (2) from
+  Session 29/30/31's plan — the in-memory `deployer -> mint -> balance` index
+  itself, fed by `detectTradeInstruction`/`decodeTradeInstruction`.
+  - `src/balanceIndex.ts` — `BalanceIndex`: tracks a `mint -> wallet ->
+    balance` map. `recordTrade({ kind, mint, user, amount })` takes the shape
+    `decodeTradeInstruction` already returns; a buy adds to the wallet's
+    balance, a sell subtracts, clamped at zero rather than going negative (a
+    sell with no observed prior buy just means the wallet bought before this
+    process started watching — same "only reflects what's been observed
+    live" caveat as `deployerIndex.ts`). `getHolders(mint,
+    excludeAddresses?)` returns every wallet with a positive balance, close
+    to the shape `holderConcentration`'s existing `HolderBalance[]` input
+    expects. Bounded the same way as `deployerIndex.ts`: one FIFO across
+    every `(mint, wallet)` pair ever seen (default max 20000, higher than
+    `deployerIndex`'s 5000 since there are many more wallets than deployers).
+  - `src/balanceIndex.test.ts` — 9 offline tests: empty lookup, buy records a
+    balance, sell reduces it, selling out to zero drops the wallet from
+    results, a sell with no observed buy clamps to zero instead of going
+    negative, the exclude-list filter, mints kept separate, FIFO eviction
+    across mints, and repeated trades on the same pair not counting twice
+    toward eviction.
+  - Deliberately not wired into `wsDiscovery.ts` or `signals/
+    holderConcentration.ts` yet — same "build the piece, don't wire until
+    the next session" pacing as `decodeTradeInstruction` (session 29) and
+    `detectTradeInstruction` (session 31). Step (3) — feeding it from the
+    websocket watcher's trade notifications and deciding how/whether
+    holder-concentration should prefer it over (or alongside) the
+    rate-limited `getTokenLargestAccounts` call — remains unstarted.
+  - Updated `rug-radar/README.md`'s data-layer section with a paragraph
+    describing `BalanceIndex` and what's still left to wire it in.
+- No live-RPC check this session — pure offline data-structure logic with no
+  network dependency, same category as `deployerIndex.ts` (session 13) and
+  the trade decoder (session 29), neither of which needed one either.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 146/146 passing (9 new, all in `balanceIndex.test.ts`), all
+  offline, ~2.3s.
+- `git status` after this session shows only the intended `balanceIndex.ts`/
+  `balanceIndex.test.ts`/README/PROGRESS changes — no stray files.
+
+### Next
+- Step (3): wire `BalanceIndex` into the websocket watcher (`wsDiscovery.ts`)
+  — run `detectTradeInstruction` on pushed log notifications the same way
+  `detectCreateInstruction` already is, resolve a match to the full trade via
+  `decodeTradeInstruction` + a `getTransaction` call, and call `recordTrade`.
+  Then decide how/whether `signals/holderConcentration.ts` should prefer
+  `BalanceIndex.getHolders()` over the rate-limited `getTokenLargestAccounts`
+  call — e.g. prefer the index once it has enough observed trades for a mint,
+  fall back to the RPC call otherwise — not decided yet, each is its own
+  judgment call rather than a mechanical follow-on.
+- The scoring endpoint's rate-limit ceiling is otherwise unchanged — still
+  the headline open item; this session's index doesn't touch it on its own
+  until step (3) wires it in and holder-concentration actually stops calling
+  `getTokenLargestAccounts` for mints it covers.
+- `findFundingSource`'s lookback-limit live check (open since Session 4) is
+  still blocked on the same root cause — unchanged this session.
+- All five TASK.md steps remain functionally complete.
