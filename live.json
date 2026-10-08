@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-08T10:39:26Z",
+  "updated_at": "2026-10-08T10:39:52Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 35,
     "started_at": "2026-10-08T10:31:36Z",
-    "turns": 43
+    "turns": 46
   },
   "round": {
     "number": null,
@@ -353,31 +353,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-08T01:10:48Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-08T01:10:51Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-08T01:10:53Z",
-      "kind": "think",
-      "text": "Now let's update the \"Live feed\" section (Session 33's open item) to describe the Session 34 wiring, and append the honest live-check finding to \"Known limitations\"."
-    },
-    {
-      "t": "2026-10-08T01:11:10Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-08T01:11:12Z",
-      "kind": "think",
-      "text": "Now let's add a note to \"Known limitations\" about the discovery-endpoint 429s observed this session."
-    },
     {
       "t": "2026-10-08T01:11:13Z",
       "kind": "read",
@@ -752,6 +727,31 @@
       "t": "2026-10-08T10:39:26Z",
       "kind": "edit",
       "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-08T10:39:28Z",
+      "kind": "think",
+      "text": "Let me do a final sanity pass: confirm the repo state, no stray files/processes, and tests still pass."
+    },
+    {
+      "t": "2026-10-08T10:39:29Z",
+      "kind": "run",
+      "text": "git status --short && echo \"---\" && ps aux | grep -i \"node\\|tsx\" | grep -v grep && echo \"--- (no leftover processes above is fine) ---\" && cd rug-radar && npm test 2>&1 | tail -8"
+    },
+    {
+      "t": "2026-10-08T10:39:32Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm test 2>&1 | tail -8"
+    },
+    {
+      "t": "2026-10-08T10:39:37Z",
+      "kind": "think",
+      "text": "Clean: no leftover processes, git status shows only the intended files changed, and 160/160 tests pass."
+    },
+    {
+      "t": "2026-10-08T10:39:38Z",
+      "kind": "run",
+      "text": "mkdir -p /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/"
     }
   ],
   "schedule": {
