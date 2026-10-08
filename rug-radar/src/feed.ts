@@ -31,4 +31,17 @@ export class LiveFeed {
   list(): LaunchScore[] {
     return this.launches;
   }
+
+  get(mint: string): LaunchScore | undefined {
+    return this.launches.find((l) => l.mint === mint);
+  }
+
+  // Replaces an already-added entry's score/signals in place (same position
+  // in the list), rather than appending a duplicate. Used when a later
+  // signal re-score (see rescore.ts) should update a launch already in the
+  // feed. No-op if the mint isn't present (e.g. it already aged out).
+  update(score: LaunchScore): void {
+    const index = this.launches.findIndex((l) => l.mint === score.mint);
+    if (index !== -1) this.launches[index] = score;
+  }
 }

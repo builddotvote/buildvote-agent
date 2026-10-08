@@ -10,6 +10,10 @@ import { scoreLaunch } from "./pipeline.js";
 import { LaunchWatcher, deriveWsUrl } from "./wsDiscovery.js";
 import { DeployerIndex } from "./deployerIndex.js";
 import { ScoringGate } from "./scoringGate.js";
+import { BalanceIndex } from "./balanceIndex.js";
+import { rescoreHolderConcentrationFromIndex } from "./rescore.js";
+import { combineSignals } from "./scorer.js";
+import type { DiscoveredLaunch } from "./discovery.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "..", "public");
@@ -27,6 +31,12 @@ const deployerIndex = new DeployerIndex();
 // never drain within a 100s window. A launch beyond the cap is dropped, not
 // queued — see scoringGate.ts.
 const scoringGate = new ScoringGate(3);
+// Per-mint observed balances, fed by the websocket watcher's per-mint trade
+// subscriptions (see trackMint/onTrade below) — see balanceIndex.ts and
+// rescore.ts for why: an alternative to the rate-limited
+// getTokenLargestAccounts call, built from trades this process has already
+// subscribed to for free rather than another indexed RPC call.
+const balanceIndex = new BalanceIndex();
 
 // Four clients, not one: discovery (finding/resolving launches — high
 // volume, needs config.discoveryRpcUrl) and scoring (each launch's four
@@ -52,16 +62,54 @@ const watcher = new LaunchWatcher(wsUrl, watcherDiscoveryRpc, {
       return;
     }
     scoreLaunch(watcherScoringRpc, launch, deployerIndex)
-      .then((score) => feed.add(score))
+      .then((score) => {
+        feed.add(score);
+        scheduleHolderRescore(launch);
+      })
       .catch((err) => {
         console.error(`failed to score launch ${launch.mint}:`, err instanceof Error ? err.message : err);
       })
       .finally(() => scoringGate.release());
   },
+  onTrade: (trade) => balanceIndex.recordTrade(trade),
   onError: (err) => {
     console.error("launch watcher error:", err instanceof Error ? err.message : err);
   },
 });
+
+// How long to let a mint's own trade subscription (trackMint) collect buys/
+// sells before re-scoring holder-concentration from BalanceIndex and giving
+// up the subscription — a starting point, not yet tuned against how fast
+// real launches accumulate trades (see README).
+const RESCORE_DELAY_MS = 20_000;
+
+// Tracks the mint's own bonding-curve trades (see wsDiscovery.ts's
+// trackMint), waits RESCORE_DELAY_MS for BalanceIndex to accumulate some,
+// then re-scores just the holder-concentration signal from it and updates
+// the feed entry in place. Always untracks afterward so a long-running
+// process doesn't leak subscriptions for launches it's done watching.
+function scheduleHolderRescore(launch: DiscoveredLaunch): void {
+  watcher.trackMint(launch.mint, launch.bondingCurve);
+  setTimeout(() => {
+    rescoreHolderConcentrationFromIndex(watcherScoringRpc, launch, balanceIndex)
+      .then((signal) => {
+        if (!signal) return;
+        const existing = feed.get(launch.mint);
+        if (!existing) return;
+        const signals = existing.signals.filter((s) => s.name !== "holder-concentration");
+        signals.push(signal);
+        feed.update(combineSignals(launch.mint, signals));
+        console.log(`rescored holder-concentration for ${launch.mint} from observed trades: ${signal.reasons[0]}`);
+      })
+      .catch((err) => {
+        console.error(
+          `holder-concentration rescore failed for ${launch.mint}:`,
+          err instanceof Error ? err.message : err,
+        );
+      })
+      .finally(() => watcher.untrackMint(launch.mint));
+  }, RESCORE_DELAY_MS);
+}
 
 // How often the backstop poll checks the pump.fun program for new launches
 // the watcher missed. Public RPCs rate limit aggressively, so this is a slow

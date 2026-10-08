@@ -142,17 +142,48 @@ tests needed a subscribe-ack emitted first to keep testing real behavior now
 that routing depends on it (previously they worked by accident, since
 there was only one subscription to route to).
 
-Still not wired into `server.ts` or the holder-concentration signal. Beyond
-"not started yet," there's a real design question first: `server.ts` calls
-`scoreLaunch` exactly once, immediately in the `onLaunch` callback — before
-any trade could have been observed for that mint even if `trackMint` fired
-in the same callback. `BalanceIndex` would be empty at the one moment
-holder-concentration actually runs, so naively preferring it over
-`getTokenLargestAccounts` would never help the common case without also
-changing *when* holder-concentration runs for a given launch (e.g. a delayed
-or periodic re-score once enough trades have been observed) — a bigger,
-separate decision than the subscription plumbing itself, left for a future
-session rather than guessed at here.
+Session 34 made the design call left open above and wired it in:
+`src/rescore.ts`'s `rescoreHolderConcentrationFromIndex(rpc, launch,
+balanceIndex)` re-scores *only* the holder-concentration signal from
+`BalanceIndex.getHolders()` plus the bonding curve's `tokenTotalSupply` (a
+plain `getAccountInfo` call, not the rate-limited indexed methods) —
+deliberately not the whole launch, since re-running the other three signals
+would add calls against the same rate-limited scoring RPC this exists to
+avoid, for signals the balance index has no data for anyway. Returns `null`
+(caller leaves the existing signal alone) when no trades have been observed
+for the mint yet, or the bonding curve account can't be read.
+
+`src/server.ts` wires the *when*: on a successful initial score, it calls
+`watcher.trackMint(launch.mint, launch.bondingCurve)` and schedules a
+one-shot re-score `RESCORE_DELAY_MS` (20s, an untuned starting point) later.
+That re-score calls `rescoreHolderConcentrationFromIndex`, and if it returns
+a signal, replaces the `holder-concentration` entry in the launch's signals
+and recombines the score via `src/feed.ts`'s new `update()` (replaces an
+entry in place by mint; `get()` added alongside it for the lookup). Either
+way, `watcher.untrackMint()` always runs afterward so a long-running process
+doesn't leak subscriptions for launches it's done watching. `onTrade` is
+wired to `balanceIndex.recordTrade()`. Note `LaunchWatcher`'s per-mint trade
+subscriptions resolve over the *discovery* RPC client (the same one passed
+into `LaunchWatcher`'s constructor for create resolution), not the
+rate-limited scoring one — so trade resolution for the index inherits
+whichever endpoint discovery is currently using, independent of the scoring
+bottleneck below.
+
+Offline-tested (`src/rescore.test.ts`, `src/feed.test.ts`'s new `get`/
+`update` cases) but **not live-confirmed end-to-end**: a synchronous live
+boot (public mainnet-beta, no keys, ~90s) only landed one launch in
+`/api/feed` during the window (same scoring-gate-capped ceiling as every
+session since 20 — most discovered launches get dropped at "too many
+pending scores" before `scoreLaunch` ever runs, so `trackMint` is only
+called for the rare one that gets through), and that one mint's bonding
+curve showed thin liquidity (0.16 SOL) — consistent with too little trading
+activity to populate `BalanceIndex` in the 20s window, though a now-also-
+elevated 429 rate on the discovery endpoint during that same run (see "Known
+limitations") means "no trades observed" and "trade resolution also
+throttled" can't be told apart from this one sample. Worth an isolated check
+(watch `trackMint`/`onTrade` directly against a busier mint, same approach
+session 19 used to isolate `LaunchWatcher`) rather than guessing further from
+one data point.
 
 ## Signals
 
@@ -403,6 +434,26 @@ doesn't fix.
   holder index from live buy/sell instruction data (a much bigger change,
   same shape as `deployerIndex.ts` but tracking balances instead of launch
   counts — not attempted, would need its own scoped session).
+  **Sessions 29-33** built that self-built holder index in pieces
+  (`decodeTradeInstruction`, `detectTradeInstruction`, `BalanceIndex`,
+  `LaunchWatcher.trackMint`/`untrackMint`) without wiring it in — see
+  "Live feed" above. **Session 34** wired it in (`src/rescore.ts`,
+  `src/server.ts`'s delayed re-score) and live-booted again (90s,
+  foreground, same pattern as sessions 26/27): still only **one** launch
+  landed in `/api/feed` in the window — the scoring-gate ceiling above is
+  unchanged by this session — and a new wrinkle showed up in that same run:
+  a visible rate of `getTransaction` 429s against the *discovery* endpoint
+  (`solana-rpc.publicnode.com`), which session 20 had found to be 429-free.
+  Only one launch ever reached the point where `trackMint` could run (the
+  scoring gate drops everything else before `scoreLaunch` is even called),
+  and that mint had very thin liquidity (0.16 SOL) — not enough of a sample
+  to tell whether the balance index got no trades because there weren't any,
+  or because trade resolution hit the same new 429s. If the discovery
+  endpoint's throttling has genuinely tightened since session 20 (rather
+  than being this run's point-in-time load, the same caveat raised about the
+  scoring endpoint in session 19), that would narrow the two endpoints' gap
+  and is worth checking on its own before trusting either endpoint's
+  behavior as fixed.
 - Previously documented here (session 19): a thrown 429 error (after
   `rpc.ts`'s own 4 retries were exhausted) used to be swallowed by
   `safeGetTransaction` to the same `null` as a genuine "not found yet"

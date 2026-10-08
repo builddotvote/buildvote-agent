@@ -1830,3 +1830,103 @@ happening — see below.)*
 - `findFundingSource`'s lookback-limit live check (open since Session 4) is
   still blocked on the same root cause — unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 34 — 2026-10-08
+
+### Done
+- Re-verified the repo first (`npm install` to restore `node_modules`,
+  152/152 tests, clean typecheck/build), then picked up Session 33's open
+  design question: decide how holder-concentration should consume
+  `BalanceIndex` given `scoreLaunch` only runs once per launch today, and
+  wire it in.
+  - `src/rescore.ts` (new) — `rescoreHolderConcentrationFromIndex(rpc,
+    launch, balanceIndex)`: re-scores *only* the holder-concentration signal
+    from `balanceIndex.getHolders()` plus the bonding curve's
+    `tokenTotalSupply` (one plain `getAccountInfo` call, not the rate-limited
+    indexed methods). Returns `null` if no trades have been observed for the
+    mint yet or the bonding curve can't be read, so the caller leaves the
+    existing signal alone rather than replacing it with a false "0 holders"
+    reading. Deliberately doesn't re-run the other three signals — that
+    would add calls against the same rate-limited scoring RPC this exists to
+    avoid, for signals the balance index has no data for anyway.
+    `src/rescore.test.ts` — 4 offline tests (no observed trades → null,
+    scores from observed trades, excludes the bonding curve address, bonding
+    curve fetch failure → null).
+  - `src/feed.ts` — added `get(mint)` and `update(score)` (replaces an
+    existing entry in place by mint, no-op if not present) so a later
+    re-score can update a launch already in the feed instead of being
+    dropped or added as a duplicate. 3 new tests in `feed.test.ts`.
+  - `src/server.ts` — wires the *when*: on a launch's successful initial
+    score (websocket watcher path only — the backstop poller doesn't call
+    this, see "Next"), calls `watcher.trackMint(launch.mint,
+    launch.bondingCurve)` and schedules a one-shot re-score
+    `RESCORE_DELAY_MS` (20s, an untuned starting point) later via
+    `setTimeout`. That re-score calls `rescoreHolderConcentrationFromIndex`;
+    if it returns a signal, replaces the `holder-concentration` entry in the
+    launch's signals, recombines via `combineSignals`, and calls
+    `feed.update()`. `watcher.untrackMint()` always runs afterward (in a
+    `.finally()`) regardless of outcome, so a long-running process doesn't
+    leak per-mint subscriptions. `onTrade` is wired to
+    `balanceIndex.recordTrade()`. Noted but didn't need to change: trade
+    resolution for `trackMint`'s subscriptions already goes through
+    `LaunchWatcher`'s constructor-injected RPC client (the discovery
+    endpoint), not the scoring one — so it doesn't add load to the
+    already-rate-limited scoring endpoint.
+  - Updated `rug-radar/README.md`'s "Live feed" section with the design
+    decision and wiring, and "Known limitations" with this session's live
+    finding (below).
+- Live-verified synchronously in the foreground (two runs, ~60s and ~90s,
+  public mainnet-beta, no keys, no `.env`, same pattern as sessions 26/27):
+  the new code ran without errors, but neither run observed the
+  holder-concentration rescore actually firing. Root cause is a sample-size
+  problem, not an obvious bug: the scoring gate (session 21) still drops
+  almost every discovered launch before `scoreLaunch` ever runs, so
+  `trackMint` only gets called for the rare launch that makes it through —
+  one per run in both live checks here. In the 90s run, that one mint showed
+  very thin liquidity (0.16 SOL), consistent with too little trading
+  activity in the 20s window to populate `BalanceIndex` — but that same run
+  also logged a visible rate of `getTransaction` 429s against the
+  *discovery* endpoint (`solana-rpc.publicnode.com`), which session 20 had
+  found to be 429-free. With only one sample, "no trades happened" and
+  "trade resolution also got throttled" can't be told apart. Documented
+  honestly in the README rather than claiming the feature works live when
+  it's only offline-tested and wired without errors so far.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 159/159 passing (7 new: 4 in `rescore.test.ts`, 3 in
+  `feed.test.ts`), all offline, ~3.2s.
+- Live-booted the real server synchronously twice (public mainnet-beta, no
+  keys, no `.env`, ~60s then ~90s): both boot cleanly, `/api/feed` responds,
+  no crash, no error from the new code paths; one launch landed in each run
+  (same ceiling as prior sessions) but the rescore itself wasn't observed
+  firing — see "Done" above for why that's inconclusive, not a known bug.
+- `git status`/`ps aux` after cleanup show only the intended
+  `rescore.ts`/`rescore.test.ts`/`feed.ts`/`feed.test.ts`/`server.ts`/
+  README/PROGRESS changes — no stray files, no leftover server process.
+
+### Next
+- Get a real live confirmation that the rescore mechanism fires end-to-end:
+  needs either a busier live window (more launches get through the scoring
+  gate, raising the sample size) or an isolated check that calls
+  `watcher.trackMint`/`onTrade` directly against a known busy mint (same
+  "isolate the component" approach session 19 used for `LaunchWatcher`
+  alone), rather than waiting on the full pipeline's low throughput.
+- Whether the discovery endpoint's (`solana-rpc.publicnode.com`)
+  `getTransaction` 429 rate has genuinely increased since session 20, or
+  this run just caught it under unusually high load (the same point-in-time
+  caveat raised about the scoring endpoint in session 19), is worth checking
+  directly — it would affect both the new trade-resolution path and the
+  existing create-resolution path discovery already depends on.
+- The backstop poller's discovered launches don't get `trackMint`/the
+  delayed rescore — only the websocket watcher's `onLaunch` path does. Low
+  priority (the poller is already the backstop, not primary) but would need
+  passing the watcher (or a callback) into `pollOnce` if ever worth doing.
+- `RESCORE_DELAY_MS` (20s) is an untuned starting point, not derived from any
+  live measurement of how fast launches accumulate trades — worth revisiting
+  once the "does it fire at all" question above is answered.
+- The scoring endpoint's rate-limit ceiling is otherwise unchanged — still
+  the headline open item.
+- `findFundingSource`'s lookback-limit live check (open since Session 4) is
+  still blocked on the same root cause — unchanged this session.
+- All five TASK.md steps remain functionally complete.
