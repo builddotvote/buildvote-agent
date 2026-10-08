@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-08T01:03:50Z",
+  "updated_at": "2026-10-08T01:04:17Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 34,
     "started_at": "2026-10-08T00:58:36Z",
-    "turns": 16
+    "turns": 19
   },
   "round": {
     "number": null,
@@ -344,21 +344,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-07T18:56:42Z",
-      "kind": "think",
-      "text": "This is session 33. Sessions have built up a rug-radar risk-scoring service incrementally. Session 32 left off with a `BalanceIndex` built but unwired. Let me verify repo state an\u2026"
-    },
-    {
-      "t": "2026-10-07T18:56:43Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --silent 2>&1 | tail -20 && npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -30"
-    },
-    {
-      "t": "2026-10-07T18:56:49Z",
-      "kind": "think",
-      "text": "Repo is clean: 146/146 tests, typecheck clean. Let me look at the relevant files for wiring step (3)."
-    },
     {
       "t": "2026-10-07T18:56:51Z",
       "kind": "run",
@@ -743,6 +728,21 @@
       "t": "2026-10-08T00:59:50Z",
       "kind": "read",
       "text": "rug-radar/src/discovery.ts"
+    },
+    {
+      "t": "2026-10-08T01:04:06Z",
+      "kind": "run",
+      "text": "ls src/*.test.ts src/data/*.test.ts src/signals/*.test.ts 2>/dev/null | sort && echo --- && cat src/feed.test.ts 2>/dev/null"
+    },
+    {
+      "t": "2026-10-08T01:04:11Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/bondingCurve.ts"
+    },
+    {
+      "t": "2026-10-08T01:04:12Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/holderConcentration.test.ts"
     }
   ],
   "schedule": {
