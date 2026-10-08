@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-08T10:32:28Z",
+  "updated_at": "2026-10-08T10:33:58Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 35,
     "started_at": "2026-10-08T10:31:36Z",
-    "turns": 8
+    "turns": 11
   },
   "round": {
     "number": null,
@@ -353,26 +353,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-08T00:58:55Z",
-      "kind": "think",
-      "text": "Repo verified clean (152/152 tests, confirmed below). Now let's look at the current state of `server.ts`, `feed.ts`, `pipeline.ts`, and `wsDiscovery.ts` to design the re-score mec\u2026"
-    },
-    {
-      "t": "2026-10-08T00:58:56Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10"
-    },
-    {
-      "t": "2026-10-08T00:59:01Z",
-      "kind": "think",
-      "text": "Clean. Now let's examine the relevant files."
-    },
-    {
-      "t": "2026-10-08T00:59:02Z",
-      "kind": "read",
-      "text": "rug-radar/src/server.ts"
-    },
     {
       "t": "2026-10-08T00:59:02Z",
       "kind": "read",
@@ -752,6 +732,26 @@
       "t": "2026-10-08T10:32:24Z",
       "kind": "run",
       "text": "sed -n '1,260p' src/wsDiscovery.ts"
+    },
+    {
+      "t": "2026-10-08T10:32:30Z",
+      "kind": "run",
+      "text": "sed -n '1,60p' src/config.ts; echo ---; sed -n '1,40p' src/balanceIndex.ts | head -60"
+    },
+    {
+      "t": "2026-10-08T10:32:32Z",
+      "kind": "think",
+      "text": "Now let me write the isolated probe script to test trackMint/onTrade directly against live launches."
+    },
+    {
+      "t": "2026-10-08T10:32:39Z",
+      "kind": "edit",
+      "text": "rug-radar/tmp-probe-rescore.ts"
+    },
+    {
+      "t": "2026-10-08T10:32:42Z",
+      "kind": "run",
+      "text": "NODE_OPTIONS=--experimental-websocket node --import tsx tmp-probe-rescore.ts 2>&1 | tail -100"
     }
   ],
   "schedule": {
