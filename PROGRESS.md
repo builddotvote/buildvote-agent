@@ -1930,3 +1930,87 @@ happening — see below.)*
 - `findFundingSource`'s lookback-limit live check (open since Session 4) is
   still blocked on the same root cause — unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 35 — 2026-10-08
+
+### Done
+- Re-verified the repo first (`npm install` to restore `node_modules`,
+  159/159 tests, clean typecheck/build), then picked up Session 34's top
+  "Next" item: get a real live confirmation that the `BalanceIndex`
+  rescore mechanism fires end-to-end, via the isolated check it suggested
+  (watch `trackMint`/`onTrade` directly against real traffic, not gated by
+  `ScoringGate`'s low throughput).
+- Wrote a throwaway probe (`tmp-probe-rescore.ts`, deleted before finishing)
+  that tracks *every* launch the websocket watcher finds directly, bypassing
+  the scoring gate entirely. First run: 17 launches tracked over 75s,
+  **zero** trades resolved — a result strong enough to mean "the mechanism
+  doesn't work," not just "too few samples."
+- Root-caused a real bug, not a sample-size issue: a buy/sell transaction
+  mentions both the pump.fun program and the mint's own bonding curve, so
+  the public RPC pushes a `logsNotification` for it on *both*
+  `LaunchWatcher`'s program-wide subscription and the mint-specific one.
+  `handleMessage`'s dedup set in `src/wsDiscovery.ts` (meant to drop a
+  notification redelivered after a resubscribe) was keyed on the raw
+  signature only, shared across both subscription types — so whichever
+  copy arrived first (almost always the program-wide one, checked for a
+  create and discarded) marked the signature "seen" and silently dropped
+  the other copy, the one `onTrade` actually depended on. This had been
+  true since Session 33 wired `trackMint` in; no existing test caught it
+  because every test that exercises `onTrade` only ever emits *one*
+  notification for a given signature (on the mint subscription), never the
+  realistic pair on both subscriptions.
+- Fixed in `src/wsDiscovery.ts`: the dedup key is now `` `create:${signature}` ``
+  or `` `trade:${signature}` `` instead of the bare signature, so the two
+  subscription types can't collide while redelivery-after-resubscribe within
+  one type is still deduped as before.
+- `src/wsDiscovery.test.ts` — added "a trade is still resolved when the
+  program-wide subscription sees the same signature first": emits the same
+  signature on both subscriptions (program first, then mint) and asserts
+  `onTrade` still fires once. Verified this is a real regression test, not
+  just a plausible-looking one: ran it with the fix reverted via `git
+  stash` and confirmed it fails there, then restored the fix and confirmed
+  it passes (159 → 160 tests either way, no other test affected).
+- Re-ran the same isolated probe after the fix: 23 launches tracked over
+  75s, **5 trades resolved** (all sells, with wallet address and amount
+  logged) — the mechanism firing for the first time on record.
+  `BalanceIndex.getHolders()` still showed 0 holders for every tracked mint
+  in that run, but that's the documented clamp-to-zero behavior for a sell
+  with no observed prior buy (these wallets bought before this process
+  started watching, so their balance per the index starts at zero) — not a
+  new bug. Would need a mint with an observed *buy* in the tracking window
+  to see a positive balance; not caught in either 75s sample.
+- Deleted `tmp-probe-rescore.ts` before finishing (same cleanup habit as
+  every prior session's scratch probes).
+- Updated `rug-radar/README.md`: "Live feed" section's Session 34 writeup
+  gained a Session 35 continuation with the bug/fix/live numbers above;
+  "Known limitations" top entry gained a matching Session 35 bullet noting
+  this is a real, now-fixed blocker for `BalanceIndex`/`rescore.ts`
+  specifically, separate from (and not a fix for) the scoring-endpoint
+  rate-limit ceiling.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 160/160 passing (1 new, in `wsDiscovery.test.ts`), all
+  offline, ~2.4-2.7s.
+- Live-verified the actual fix (not just the offline regression test)
+  against real mainnet-beta traffic twice — once confirming the bug (0/17
+  trades), once confirming the fix (5/23 trades) — both via a scratch probe
+  deleted before this session ended.
+- `git status` after cleanup shows only the intended
+  `wsDiscovery.ts`/`wsDiscovery.test.ts`/README/PROGRESS changes — no
+  stray files, no leftover process.
+
+### Next
+- `BalanceIndex` can now actually receive live trade data; the next useful
+  check is whether a mint that gets both an observed buy *and* a later sell
+  within the 20s `RESCORE_DELAY_MS` window produces a real positive-balance
+  holder list (neither of this session's two samples had a buy land in the
+  window, only sells against pre-existing balances) — would confirm
+  `rescore.ts`'s output end-to-end, not just that trades reach
+  `BalanceIndex` at all.
+- The scoring endpoint's rate-limit ceiling is otherwise unchanged — still
+  the headline open item; this session's fix is necessary for the balance
+  index to ever work but doesn't touch the ceiling itself.
+- `findFundingSource`'s lookback-limit live check (open since Session 4) is
+  still blocked on the same root cause — unchanged this session.
+- All five TASK.md steps remain functionally complete.

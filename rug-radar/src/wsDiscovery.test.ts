@@ -458,6 +458,48 @@ test("resolves a trade notification for a tracked mint into onTrade", async () =
   watcher.stop();
 });
 
+test("a trade is still resolved when the program-wide subscription sees the same signature first", async () => {
+  // Regression test (found live, session 35): a buy/sell transaction
+  // mentions both the program and the mint's own bonding curve, so the real
+  // server pushes it on *both* subscriptions. The program-wide one arrives
+  // here first and is checked for a create (it isn't one, so nothing
+  // happens) — that must not block the mint-specific notification for the
+  // same signature from still reaching onTrade.
+  const sockets: FakeWebSocket[] = [];
+  const trades: unknown[] = [];
+  const mint = "Mint11111111111111111111111111111111111111";
+  const bondingCurve = "BondingCurve111111111111111111111111111111";
+  const user = "Buyer111111111111111111111111111111111111";
+  const watcher = new LaunchWatcher(
+    "wss://fake",
+    fakeRpc(async (sig) => tradeFixtureTx(sig, mint, bondingCurve, user, 123n)),
+    {
+      onLaunch: () => {},
+      onTrade: (t) => trades.push(t),
+      wsFactory: (url) => {
+        const ws = new FakeWebSocket();
+        sockets.push(ws);
+        return ws;
+      },
+    },
+  );
+
+  watcher.start();
+  const ws = sockets[0];
+  ws.emitOpen();
+  ws.emitMessage(JSON.stringify(subscribeAckFor(ws, 0, 12345)));
+  watcher.trackMint(mint, bondingCurve);
+  ws.emitMessage(JSON.stringify(subscribeAckFor(ws, 1, 67890)));
+  ws.emitMessage(JSON.stringify(logsNotification("sig-both", BUY_ONLY_LOGS, null, 12345)));
+  ws.emitMessage(JSON.stringify(logsNotification("sig-both", BUY_ONLY_LOGS, null, 67890)));
+
+  await flushMicrotasks();
+
+  assert.equal(trades.length, 1);
+  assert.deepEqual(trades[0], { kind: "buy", mint, bondingCurve, user, amount: 123n });
+  watcher.stop();
+});
+
 test("a create-only notification on a tracked mint's subscription does not call onTrade", async () => {
   const sockets: FakeWebSocket[] = [];
   const trades: unknown[] = [];

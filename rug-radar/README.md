@@ -185,6 +185,34 @@ throttled" can't be told apart from this one sample. Worth an isolated check
 session 19 used to isolate `LaunchWatcher`) rather than guessing further from
 one data point.
 
+**Session 35 ran that isolated check and found a real bug, not just a
+sample-size problem.** A scratch probe tracked every launch `LaunchWatcher`
+found directly (bypassing `ScoringGate`, so the sample wasn't capped at ~1)
+— 17 launches tracked over 75s, **zero** trades resolved. Root cause: a
+buy/sell transaction mentions *both* the pump.fun program and the mint's own
+bonding curve, so the public RPC pushes a `logsNotification` for it on
+*both* the program-wide subscription and the mint-specific one.
+`handleMessage`'s signature dedup set (`seen`/`seenOrder` in
+`wsDiscovery.ts`, meant to drop a notification redelivered after a
+resubscribe) was keyed on the raw signature only, shared across both
+subscription types — so whichever copy arrived first (almost always the
+program-wide one, checked for a create and discarded) marked the signature
+seen and silently dropped the other copy, the one that actually mattered for
+`onTrade`. Fixed by keying the dedup set on `(purpose, signature)` —
+`` `create:${signature}` `` vs `` `trade:${signature}` `` — so the two
+subscription types no longer collide; redelivery-after-resubscribe within
+one type is still deduped as before. Added a regression test ("a trade is
+still resolved when the program-wide subscription sees the same signature
+first") that fails on the old code and passes on the fix (verified both
+ways). Re-ran the same isolated probe after the fix: 23 launches tracked
+over 75s, **5 trades resolved** (all sells, logged with wallet/amount) — the
+mechanism fires for the first time on record. `BalanceIndex.getHolders()`
+still showed 0 holders for every tracked mint in that run, but that's the
+documented clamp-to-zero behavior for a sell with no observed prior buy
+(the wallets sold tokens they'd bought before this process started
+watching), not a new bug — would need a mint with an observed *buy* in the
+window to see a positive balance.
+
 ## Signals
 
 1. **Deployer history** — how many tokens this wallet launched before and how
@@ -454,6 +482,19 @@ doesn't fix.
   scoring endpoint in session 19), that would narrow the two endpoints' gap
   and is worth checking on its own before trusting either endpoint's
   behavior as fixed.
+  **Session 35** ran the isolated `trackMint`/`onTrade` check session 34 left
+  open and found the real reason the balance index had never observed a
+  trade: a dedup bug in `wsDiscovery.ts` (see "Live feed" above for the full
+  root cause and fix — a cross-subscription dedup collision, not a sample-
+  size problem) was silently dropping almost every trade notification before
+  it reached `onTrade`. Fixed and live-confirmed (5 trades resolved in a
+  75s isolated check, versus 0 before the fix in the same kind of check).
+  This does not touch the scoring-endpoint rate-limit ceiling itself — that
+  remains unchanged — but it does mean `BalanceIndex`/`rescore.ts`'s
+  mechanism, wired in session 34, can now actually receive data once a
+  mint is tracked for long enough to see real trading activity, which it
+  could not reliably do before this fix regardless of the scoring gate's
+  throughput.
 - Previously documented here (session 19): a thrown 429 error (after
   `rpc.ts`'s own 4 retries were exhausted) used to be swallowed by
   `safeGetTransaction` to the same `null` as a genuine "not found yet"

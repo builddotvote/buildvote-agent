@@ -263,15 +263,25 @@ export class LaunchWatcher {
     const { subscription, result } = msg.params;
     const { signature, err, logs } = result.value;
     if (err) return;
-    if (!this.markSeen(signature)) return;
 
+    // Keyed by (purpose, signature), not signature alone: a buy/sell
+    // transaction mentions both the program and the mint's own bonding
+    // curve, so the server pushes it on *both* subscriptions. A shared,
+    // signature-only dedup set would let whichever notification arrived
+    // first (almost always the program-wide one, checked for a create and
+    // discarded) block the other from ever reaching its own handler — see
+    // README's "Known limitations" for the live numbers that surfaced this.
     if (subscription === this.programSubscriptionId) {
+      if (!this.markSeen(`create:${signature}`)) return;
       this.handleCreateCandidate(signature, logs);
       return;
     }
 
     const mintInfo = this.mintSubscriptions.get(subscription);
-    if (mintInfo) this.handleTradeCandidate(signature, logs);
+    if (mintInfo) {
+      if (!this.markSeen(`trade:${signature}`)) return;
+      this.handleTradeCandidate(signature, logs);
+    }
   }
 
   private handleCreateCandidate(signature: string, logs: string[]): void {
