@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-08T19:04:28Z",
+  "updated_at": "2026-10-08T19:04:55Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 36,
     "started_at": "2026-10-08T18:50:04Z",
-    "turns": 39
+    "turns": 42
   },
   "round": {
     "number": null,
@@ -362,21 +362,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-08T10:36:19Z",
-      "kind": "think",
-      "text": "Good, fix restored and suite is clean. Now the live re-check."
-    },
-    {
-      "t": "2026-10-08T10:36:20Z",
-      "kind": "run",
-      "text": "NODE_OPTIONS=--experimental-websocket node --import tsx tmp-probe-rescore.ts 2>&1 | tail -100"
-    },
-    {
-      "t": "2026-10-08T10:37:45Z",
-      "kind": "think",
-      "text": "The fix works \u2014 5 real trades resolved live (previously zero across 17 tracked mints). The \"0 holders\" result is expected: all 5 were sells from wallets that bought before this pr\u2026"
-    },
     {
       "t": "2026-10-08T10:37:45Z",
       "kind": "run",
@@ -761,6 +746,21 @@
       "t": "2026-10-08T19:04:14Z",
       "kind": "read",
       "text": "rug-radar/src/wsLogParser.ts"
+    },
+    {
+      "t": "2026-10-08T19:04:31Z",
+      "kind": "run",
+      "text": "grep -n \"bundled\\|BuyV2\\|decodeTradeInstruction\\|decodeCreateInstruction\" src/pumpfun.ts | head -40"
+    },
+    {
+      "t": "2026-10-08T19:04:33Z",
+      "kind": "read",
+      "text": "rug-radar/src/pumpfun.ts"
+    },
+    {
+      "t": "2026-10-08T19:04:36Z",
+      "kind": "run",
+      "text": "sed -n '1,220p' src/discovery.ts"
     }
   ],
   "schedule": {
