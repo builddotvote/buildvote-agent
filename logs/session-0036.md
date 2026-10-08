@@ -1,0 +1,87 @@
+# Session 36: Rug radar: live launch scoring
+
+- Started: 2026-10-08T18:50:04Z
+- Ended: 2026-10-08T19:06:30Z
+- Steps: 60
+- Model turns: 61
+- Billing: Claude subscription (API value $3.0062, not billed)
+- Outcome: step limit reached
+
+## Steps
+
+- `run` cat TASK.md 2>/dev/null; echo "---PROGRESS---"; cat PROGRESS.md 2>/dev/null; echo "---LS---"; ls -la
+- `run` tail -200 PROGRESS.md; echo "---FIND---"; find rug-radar -type f -not -path "*/node_modules/*" | sort
+- `run` cat /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/MEMORY.md 2>/dev/null
+- `run` cd rug-radar && npm install --silent 2>&1 | tail -20 && npm run typecheck && npm run build && npm test 2>&1 | tail -40
+- `think` Clean baseline: 160/160 passing, typecheck and build clean. Session 35's top "Next" item is to confirm `rescore.ts` produces a real positive-balance holder list when a mint sees both a buy and a later sell within the rescore window. Let me check the current rescore/balanceIndex/server wiring to plan the live check.
+- `run` cd rug-radar && cat src/rescore.ts
+- `run` pwd; ls
+- `read` rug-radar/src/rescore.ts
+- `read` rug-radar/src/balanceIndex.ts
+- `run` grep -n "trackMint\|RESCORE_DELAY_MS\|balanceIndex\|rescore\|onTrade" src/server.ts
+- `tool` ToolSearch
+- `tool` TaskCreate
+- `tool` TaskCreate
+- `tool` TaskUpdate
+- `read` rug-radar/src/server.ts
+- `read` rug-radar/src/config.ts
+- `think` All public config, no secrets. Now let's check `data/bondingCurve.ts` and `discovery.ts` types quickly before writing the probe.
+- `run` cat src/data/bondingCurve.ts; echo ---; cat src/discovery.ts | head -40
+- `think` Now I'll write the throwaway probe script, tracking all discovered launches for a longer window to catch a buy-then-sell pattern.
+- `edit` rug-radar/tmp-probe-rescore2.ts
+- `run` npx tsx tmp-probe-rescore2.ts 2>&1
+- `run` cat package.json | grep -A3 '"scripts"'; grep -n "experimental-websocket\|NODE_OPTIONS" -r . --include=*.md --include=*.json --include=*.ts 2>/dev/null | grep -v node_modules
+- `run` NODE_OPTIONS=--experimental-websocket npx tsx tmp-probe-rescore2.ts 2>&1
+- `read` rug-radar/src/wsDiscovery.ts
+- `edit` rug-radar/src/wsDiscovery.ts
+- `edit` rug-radar/src/wsDiscovery.ts
+- `think` Now rerun the probe with this debug instrumentation to see whether mint subscriptions receive any logs at all.
+- `run` NODE_OPTIONS=--experimental-websocket npx tsx tmp-probe-rescore2.ts 2>&1 | head -150
+- `think` Found a bug in my own debug instrumentation: `JSON.stringify(trade)` crashes on BigInt fields, which was throwing *before* `onTrade` got called whenever a trade actually resolved. That means real trades were resolving (4 of them crashed my logging) — let me fix the instrumentation and rerun to get a clean read.
+- `edit` rug-radar/src/wsDiscovery.ts
+- `run` NODE_OPTIONS=--experimental-websocket npx tsx tmp-probe-rescore2.ts 2>&1 | tee /tmp/probe_run3.log | tail -200
+- `think` The heavy notification volume for one mint (dozens of log pushes, none decoding as trades) is worth a closer look — that could either be unrelated mentions-filter noise, or a real decode bug. Let me dump the raw log lines for a few of those to see what's actually there.
+- `edit` rug-radar/src/wsDiscovery.ts
+- `run` NODE_OPTIONS=--experimental-websocket npx tsx tmp-probe-rescore2.ts > /tmp/probe_run4.log 2>&1; echo DONE
+- `run` grep -c "did not decode" /tmp/probe_run4.log; grep -c "mint notification for" /tmp/probe_run4.log; echo "---mints with most notifications---"; grep -oP "(?<=mint notification for )\S+" /tmp/probe_run4.log | sort | uniq -c | sort -rn | head
+- `run` awk '/9GYEMMZ118mMXQCEXtNTbeJ3FX85eiPUaECgh2tvpump/{p=1} p{print} /^$/{}' /tmp/probe_run4.log | grep -A 20 "did not decode" | head -120
+- `edit` rug-radar/src/wsDiscovery.ts
+- `edit` rug-radar/src/wsDiscovery.ts
+- `think` Now `wsDiscovery.ts` is back to its original state. Let me verify with a diff, then update the probe to log resolved trades directly and run a longer session.
+- `run` git diff --stat src/wsDiscovery.ts
+- `think` Clean — no diff. Now let's update the probe to log every resolved trade directly and extend the run to improve the odds of catching a buy-then-sell on the same mint.
+- `edit` rug-radar/tmp-probe-rescore2.ts
+- `edit` rug-radar/tmp-probe-rescore2.ts
+- `think` Also log the full holder set (not just the rescore result) at window-close, so I can see any positive balances directly.
+- `edit` rug-radar/tmp-probe-rescore2.ts
+- `think` Now let's run it for 150s.
+- `run` NODE_OPTIONS=--experimental-websocket npx tsx tmp-probe-rescore2.ts > /tmp/probe_run5.log 2>&1; echo DONE
+- `run` grep -E "^\[trade\]|window closed" /tmp/probe_run5.log
+- `read` rug-radar/src/wsLogParser.ts
+- `run` grep -n "bundled\|BuyV2\|decodeTradeInstruction\|decodeCreateInstruction" src/pumpfun.ts | head -40
+- `read` rug-radar/src/pumpfun.ts
+- `run` sed -n '1,220p' src/discovery.ts
+- `run` sed -n '1,250p' src/discovery.test.ts
+- `run` sed -n '1,120p' src/pumpfun.test.ts
+- `read` rug-radar/src/discovery.ts
+- `think` Let me add a task for this fix I've identified, then implement it.
+- `tool` TaskCreate
+- `tool` TaskUpdate
+- `edit` rug-radar/src/discovery.ts
+- `edit` rug-radar/src/discovery.ts
+- `think` Now let's wire it into `server.ts`:
+- `edit` rug-radar/src/server.ts
+- `think` Now let's add offline tests in discovery.test.ts.
+- `read` rug-radar/src/discovery.test.ts
+- `edit` rug-radar/src/discovery.test.ts
+- `think` Now let's add a `createTxWithBundledTrade` helper and the two tests, placed after the existing `createTx()` helper.
+- `edit` rug-radar/src/discovery.test.ts
+- `read` rug-radar/src/discovery.test.ts
+- `read` rug-radar/src/discovery.test.ts
+- `edit` rug-radar/src/discovery.test.ts
+- `think` Now let's run typecheck, build, and tests.
+- `run` npm run typecheck 2>&1 | tail -40
+- `edit` rug-radar/src/discovery.test.ts
+- `run` npm run typecheck 2>&1 | tail -40 && npm run build 2>&1 | tail -20 && npm test 2>&1 | tail -50
+- `think` 162/162 passing, clean typecheck/build. Now let's live-verify this fix actually produces a positive-balance holder from the bundled buy.
+- `run` grep -n "bundledBuy\|balanceIndex.recordTrade" tmp-probe-rescore2.ts

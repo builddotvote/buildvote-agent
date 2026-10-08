@@ -89,6 +89,10 @@ const RESCORE_DELAY_MS = 20_000;
 // the feed entry in place. Always untracks afterward so a long-running
 // process doesn't leak subscriptions for launches it's done watching.
 function scheduleHolderRescore(launch: DiscoveredLaunch): void {
+  // Seed the index with the dev's bundled buy (see discovery.ts) before
+  // subscribing for further trades — trackMint only sees activity from here
+  // on, so without this the mint's actual first holder is invisible to it.
+  if (launch.bundledBuy) balanceIndex.recordTrade(launch.bundledBuy);
   watcher.trackMint(launch.mint, launch.bondingCurve);
   setTimeout(() => {
     rescoreHolderConcentrationFromIndex(watcherScoringRpc, launch, balanceIndex)

@@ -13,6 +13,16 @@ export interface DiscoveredLaunch {
   bondingCurve: string;
   createdAt: number; // unix seconds, from the transaction's blockTime
   signature: string;
+  // A buy/buy_v2 instruction bundled into the same transaction as the create
+  // (pump.fun's "dev buy") — decoded from the transaction already fetched
+  // for the create itself, no extra RPC call. This is the mint's actual
+  // first holder and is otherwise unobservable: it happens before
+  // wsDiscovery.ts's trackMint subscription can possibly exist for a mint
+  // that doesn't exist yet, so without this, balanceIndex.ts would never
+  // see it (see server.ts's scheduleHolderRescore, and README's "Known
+  // limitations" for the live numbers that surfaced this — every observed
+  // trade in two live sessions was a sell, never a buy).
+  bundledBuy?: TradeInstruction;
 }
 
 type DiscoveryFetcher = Pick<SolanaRpcClient, "getSignaturesForAddress" | "getTransaction">;
@@ -172,7 +182,10 @@ export async function resolveLaunchFromSignature(
     signature,
     (tx, blockTime) => {
       const created = findCreateInstruction(tx);
-      return created ? { ...created, createdAt: blockTime, signature } : null;
+      if (!created) return null;
+      const bundledTrade = findTradeInstruction(tx);
+      const bundledBuy = bundledTrade?.kind === "buy" ? bundledTrade : undefined;
+      return { ...created, createdAt: blockTime, signature, ...(bundledBuy ? { bundledBuy } : {}) };
     },
     options,
   );

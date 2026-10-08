@@ -6,9 +6,30 @@ import { base58Encode } from "./base58.js";
 import type { ParsedTransaction, SignatureInfo } from "./rpc.js";
 
 const CREATE_DISCRIMINATOR = [24, 30, 200, 40, 5, 28, 7, 119];
+const BUY_DISCRIMINATOR = [102, 6, 61, 18, 1, 218, 235, 234];
+const SELL_DISCRIMINATOR = [51, 230, 133, 164, 1, 127, 131, 173];
 
 function createInstructionData(): string {
   return base58Encode(Buffer.concat([Buffer.from(CREATE_DISCRIMINATOR), Buffer.alloc(4)]));
+}
+
+// account[2] = mint, account[3] = bonding curve, account[6] = user, per
+// TRADE_ACCOUNT_INDEX in pumpfun.ts. Shared by buy and sell (same layout).
+const TRADE_ACCOUNTS = [
+  "Filler0Program11111111111111111111111111",
+  "Filler1Program11111111111111111111111111",
+  "Mint1111111111111111111111111111111111111",
+  "BondingCurve11111111111111111111111111111",
+  "Filler4Program11111111111111111111111111",
+  "Filler5Program11111111111111111111111111",
+  "DevBuyer111111111111111111111111111111111",
+];
+
+function tradeInstructionData(discriminator: number[], amount: bigint): string {
+  const buf = Buffer.alloc(8 + 8);
+  Buffer.from(discriminator).copy(buf, 0);
+  buf.writeBigUInt64LE(amount, 8);
+  return base58Encode(buf);
 }
 
 // account[0] = mint, account[2] = bonding curve, account[7] = deployer/user,
@@ -53,6 +74,15 @@ function createTx(): ParsedTransaction {
   };
 }
 
+function createTxWithBundledTrade(discriminator: number[], amount: bigint): ParsedTransaction {
+  const tx = createTx();
+  tx.transaction.message.instructions = [
+    ...(tx.transaction.message.instructions ?? []),
+    { programId: PUMP_FUN_PROGRAM_ID, accounts: TRADE_ACCOUNTS, data: tradeInstructionData(discriminator, amount) },
+  ];
+  return tx;
+}
+
 test("first poll (sinceBlockTime null) seeds the watermark without reporting launches", async () => {
   const signatures: SignatureInfo[] = [
     { signature: "sigNewest", slot: 3, err: null, memo: null, blockTime: 1700000200 },
@@ -78,6 +108,38 @@ test("finds a create instruction among newer signatures and returns oldest-first
   assert.equal(result.launches[0].bondingCurve, "BondingCurve11111111111111111111111111111");
   assert.equal(result.launches[0].createdAt, 1700000100);
   assert.equal(result.newestBlockTime, 1700000200);
+  assert.equal(result.launches[0].bundledBuy, undefined);
+});
+
+test("decodes a bundled dev buy in the same transaction as the create into launch.bundledBuy", async () => {
+  const rpc = {
+    async getTransaction() {
+      return createTxWithBundledTrade(BUY_DISCRIMINATOR, 5_000_000n);
+    },
+  };
+
+  const launch = await resolveLaunchFromSignature(rpc, "sigCreate");
+  assert.deepEqual(launch?.bundledBuy, {
+    kind: "buy",
+    mint: "Mint1111111111111111111111111111111111111",
+    bondingCurve: "BondingCurve11111111111111111111111111111",
+    user: "DevBuyer111111111111111111111111111111111",
+    amount: 5_000_000n,
+  });
+});
+
+test("does not mistake a bundled sell for a bundled buy", async () => {
+  // Not a real pump.fun shape (a create transaction only ever bundles a buy),
+  // but guards the `bundledTrade?.kind === "buy"` check in discovery.ts
+  // against silently treating any bundled trade as the dev buy.
+  const rpc = {
+    async getTransaction() {
+      return createTxWithBundledTrade(SELL_DISCRIMINATOR, 5_000_000n);
+    },
+  };
+
+  const launch = await resolveLaunchFromSignature(rpc, "sigCreate");
+  assert.equal(launch?.bundledBuy, undefined);
 });
 
 test("ignores signatures at or before the watermark", async () => {
