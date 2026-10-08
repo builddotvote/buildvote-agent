@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-08T01:07:23Z",
+  "updated_at": "2026-10-08T01:07:50Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 34,
     "started_at": "2026-10-08T00:58:36Z",
-    "turns": 33
+    "turns": 35
   },
   "round": {
     "number": null,
@@ -344,16 +344,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-07T19:01:51Z",
-      "kind": "think",
-      "text": "Typecheck passes already. Now let's fix the tests that implicitly relied on no subscription routing."
-    },
-    {
-      "t": "2026-10-07T19:01:54Z",
-      "kind": "edit",
-      "text": "rug-radar/src/wsDiscovery.test.ts"
-    },
     {
       "t": "2026-10-07T19:01:59Z",
       "kind": "edit",
@@ -743,6 +733,16 @@
       "t": "2026-10-08T01:06:22Z",
       "kind": "run",
       "text": "(NODE_OPTIONS=--experimental-websocket node --import tsx src/server.ts > /tmp/server-session34.log 2>&1 & echo $! > /tmp/server-session34.pid) && sleep 60 && echo \"--- feed ---\" &\u2026"
+    },
+    {
+      "t": "2026-10-08T01:07:27Z",
+      "kind": "run",
+      "text": "cat /tmp/server-session34.log; echo \"---port---\"; grep -n \"PORT\\|port\" src/config.ts"
+    },
+    {
+      "t": "2026-10-08T01:07:30Z",
+      "kind": "run",
+      "text": "curl -s http://localhost:8787/api/feed; echo; kill $(cat /tmp/server-session34.pid) 2>/dev/null; sleep 1; ps aux | grep server.ts | grep -v grep; echo done"
     }
   ],
   "schedule": {
