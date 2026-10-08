@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-08T01:05:10Z",
+  "updated_at": "2026-10-08T01:05:39Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 34,
     "started_at": "2026-10-08T00:58:36Z",
-    "turns": 23
+    "turns": 26
   },
   "round": {
     "number": null,
@@ -344,26 +344,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-07T19:00:17Z",
-      "kind": "think",
-      "text": "Now I understand the architecture. Before wiring `BalanceIndex` the way Session 32 sketched, I need to check an important detail: whether log lines carry enough info to know which\u2026"
-    },
-    {
-      "t": "2026-10-07T19:00:18Z",
-      "kind": "run",
-      "text": "grep -n \"mentions\\|logsSubscribe\" src/wsDiscovery.ts README.md | head -20"
-    },
-    {
-      "t": "2026-10-07T19:00:22Z",
-      "kind": "run",
-      "text": "cat -n src/wsLogParser.ts"
-    },
-    {
-      "t": "2026-10-07T19:00:27Z",
-      "kind": "think",
-      "text": "Confirmed: log lines carry no account/mint info \u2014 only instruction names. This means Session 32's sketched plan (\"run `detectTradeInstruction` on the full program-wide `mentions` \u2026"
-    },
     {
       "t": "2026-10-07T19:00:29Z",
       "kind": "read",
@@ -743,6 +723,26 @@
       "t": "2026-10-08T01:05:04Z",
       "kind": "edit",
       "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-08T01:05:30Z",
+      "kind": "edit",
+      "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-08T01:05:32Z",
+      "kind": "think",
+      "text": "Now let's add offline tests for `feed.ts`'s new `get`/`update` methods and for `rescore.ts`."
+    },
+    {
+      "t": "2026-10-08T01:05:32Z",
+      "kind": "read",
+      "text": "rug-radar/src/feed.test.ts"
+    },
+    {
+      "t": "2026-10-08T01:05:39Z",
+      "kind": "edit",
+      "text": "rug-radar/src/feed.test.ts"
     }
   ],
   "schedule": {
