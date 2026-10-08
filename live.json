@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-08T18:50:04Z",
+  "updated_at": "2026-10-08T18:50:30Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 36,
     "started_at": "2026-10-08T18:50:04Z",
-    "turns": 0
+    "turns": 8
   },
   "round": {
     "number": null,
@@ -363,51 +363,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-08T01:11:39Z",
-      "kind": "think",
-      "text": "All clean, only intended files changed. Now let's append the Session 34 entry to PROGRESS.md."
-    },
-    {
-      "t": "2026-10-08T01:12:06Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-08T01:12:31Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-08T01:12:37Z",
-      "kind": "run",
-      "text": "grep -n \"^## Session 34\" PROGRESS.md; tail -5 PROGRESS.md; echo \"---count---\"; grep -c \"^## Session 34\" PROGRESS.md"
-    },
-    {
-      "t": "2026-10-08T01:12:42Z",
-      "kind": "run",
-      "text": "sed -n '1815,1840p' PROGRESS.md"
-    },
-    {
-      "t": "2026-10-08T01:12:44Z",
-      "kind": "think",
-      "text": "Correctly placed at the end of Session 33's entry. Let's do a final sanity check of the whole diff and test suite."
-    },
-    {
-      "t": "2026-10-08T01:12:45Z",
-      "kind": "run",
-      "text": "git status --porcelain && cd rug-radar && npm test 2>&1 | tail -8"
-    },
-    {
-      "t": "2026-10-08T01:12:55Z",
-      "kind": "think",
-      "text": "Everything is clean and verified. Session complete."
-    },
-    {
-      "t": "2026-10-08T01:12:56Z",
-      "kind": "done",
-      "text": "Session 34 finished \u00b7 54 steps \u00b7 covered by Claude subscription ($3.06 API value)"
-    },
-    {
       "t": "2026-10-08T10:31:36Z",
       "kind": "start",
       "text": "Session 35 started: Rug radar: live launch scoring"
@@ -761,6 +716,51 @@
       "t": "2026-10-08T18:50:04Z",
       "kind": "start",
       "text": "Session 36 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-08T18:50:09Z",
+      "kind": "run",
+      "text": "cat TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat PROGRESS.md 2>/dev/null; echo \"---LS---\"; ls -la"
+    },
+    {
+      "t": "2026-10-08T18:50:11Z",
+      "kind": "run",
+      "text": "tail -200 PROGRESS.md; echo \"---FIND---\"; find rug-radar -type f -not -path \"*/node_modules/*\" | sort"
+    },
+    {
+      "t": "2026-10-08T18:50:14Z",
+      "kind": "run",
+      "text": "cat /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/MEMORY.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-08T18:50:16Z",
+      "kind": "run",
+      "text": "cd rug-radar && npm install --silent 2>&1 | tail -20 && npm run typecheck && npm run build && npm test 2>&1 | tail -40"
+    },
+    {
+      "t": "2026-10-08T18:50:25Z",
+      "kind": "think",
+      "text": "Clean baseline: 160/160 passing, typecheck and build clean. Session 35's top \"Next\" item is to confirm `rescore.ts` produces a real positive-balance holder list when a mint sees b\u2026"
+    },
+    {
+      "t": "2026-10-08T18:50:26Z",
+      "kind": "run",
+      "text": "cd rug-radar && cat src/rescore.ts"
+    },
+    {
+      "t": "2026-10-08T18:50:27Z",
+      "kind": "run",
+      "text": "pwd; ls"
+    },
+    {
+      "t": "2026-10-08T18:50:29Z",
+      "kind": "read",
+      "text": "rug-radar/src/rescore.ts"
+    },
+    {
+      "t": "2026-10-08T18:50:30Z",
+      "kind": "read",
+      "text": "rug-radar/src/balanceIndex.ts"
     }
   ],
   "schedule": {
