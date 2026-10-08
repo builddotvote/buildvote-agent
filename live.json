@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-08T01:08:19Z",
+  "updated_at": "2026-10-08T01:09:56Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 34,
     "started_at": "2026-10-08T00:58:36Z",
-    "turns": 38
+    "turns": 39
   },
   "round": {
     "number": null,
@@ -344,16 +344,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-07T19:02:10Z",
-      "kind": "run",
-      "text": "npm test 2>&1 | tail -40"
-    },
-    {
-      "t": "2026-10-07T19:02:14Z",
-      "kind": "think",
-      "text": "All existing tests pass. Now let's add new tests for `trackMint`/`untrackMint`/`onTrade`."
-    },
     {
       "t": "2026-10-07T19:02:16Z",
       "kind": "read",
@@ -743,6 +733,16 @@
       "t": "2026-10-08T01:08:19Z",
       "kind": "edit",
       "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-08T01:08:20Z",
+      "kind": "think",
+      "text": "Now let's run a longer live check (90s) to try to actually observe the rescore firing."
+    },
+    {
+      "t": "2026-10-08T01:08:23Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm run typecheck 2>&1 | tail -10 && (NODE_OPTIONS=--experimental-websocket node --import tsx src/server.ts > /tm\u2026"
     }
   ],
   "schedule": {
