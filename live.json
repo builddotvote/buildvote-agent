@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-08T18:50:30Z",
+  "updated_at": "2026-10-08T18:51:02Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 36,
     "started_at": "2026-10-08T18:50:04Z",
-    "turns": 8
+    "turns": 17
   },
   "round": {
     "number": null,
@@ -363,61 +363,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-08T10:31:36Z",
-      "kind": "start",
-      "text": "Session 35 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-08T10:31:39Z",
-      "kind": "think",
-      "text": "I'll start by reading PROGRESS.md and TASK.md to understand the current state and task."
-    },
-    {
-      "t": "2026-10-08T10:31:40Z",
-      "kind": "run",
-      "text": "echo \"=== TASK.md ===\" && cat TASK.md 2>/dev/null; echo \"=== PROGRESS.md ===\" && cat PROGRESS.md 2>/dev/null; echo \"=== ls ===\" && ls -la"
-    },
-    {
-      "t": "2026-10-08T10:31:44Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-08T10:31:47Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-08T10:31:53Z",
-      "kind": "run",
-      "text": "cat /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/MEMORY.md 2>/dev/null; echo \"---\"; ls /home/runner/.claude/projects/-home-runner-work-bu\u2026"
-    },
-    {
-      "t": "2026-10-08T10:31:56Z",
-      "kind": "run",
-      "text": "ls -la /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/ 2>&1"
-    },
-    {
-      "t": "2026-10-08T10:32:05Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --silent 2>&1 | tail -20 && npm test 2>&1 | tail -30 && npm run typecheck 2>&1 | tail -20 && npm run \u2026"
-    },
-    {
-      "t": "2026-10-08T10:32:14Z",
-      "kind": "think",
-      "text": "Good, repo is clean: 159/159 tests, clean typecheck/build. Now let me look at the current wiring to plan the isolated live check Session 34 suggested."
-    },
-    {
-      "t": "2026-10-08T10:32:14Z",
-      "kind": "run",
-      "text": "sed -n '1,200p' src/server.ts"
-    },
-    {
-      "t": "2026-10-08T10:32:24Z",
-      "kind": "run",
-      "text": "sed -n '1,260p' src/wsDiscovery.ts"
-    },
-    {
       "t": "2026-10-08T10:32:30Z",
       "kind": "run",
       "text": "sed -n '1,60p' src/config.ts; echo ---; sed -n '1,40p' src/balanceIndex.ts | head -60"
@@ -761,6 +706,61 @@
       "t": "2026-10-08T18:50:30Z",
       "kind": "read",
       "text": "rug-radar/src/balanceIndex.ts"
+    },
+    {
+      "t": "2026-10-08T18:50:33Z",
+      "kind": "run",
+      "text": "grep -n \"trackMint\\|RESCORE_DELAY_MS\\|balanceIndex\\|rescore\\|onTrade\" src/server.ts"
+    },
+    {
+      "t": "2026-10-08T18:50:35Z",
+      "kind": "tool",
+      "text": "ToolSearch"
+    },
+    {
+      "t": "2026-10-08T18:50:38Z",
+      "kind": "tool",
+      "text": "TaskCreate"
+    },
+    {
+      "t": "2026-10-08T18:50:40Z",
+      "kind": "tool",
+      "text": "TaskCreate"
+    },
+    {
+      "t": "2026-10-08T18:50:42Z",
+      "kind": "tool",
+      "text": "TaskUpdate"
+    },
+    {
+      "t": "2026-10-08T18:50:43Z",
+      "kind": "read",
+      "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-08T18:50:49Z",
+      "kind": "read",
+      "text": "rug-radar/src/config.ts"
+    },
+    {
+      "t": "2026-10-08T18:50:50Z",
+      "kind": "think",
+      "text": "All public config, no secrets. Now let's check `data/bondingCurve.ts` and `discovery.ts` types quickly before writing the probe."
+    },
+    {
+      "t": "2026-10-08T18:50:50Z",
+      "kind": "run",
+      "text": "cat src/data/bondingCurve.ts; echo ---; cat src/discovery.ts | head -40"
+    },
+    {
+      "t": "2026-10-08T18:50:52Z",
+      "kind": "think",
+      "text": "Now I'll write the throwaway probe script, tracking all discovered launches for a longer window to catch a buy-then-sell pattern."
+    },
+    {
+      "t": "2026-10-08T18:51:02Z",
+      "kind": "edit",
+      "text": "rug-radar/tmp-probe-rescore2.ts"
     }
   ],
   "schedule": {
