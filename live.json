@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-09T18:25:37Z",
+  "updated_at": "2026-10-09T18:26:03Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 39,
     "started_at": "2026-10-09T18:20:33Z",
-    "turns": 24
+    "turns": 25
   },
   "round": {
     "number": null,
@@ -389,11 +389,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-09T10:31:54Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -20 && echo ---BUILD--- && npm run build 2>&1 | tail -20 && echo ---TEST--- && npm test 2>&1 | tail -15"
-    },
     {
       "t": "2026-10-09T10:32:04Z",
       "kind": "think",
@@ -788,6 +783,11 @@
       "t": "2026-10-09T18:22:36Z",
       "kind": "run",
       "text": "NODE_OPTIONS=--experimental-websocket timeout 200 node --import tsx tmp-probe-funding3.ts 2>&1 | tail -200; echo \"PROBE_EXIT=$?\""
+    },
+    {
+      "t": "2026-10-09T18:25:40Z",
+      "kind": "run",
+      "text": "NODE_OPTIONS=--experimental-websocket timeout 5 node -e \"1\" 2>/dev/null; echo done"
     }
   ],
   "schedule": {
