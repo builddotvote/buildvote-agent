@@ -243,8 +243,10 @@ question open since session 34.
 2. **Bundled buys** — wallets funded from one source that bought in the first
    minutes. **Built:** `src/signals/bundledBuys.ts` (pure scoring function) +
    `src/data/bundledBuys.ts` (finds early buyers of the mint from the bonding
-   curve's transaction history, then traces each buyer's earliest known
-   transaction to find who funded them with SOL).
+   curve's transaction history, then walks each buyer's known transaction
+   history oldest-to-newest to find the first one that actually funded them
+   with SOL — see "Known limitations" (session 39) for why it scans more than
+   just the single oldest signature).
 3. **Holder concentration** — top 10 holder share, excluding the bonding
    curve and known program accounts. **Built:** `src/signals/holderConcentration.ts`
    (pure scoring function) + `src/data/holderConcentration.ts` (gathers the
@@ -587,29 +589,39 @@ doesn't fix.
   retroactive scan limit was used in the check, to isolate the index's
   contribution from the scan's).
 - **`findFundingSource`'s lookback-limit — live-checked (session 37), real
-  gap confirmed.** Open since session 4, repeatedly blocked (sessions
-  16/19/20/21) because discovery either couldn't resolve a live launch at
-  all, or the scoring endpoint's backlog never let one finish scoring with
-  early-buy data available. Unblocked by running `fetchBundledBuysInput`
-  directly against `solana-rpc.publicnode.com` (the discovery endpoint)
-  instead of waiting on the scoring endpoint — `getSignaturesForAddress`/
-  `getTransaction` aren't blocked there (only the indexed token methods are,
-  per session 20), so this sidesteps the scoring bottleneck entirely rather
-  than needing it fixed first. Watched 4 real, freshly-launched mints over a
-  ~170s window (default `windowSeconds: 90`, default `signatureLimit: 50`,
-  unmodified production code): **4 of 12 distinct early buyers (33%)
-  resolved to `fundedBy: null` ("unknown")** — not a rare edge case, a
-  roughly one-in-three miss rate on real traffic. Did not look further into
-  *why* each specific miss happened (e.g. whether `signatureLimit: 50` was
-  too small for that particular wallet's own history, or `findSolSender`
-  genuinely found no qualifying transfer in its earliest-visible
-  transaction) — that would need per-wallet follow-up, not attempted this
-  session. Worth deciding in a future session whether 33% unknown is
-  acceptable (the signal already treats `fundedBy: null` as "not part of a
-  bundle" rather than erroring) or whether raising `signatureLimit` is worth
-  its cost (more signatures scanned per buyer means more `getTransaction`
-  calls against whichever endpoint runs it — the same tradeoff already
-  documented for deployer-history's own lookback limit).
+  bug root-caused and fixed (session 39).** Open since session 4, repeatedly
+  blocked (sessions 16/19/20/21) because discovery either couldn't resolve a
+  live launch at all, or the scoring endpoint's backlog never let one finish
+  scoring with early-buy data available. Session 37 unblocked the live check
+  by running `fetchBundledBuysInput` directly against
+  `solana-rpc.publicnode.com` (the discovery endpoint) instead of waiting on
+  the scoring endpoint, and measured **4 of 12 distinct early buyers (33%)
+  resolved to `fundedBy: null` ("unknown")** across 4 real mints — but didn't
+  dig into why.
+  Session 39 dug in with an instrumented probe that classified each miss, and
+  found it was overwhelmingly **one root cause, not signature-limit
+  exhaustion**: `findFundingSource` only ever checked the buyer's single
+  *oldest* visible signature for a SOL balance increase. Across a live sample
+  (24 mints, dozens of buyers), nearly every miss was a case where that oldest
+  transaction wasn't a funding transfer at all (some other, unrelated
+  activity, e.g. a failed tx) while a real funding transfer sat a few
+  signatures later, still well within `signatureLimit: 50` — the function
+  just never looked at it. Zero misses were attributable to the wallet
+  genuinely having no funding transaction within the limit.
+  Fixed in `src/data/bundledBuys.ts`: `findFundingSource` now walks every
+  signature within the limit oldest-to-newest and returns the first one that
+  actually shows a SOL balance increase for the buyer, instead of assuming
+  the single oldest signature is the funding transaction. Stops at the first
+  match, so the common case (a freshly-created wallet funded then immediately
+  used) still costs one extra `getTransaction` call; only a wallet with no
+  funding transaction anywhere in the window pays the full `signatureLimit`
+  cost, same worst case the old code already risked elsewhere. Regression
+  test added (confirmed it fails on the pre-fix code, passes on the fix).
+  **Live-reverified with the real, fixed `fetchBundledBuysInput`** over a
+  180s window (24 mints, public mainnet-beta, no keys): unknown rate dropped
+  from session 37's 33% to **2% (5 of 217 buyers)** — the remaining handful
+  are genuine "no funding transaction within `signatureLimit: 50`" cases, the
+  kind of miss this lookback limit was always expected to have.
 
 ## Setup
 

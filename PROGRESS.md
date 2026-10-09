@@ -2181,3 +2181,72 @@ happening — see below.)*
   that something upstream went undocumented, the same tell that caught this
   session's finding.
 - All five TASK.md steps remain functionally complete.
+
+## Session 39 — 2026-10-09
+
+### Done
+- Re-verified the repo first (`npm install`, 162/162 tests, clean
+  typecheck/build), then picked up Session 37's top open item:
+  `findFundingSource`'s 33%-unknown rate — measured but not yet understood
+  *why* each miss happened.
+- Wrote a throwaway instrumented probe (`tmp-probe-funding3.ts`, deleted
+  after the run) that classified each "unknown" early buyer live, rather than
+  guessing: for every miss, it checked whether a funding transaction actually
+  existed somewhere else within `signatureLimit: 50` (not just the single
+  oldest signature `findFundingSource` was checking). Ran it for 180s against
+  real mainnet-beta traffic (24 mints, dozens of early buyers via the
+  websocket watcher) and got a clear, lopsided answer: **nearly every miss**
+  was the same cause — the buyer's single oldest visible transaction wasn't a
+  funding transfer at all, while a real funding transfer sat a few signatures
+  later, still well inside the limit. **Zero** misses were genuinely
+  "no funding transaction within the limit" (which would have meant
+  `signatureLimit` itself needed raising). This is a real logic bug, not a
+  tuning question — closes the "is this acceptable or does the limit need
+  raising" decision Session 37 left open with a different answer than either
+  option it posed.
+- Fixed `src/data/bundledBuys.ts`'s `findFundingSource`: now walks every
+  signature within `signatureLimit` oldest-to-newest and returns the first
+  one that actually shows a SOL balance increase for the buyer, instead of
+  checking only the single oldest signature. Stops at the first match, so
+  the common case (funded once, then immediately used) still costs one
+  `getTransaction` call. `src/data/bundledBuys.test.ts` — 1 new regression
+  test ("finds the funding source when it's not the buyer's single oldest
+  transaction"); verified it's a real regression test by reverting the fix
+  via `git stash` and confirming it fails there, then restoring the fix and
+  confirming it passes (163 tests either way, no other test affected).
+- Live-reverified the actual fix (not just the offline test) with a second
+  scratch probe (`tmp-verify-funding-fix.ts`, deleted after the run) that
+  called the real, unmodified `fetchBundledBuysInput` directly — same
+  measurement Session 37 did, now with the fix in place. Result over a 180s
+  window (24 mints, public mainnet-beta, no keys): unknown rate dropped from
+  Session 37's 33% (4/12) to **2% (5/217)** — a much larger sample than
+  Session 37's, and the remaining handful look like genuine
+  "no funding transaction within `signatureLimit: 50`" cases rather than more
+  instances of the bug just fixed.
+- Updated `rug-radar/README.md`: the "Bundled buys" signal description now
+  describes the oldest-to-newest scan; "Known limitations" bottom entry
+  rewritten with the root cause, the fix, and the before/after live numbers.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 163/163 passing (1 new, in `bundledBuys.test.ts`), all offline,
+  ~2.8-3s.
+- Live-verified both the diagnostic (which cause dominates) and the fix
+  itself (unknown rate before/after) against real mainnet-beta traffic via
+  two scratch probes, both deleted before this session ended.
+- `git status`/`ps aux` after cleanup show only the intended
+  `bundledBuys.ts`/`bundledBuys.test.ts`/README/PROGRESS changes — no stray
+  files, no leftover process.
+
+### Next
+- `findFundingSource`'s remaining ~2% unknown rate looks like genuine
+  lookback-limit exhaustion now (not the bug just fixed) — not dug into
+  further this session; would need its own per-wallet check if ever worth
+  chasing below 2%, likely not a priority given the low rate.
+- The scoring endpoint's rate-limit ceiling (README's top "Known
+  limitations" entry) is unchanged — still the headline open item; this
+  session's fix is in the bundled-buys signal's data quality, not the
+  endpoint throughput question.
+- `RESCORE_DELAY_MS` (20s, session 34) is still untuned — unchanged this
+  session.
+- All five TASK.md steps remain functionally complete.

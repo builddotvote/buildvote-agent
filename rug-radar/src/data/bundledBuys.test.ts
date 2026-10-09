@@ -128,6 +128,40 @@ test("reports a null funding source when the buyer has no prior transactions", a
   assert.equal(result[0].fundedBy, null);
 });
 
+test("finds the funding source when it's not the buyer's single oldest transaction", async () => {
+  const rpc = {
+    getSignaturesForAddress: async (address: string) => {
+      if (address === CURVE) return [sig("buy-sig", 1050)];
+      // Newest-first: an unrelated, older transaction sits before (i.e. is
+      // older than) the real funding transfer within the lookback limit.
+      if (address === "buyerA") return [sig("funding-sig", 920), sig("unrelated-sig", 900)];
+      return [];
+    },
+    getTransaction: async (signature: string) => {
+      if (signature === "buy-sig") return buyTx("buyerA", "0", "1000");
+      if (signature === "funding-sig") return fundingTx("buyerA", "funder1", 2_000_000_000);
+      if (signature === "unrelated-sig") {
+        // A transaction involving buyerA that isn't a SOL funding transfer
+        // (balance unchanged) — e.g. some other activity, or a failed tx.
+        return {
+          slot: 1,
+          blockTime: 900,
+          transaction: {
+            signatures: ["unrelated-sig"],
+            message: { accountKeys: [{ pubkey: "buyerA", signer: true, writable: true }] },
+          },
+          meta: { err: null, fee: 5000, preBalances: [1000], postBalances: [1000] },
+        } satisfies ParsedTransaction;
+      }
+      return null;
+    },
+  };
+
+  const result = await fetchBundledBuysInput(rpc, MINT, CURVE, 1000, { windowSeconds: 300 });
+  assert.equal(result.length, 1);
+  assert.equal(result[0].fundedBy, "funder1");
+});
+
 test("caches the funding-source lookup when the same buyer appears twice", async () => {
   let fundingLookups = 0;
   const rpc = {

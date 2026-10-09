@@ -85,8 +85,19 @@ function findTokenReceiver(tx: ParsedTransaction, mint: string): string | null {
   return null;
 }
 
-// Walk back to the buyer's earliest known transaction (within signatureLimit)
-// and find who sent them SOL there — a rough proxy for "who funded this wallet".
+// Walk the buyer's known transaction history (within signatureLimit) oldest
+// to newest, and return who sent them SOL in the first one that actually
+// funded them — a rough proxy for "who funded this wallet".
+//
+// Checks every signature in the window, not just the single oldest one:
+// confirmed live (session 39) that the wallet's oldest visible transaction is
+// often not a funding transfer at all (e.g. a failed tx, or other activity
+// that happens to be older than the real funding event but still within
+// signatureLimit) while a real funding transfer sits a few signatures later.
+// Checking only the oldest signature was the majority cause of "unknown"
+// funding sources measured in session 37 — not signatureLimit being too
+// small, a real logic bug. Stops at the first match, so the common case (a
+// freshly-created wallet funded then immediately used) still costs one call.
 async function findFundingSource(
   rpc: BuysFetcher,
   buyer: string,
@@ -95,13 +106,15 @@ async function findFundingSource(
   const signatures = await rpc.getSignaturesForAddress(buyer, signatureLimit);
   if (signatures.length === 0) return null;
 
-  // getSignaturesForAddress returns newest-first, so the last entry is the
-  // oldest one visible within our limit.
-  const earliest = signatures[signatures.length - 1];
-  const tx = await safeGetTransaction(rpc, earliest.signature);
-  if (!tx) return null;
-
-  return findSolSender(tx, buyer);
+  // getSignaturesForAddress returns newest-first; walk from the end (oldest)
+  // forward so the earliest funding event wins over a later, unrelated one.
+  for (let i = signatures.length - 1; i >= 0; i--) {
+    const tx = await safeGetTransaction(rpc, signatures[i].signature);
+    if (!tx) continue;
+    const sender = findSolSender(tx, buyer);
+    if (sender) return sender;
+  }
+  return null;
 }
 
 // The sender is whichever other account's lamport balance dropped the most
