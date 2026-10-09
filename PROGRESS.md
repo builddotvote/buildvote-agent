@@ -2014,3 +2014,78 @@ happening — see below.)*
 - `findFundingSource`'s lookback-limit live check (open since Session 4) is
   still blocked on the same root cause — unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 36 — 2026-10-09
+
+### Done
+- Found a leftover scratch probe (`rug-radar/tmp-probe-rescore2.ts`) already
+  committed from an earlier, interrupted attempt at this same session number
+  (its header comment said "session 36" and it exactly matched the question
+  Session 35 left open: does a mint that gets both an observed buy *and* a
+  later sell within the tracking window produce a real positive-balance
+  holder list via `rescoreHolderConcentrationFromIndex`, not just that trades
+  reach `BalanceIndex` at all). Re-verified the repo first (`npm install`,
+  162/162 tests, clean typecheck/build — no production code had actually
+  changed since Session 35, only the scratch file existed) before running it.
+- Ran the probe synchronously in the foreground (same pattern as every
+  session since 26 — no `ScheduleWakeup`/backgrounding, since this project's
+  sandbox resets between sessions and loses both): needed
+  `NODE_OPTIONS=--experimental-websocket` to actually connect (the probe
+  itself doesn't set this, unlike `npm start`/`npm dev`, which was the first
+  run's silent failure — every `trackMint` attempt errored with "No global
+  WebSocket constructor available" and zero trades resolved on that attempt).
+  Re-ran with the flag set, 150s, public mainnet-beta, no keys, no `.env`.
+- **Got the conclusive confirmation Session 35 left open.** One tracked mint
+  (`Bc4XQikcRmkoFQnb1eCqJkxfM2dhziAncifQEuHNc6zE`) saw 3 buys and 10 sells
+  within its 90s window, `BalanceIndex.getHolders()` returned 2
+  positive-balance holders, and `rescoreHolderConcentrationFromIndex`
+  returned a real signal: `{"name":"holder-concentration","score":2,
+  "reasons":["top 2 non-program holders hold 1.7% of supply"]}`. Every other
+  tracked mint in the same run saw 0 trades or sells-only (consistent with
+  low per-mint trade volume being the norm, not this mint being unusual).
+  This is the first time the balance-index → rescore pipeline has been
+  observed producing a real, non-null, positive-balance result end-to-end —
+  closes the question open since Session 34 ("does the rescore mechanism
+  work, not just wire without errors").
+- Deleted `tmp-probe-rescore2.ts` after the run (same cleanup habit as every
+  prior session's scratch probes).
+- Updated `rug-radar/README.md`: "Live feed" section's Session 35 writeup
+  gained a Session 36 continuation with these numbers; "Known limitations"
+  top entry gained a matching Session 36 bullet noting the balance-index
+  feature is now live-confirmed end-to-end, while being explicit that this
+  doesn't touch the scoring-endpoint rate-limit ceiling itself (a different,
+  still-open problem).
+- No other production code changed this session — this was purely finishing
+  an already-scoped live-verification question, not new functionality.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 162/162 passing (unchanged — no code changes this session),
+  all offline, ~3s.
+- Live-verified the real, unmodified `rescoreHolderConcentrationFromIndex`/
+  `BalanceIndex`/`LaunchWatcher.trackMint` pipeline against public
+  mainnet-beta (150s, no keys, no `.env`) via a scratch probe deleted before
+  this session ended — see "Done" above for the result.
+- `git status` after cleanup shows only the intended README/PROGRESS changes
+  plus the scratch-file deletion — no stray files, no leftover process.
+
+### Next
+- The balance-index/rescore feature (Sessions 29-36) is now functionally
+  complete and live-confirmed; no further open item specific to it is on
+  record.
+- The scoring endpoint's rate-limit ceiling is still the headline open item
+  — unchanged by this session. The balance index is a workaround for one
+  signal's indexed RPC call (`getTokenLargestAccounts`), not a fix for the
+  ceiling overall; `getTransaction` calls for deployer-history/bundled-buys
+  still hit it directly.
+- `findFundingSource`'s lookback-limit live check (open since Session 4) is
+  still blocked on the same root cause (needs a launch to finish scoring
+  with real early-buy data available) — unchanged this session.
+- `RESCORE_DELAY_MS` (20s, set in Session 34) is still an untuned starting
+  point — this session's probe used a 90s window and still only caught
+  meaningful activity on 1 of ~50 tracked mints, suggesting 20s in production
+  may be too short to catch much trading for most launches in practice;
+  worth a closer look if the rescore's real-world hit rate ever needs
+  checking directly (not measured this session — the probe used its own
+  90s window, not the production 20s one).
+- All five TASK.md steps remain functionally complete.

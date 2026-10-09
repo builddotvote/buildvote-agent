@@ -213,6 +213,20 @@ documented clamp-to-zero behavior for a sell with no observed prior buy
 watching), not a new bug — would need a mint with an observed *buy* in the
 window to see a positive balance.
 
+**Session 36 got that confirmation — the end-to-end mechanism works.**
+Re-ran the same isolated probe (90s per-mint tracking window, 150s total,
+bypassing `ScoringGate`) and one mint
+(`Bc4XQikcRmkoFQnb1eCqJkxfM2dhziAncifQEuHNc6zE`) saw 3 buys and 10 sells in
+its window, producing 2 positive-balance holders in `BalanceIndex`, and
+`rescoreHolderConcentrationFromIndex` returned a real signal: `{"name":
+"holder-concentration","score":2,"reasons":["top 2 non-program holders hold
+1.7% of supply"]}`. Every other tracked mint in the same run still showed 0
+trades or sell-only activity, consistent with low per-mint trade volume
+being the norm rather than this one mint being special — the mechanism
+works when a mint gets enough early activity, it just needs that activity
+to exist. This closes the "does it fire and produce a correct result"
+question open since session 34.
+
 ## Signals
 
 1. **Deployer history** — how many tokens this wallet launched before and how
@@ -495,6 +509,15 @@ doesn't fix.
   mint is tracked for long enough to see real trading activity, which it
   could not reliably do before this fix regardless of the scoring gate's
   throughput.
+  **Session 36** closed the remaining open question (whether the mechanism
+  produces a *correct positive-balance* result, not just that trades reach
+  `BalanceIndex` at all): re-ran the isolated probe and got a mint with both
+  buys and sells in its window, 2 positive-balance holders, and a real
+  `rescoreHolderConcentrationFromIndex` result — see "Live feed" above for
+  the numbers. The balance-index feature is now live-confirmed end-to-end.
+  The scoring-endpoint rate-limit ceiling itself (the headline open item
+  below) is unchanged by this — the balance index is a workaround for one
+  signal's indexed RPC call, not a fix for the ceiling overall.
 - Previously documented here (session 19): a thrown 429 error (after
   `rpc.ts`'s own 4 retries were exhausted) used to be swallowed by
   `safeGetTransaction` to the same `null` as a genuine "not found yet"
