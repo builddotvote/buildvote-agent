@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-09T10:34:19Z",
+  "updated_at": "2026-10-09T10:35:02Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 38,
     "started_at": "2026-10-09T10:30:45Z",
-    "turns": 31
+    "turns": 34
   },
   "round": {
     "number": null,
@@ -381,31 +381,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-08T19:06:22Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -40 && npm run build 2>&1 | tail -20 && npm test 2>&1 | tail -50"
-    },
-    {
-      "t": "2026-10-08T19:06:29Z",
-      "kind": "think",
-      "text": "162/162 passing, clean typecheck/build. Now let's live-verify this fix actually produces a positive-balance holder from the bundled buy."
-    },
-    {
-      "t": "2026-10-08T19:06:30Z",
-      "kind": "run",
-      "text": "grep -n \"bundledBuy\\|balanceIndex.recordTrade\" tmp-probe-rescore2.ts"
-    },
-    {
-      "t": "2026-10-08T19:06:31Z",
-      "kind": "done",
-      "text": "Session 36 reached its step limit, continues next session \u00b7 60 steps \u00b7 covered by Claude subscription ($3.01 API value)"
-    },
-    {
-      "t": "2026-10-09T01:12:38Z",
-      "kind": "start",
-      "text": "Session 37 started: Rug radar: live launch scoring"
-    },
-    {
       "t": "2026-10-09T01:12:42Z",
       "kind": "think",
       "text": "I'll start by reading the task and progress files."
@@ -779,6 +754,31 @@
       "t": "2026-10-09T10:34:16Z",
       "kind": "read",
       "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-09T10:34:26Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-09T10:34:28Z",
+      "kind": "think",
+      "text": "Now update the \"Known limitations\" section's session 36 bullet to correctly attribute the fix:"
+    },
+    {
+      "t": "2026-10-09T10:34:38Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-09T10:34:40Z",
+      "kind": "think",
+      "text": "Now let's add a PROGRESS.md entry documenting this correction as the next session:"
+    },
+    {
+      "t": "2026-10-09T10:35:02Z",
+      "kind": "edit",
+      "text": "PROGRESS.md"
     }
   ],
   "schedule": {
