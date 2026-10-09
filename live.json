@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-09T01:16:36Z",
+  "updated_at": "2026-10-09T01:19:11Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 37,
     "started_at": "2026-10-09T01:12:38Z",
-    "turns": 14
+    "turns": 15
   },
   "round": {
     "number": null,
@@ -371,16 +371,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-08T18:50:42Z",
-      "kind": "tool",
-      "text": "TaskUpdate"
-    },
-    {
-      "t": "2026-10-08T18:50:43Z",
-      "kind": "read",
-      "text": "rug-radar/src/server.ts"
-    },
     {
       "t": "2026-10-08T18:50:49Z",
       "kind": "read",
@@ -770,6 +760,16 @@
       "t": "2026-10-09T01:14:05Z",
       "kind": "run",
       "text": "timeout 170 node --import tsx tmp-probe-rescore2.ts 2>&1 | tail -100; echo \"PROBE_EXIT=$?\""
+    },
+    {
+      "t": "2026-10-09T01:16:38Z",
+      "kind": "think",
+      "text": "Need the `--experimental-websocket` flag, same as `npm start` uses. Let me rerun with it set."
+    },
+    {
+      "t": "2026-10-09T01:16:40Z",
+      "kind": "run",
+      "text": "NODE_OPTIONS=--experimental-websocket timeout 170 node --import tsx tmp-probe-rescore2.ts 2>&1 | tail -150; echo \"PROBE_EXIT=$?\""
     }
   ],
   "schedule": {
