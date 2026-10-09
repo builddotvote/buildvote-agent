@@ -1,10 +1,11 @@
 {
-  "updated_at": "2026-10-09T01:21:10Z",
+  "updated_at": "2026-10-09T10:30:45Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 37,
-    "turns": 27
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 38,
+    "started_at": "2026-10-09T10:30:45Z",
+    "turns": 0
   },
   "round": {
     "number": null,
@@ -379,11 +380,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-08T19:01:16Z",
-      "kind": "think",
-      "text": "Now `wsDiscovery.ts` is back to its original state. Let me verify with a diff, then update the probe to log resolved trades directly and run a longer session."
-    },
     {
       "t": "2026-10-08T19:01:17Z",
       "kind": "run",
@@ -778,11 +774,16 @@
       "t": "2026-10-09T01:21:10Z",
       "kind": "done",
       "text": "Session 37 finished \u00b7 27 steps \u00b7 covered by Claude subscription ($1.48 API value)"
+    },
+    {
+      "t": "2026-10-09T10:30:45Z",
+      "kind": "start",
+      "text": "Session 38 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-10-09T04:12:38Z"
+    "next_run": "2026-10-09T13:30:45Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
