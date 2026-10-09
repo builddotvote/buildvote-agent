@@ -319,6 +319,21 @@ identically, which meant a rate-limit exhaustion triggered up to 5 more
 rounds of `rpc.ts`'s own 4-retry backoff — amplifying load on an endpoint
 that had just asked for a slower pace, instead of backing off from it.
 
+**The dev's bundled buy (session 36).** `resolveLaunchFromSignature` also
+decodes a `buy`/`buy_v2` instruction bundled into the *same* transaction as
+the create itself (pump.fun's "dev buy" — common, not an edge case) into
+`DiscoveredLaunch.bundledBuy`, at no extra RPC cost since the transaction is
+already fetched to find the create. This matters because it's otherwise
+unobservable: `wsDiscovery.ts`'s `trackMint` subscription (see "Known
+limitations" below) can only exist once a mint is known, i.e. strictly after
+this transaction, so without decoding it here the mint's actual first holder
+would never reach `BalanceIndex`. `server.ts`'s `scheduleHolderRescore` seeds
+`balanceIndex.recordTrade(launch.bundledBuy)` before calling `trackMint`, so
+the dev's own buy counts alongside whatever trades arrive afterward. Confirmed
+live this was a real gap, not a theoretical one: every trade `BalanceIndex`
+had observed before this fix was a sell (see "Known limitations"'s session
+34/35 entries) — sellers of a balance the index never saw bought.
+
 `src/pipeline.ts` turns one discovered launch into a full `LaunchScore` by
 running all four signals' data-fetch + score functions (a signal that fails
 to fetch — e.g. too early for holder data to settle — is dropped rather than
@@ -511,10 +526,24 @@ doesn't fix.
   throughput.
   **Session 36** closed the remaining open question (whether the mechanism
   produces a *correct positive-balance* result, not just that trades reach
-  `BalanceIndex` at all): re-ran the isolated probe and got a mint with both
-  buys and sells in its window, 2 positive-balance holders, and a real
-  `rescoreHolderConcentrationFromIndex` result — see "Live feed" above for
-  the numbers. The balance-index feature is now live-confirmed end-to-end.
+  `BalanceIndex` at all). While investigating with an isolated probe, it
+  found the *real* reason every trade observed so far had been a sell, never
+  a buy (noted as an open mystery in the session 35 entry above): the dev's
+  own bundled buy, in the same transaction as the create, happens before
+  `trackMint` can possibly subscribe — so it was invisible to `BalanceIndex`
+  by construction, not by bad luck. Fixed in `src/discovery.ts`/`src/server.ts`
+  — see "Live feed" above for the mechanism — with 2 new offline tests in
+  `discovery.test.ts`. Re-ran the isolated probe after the fix and got a mint
+  with both buys and sells in its window, 2 positive-balance holders, and a
+  real `rescoreHolderConcentrationFromIndex` result — see "Live feed" above
+  for the numbers. The balance-index feature is now live-confirmed
+  end-to-end. **Correction:** the session that ran this live check (logged as
+  session-0037, written up above and in PROGRESS.md as part of "Session 36")
+  hit its step limit immediately after the fix and never documented it here
+  or in PROGRESS.md; the next session inherited the already-fixed code
+  without noticing the diff, and wrote up the live numbers as confirming the
+  *pre-existing* mechanism rather than this fix. Backfilled now — same
+  "step-limit interrupts documentation" pattern as sessions 6-9/17/20/22-25.
   The scoring-endpoint rate-limit ceiling itself (the headline open item
   below) is unchanged by this — the balance index is a workaround for one
   signal's indexed RPC call, not a fix for the ceiling overall.
@@ -557,15 +586,30 @@ doesn't fix.
   observed launch in the same process, using only the index (a 1-signature
   retroactive scan limit was used in the check, to isolate the index's
   contribution from the scan's).
-- `findFundingSource` (in `src/data/bundledBuys.ts`) has the same style of
-  lookback-limit cap (default 50 signatures) for a buyer's funding source —
-  still not live-checked against a real long-history wallet. Blocked in
-  sessions 16/19 because discovery couldn't resolve a live launch to test
-  against at all; that's now fixed (see the top entry above), but
-  `findFundingSource` itself calls `getSignaturesForAddress`/`getTransaction`
-  on the scoring (official, rate-limited) endpoint, so it still needs the
-  scoring-side backlog above to be manageable enough to get a result back
-  before it can be checked.
+- **`findFundingSource`'s lookback-limit — live-checked (session 37), real
+  gap confirmed.** Open since session 4, repeatedly blocked (sessions
+  16/19/20/21) because discovery either couldn't resolve a live launch at
+  all, or the scoring endpoint's backlog never let one finish scoring with
+  early-buy data available. Unblocked by running `fetchBundledBuysInput`
+  directly against `solana-rpc.publicnode.com` (the discovery endpoint)
+  instead of waiting on the scoring endpoint — `getSignaturesForAddress`/
+  `getTransaction` aren't blocked there (only the indexed token methods are,
+  per session 20), so this sidesteps the scoring bottleneck entirely rather
+  than needing it fixed first. Watched 4 real, freshly-launched mints over a
+  ~170s window (default `windowSeconds: 90`, default `signatureLimit: 50`,
+  unmodified production code): **4 of 12 distinct early buyers (33%)
+  resolved to `fundedBy: null` ("unknown")** — not a rare edge case, a
+  roughly one-in-three miss rate on real traffic. Did not look further into
+  *why* each specific miss happened (e.g. whether `signatureLimit: 50` was
+  too small for that particular wallet's own history, or `findSolSender`
+  genuinely found no qualifying transfer in its earliest-visible
+  transaction) — that would need per-wallet follow-up, not attempted this
+  session. Worth deciding in a future session whether 33% unknown is
+  acceptable (the signal already treats `fundedBy: null` as "not part of a
+  bundle" rather than erroring) or whether raising `signatureLimit` is worth
+  its cost (more signatures scanned per buyer means more `getTransaction`
+  calls against whichever endpoint runs it — the same tradeoff already
+  documented for deployer-history's own lookback limit).
 
 ## Setup
 

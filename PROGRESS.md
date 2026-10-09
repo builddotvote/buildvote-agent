@@ -2089,3 +2089,95 @@ happening — see below.)*
   checking directly (not measured this session — the probe used its own
   90s window, not the production 20s one).
 - All five TASK.md steps remain functionally complete.
+
+## Session 37 — 2026-10-09
+
+### Done
+- Re-verified the repo first (`npm install`, 162/162 tests, clean
+  typecheck/build), then found a real gap in this file and `README.md`
+  while reading `src/discovery.ts` closely: `DiscoveredLaunch.bundledBuy`,
+  `src/server.ts`'s `scheduleHolderRescore` seeding it into `BalanceIndex`
+  before calling `trackMint`, and 2 tests in `discovery.test.ts` ("decodes a
+  bundled dev buy...", "does not mistake a bundled sell for a bundled
+  buy") all exist in the committed code, pass, and are load-bearing — but
+  neither this file nor the README ever mentioned them. Root-caused why:
+  `logs/session-0036.md` shows that session built this exact fix (root
+  cause: the dev's own bundled buy happens in the *same* transaction as the
+  create, before `trackMint` can possibly subscribe, so it was invisible to
+  `BalanceIndex` by construction — this is why every trade observed in
+  sessions 34-35 had been a sell, never a buy) but hit its step limit
+  (`Outcome: step limit reached`, 60 steps) right after adding the tests,
+  one step before it could live-verify or document it. The *next* run
+  (logged as `session-0037.md`) inherited the already-fixed code, ran the
+  leftover scratch probe, saw buys for the first time, and wrote it up as
+  confirming the **pre-existing** session 34/35 mechanism — it never diffed
+  against what session 35 had actually left behind, so it didn't notice it
+  was also validating a same-session fix it hadn't made. That write-up
+  became this file's "Session 36" entry above and the matching README
+  passage — both correct about the live numbers, silent about the fix that
+  produced them. Same recurring class of problem as sessions 6-9/17/20/22-25
+  (step limit interrupts documentation), just one layer removed this time:
+  the *interrupted* session's work got documented, but mis-attributed to a
+  different session's account, rather than simply left undocumented.
+- Fixed the record rather than re-deriving anything: added a "The dev's
+  bundled buy (session 36)" paragraph to `README.md`'s "Live feed" section
+  describing the actual mechanism, and a correction to the "Known
+  limitations" session 36 bullet explaining the mix-up above. No code
+  changes — the fix itself was already correct, tested, and live-verified;
+  this session only closes the documentation gap.
+- Picked up Task #2: `findFundingSource`'s lookback-limit live check, open
+  and repeatedly blocked since Session 4 (sessions 16/19/20/21 all tried and
+  got stopped by discovery or the scoring endpoint's backlog). Unblocked it
+  with a different angle: ran the real, unmodified `fetchBundledBuysInput`
+  directly against `solana-rpc.publicnode.com` (the discovery endpoint)
+  instead of waiting for a launch to finish scoring over the rate-limited
+  scoring endpoint — `getSignaturesForAddress`/`getTransaction` aren't
+  blocked there (only the indexed token methods are, per session 20), so
+  this sidesteps the scoring bottleneck rather than needing it resolved
+  first. Wrote a throwaway probe (`tmp-probe-funding2.ts`, deleted after the
+  run) that watched the real websocket feed for new launches and called
+  `fetchBundledBuysInput` against each one ~70s later with default options
+  (`windowSeconds: 90`, `signatureLimit: 50`).
+- **Result (170s live window, public mainnet-beta, no keys): 4 of 12
+  distinct early buyers (33%) resolved to `fundedBy: null` ("unknown")**
+  across 4 real mints (`6aHEbSBnqvo5...`, `9WPV95erYZRZ...`,
+  `2nDo3jafMFbZ...`, `4aE9MgrKa9Hp...`). This is the concrete answer the
+  lookback-limit question has been waiting on since Session 4: the default
+  50-signature cap misses close to a third of real early buyers' funding
+  sources, not just a rare long-history outlier. Did not dig into *why*
+  each specific miss happened (too-small `signatureLimit` for that wallet
+  vs. a transaction shape `findSolSender` doesn't recognize) — left as a
+  follow-up, not guessed at.
+- Deleted `tmp-probe-funding2.ts` after the run (same cleanup habit as
+  every prior session's scratch probes).
+- Updated `rug-radar/README.md`'s "Known limitations" bottom entry with
+  this finding, replacing the long-standing "still not live-checked"
+  placeholder.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 162/162 passing (unchanged — no code changes this session),
+  all offline, ~3s.
+- Live-checked the real, unmodified `fetchBundledBuysInput` against public
+  mainnet-beta (170s, no keys, no `.env`) via a scratch probe deleted before
+  this session ended — see "Done" above for the result.
+- `git status` after this session shows only the intended README/PROGRESS
+  changes — no stray files, no leftover process.
+
+### Next
+- `findFundingSource`'s 33%-unknown rate (above) is now a measured number,
+  not an open question — worth a follow-up session deciding whether that
+  miss rate is acceptable as-is (the signal already treats `fundedBy: null`
+  as "not bundled" rather than erroring, so it fails closed) or whether
+  raising `signatureLimit` is worth the extra `getTransaction` calls per
+  buyer it costs.
+- The scoring endpoint's rate-limit ceiling is otherwise unchanged — still
+  the headline open item.
+- `RESCORE_DELAY_MS` (20s) is still untuned — unchanged this session.
+- Worth a lighter-weight habit for future sessions: when picking up work,
+  diff `git log`/recent test-count deltas against what the last *documented*
+  session claimed, not just whatever `npm test` reports at the start — a
+  jump in test count with no matching PROGRESS/README entry is the signal
+  that something upstream went undocumented, the same tell that caught this
+  session's finding.
+- All five TASK.md steps remain functionally complete.
