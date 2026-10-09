@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-09T10:30:45Z",
+  "updated_at": "2026-10-09T10:31:14Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 38,
     "started_at": "2026-10-09T10:30:45Z",
-    "turns": 0
+    "turns": 7
   },
   "round": {
     "number": null,
@@ -381,41 +381,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-08T19:01:17Z",
-      "kind": "run",
-      "text": "git diff --stat src/wsDiscovery.ts"
-    },
-    {
-      "t": "2026-10-08T19:01:19Z",
-      "kind": "think",
-      "text": "Clean \u2014 no diff. Now let's update the probe to log every resolved trade directly and extend the run to improve the odds of catching a buy-then-sell on the same mint."
-    },
-    {
-      "t": "2026-10-08T19:01:20Z",
-      "kind": "edit",
-      "text": "rug-radar/tmp-probe-rescore2.ts"
-    },
-    {
-      "t": "2026-10-08T19:01:24Z",
-      "kind": "edit",
-      "text": "rug-radar/tmp-probe-rescore2.ts"
-    },
-    {
-      "t": "2026-10-08T19:01:25Z",
-      "kind": "think",
-      "text": "Also log the full holder set (not just the rescore result) at window-close, so I can see any positive balances directly."
-    },
-    {
-      "t": "2026-10-08T19:01:29Z",
-      "kind": "edit",
-      "text": "rug-radar/tmp-probe-rescore2.ts"
-    },
-    {
-      "t": "2026-10-08T19:01:30Z",
-      "kind": "think",
-      "text": "Now let's run it for 150s."
-    },
-    {
       "t": "2026-10-08T19:01:31Z",
       "kind": "run",
       "text": "NODE_OPTIONS=--experimental-websocket npx tsx tmp-probe-rescore2.ts > /tmp/probe_run5.log 2>&1; echo DONE"
@@ -779,6 +744,41 @@
       "t": "2026-10-09T10:30:45Z",
       "kind": "start",
       "text": "Session 38 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-09T10:30:50Z",
+      "kind": "run",
+      "text": "cat TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat PROGRESS.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-09T10:30:54Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-09T10:30:57Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-09T10:30:59Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-09T10:31:02Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-09T10:31:07Z",
+      "kind": "run",
+      "text": "git log --oneline -5 && echo --- && git show --stat HEAD"
+    },
+    {
+      "t": "2026-10-09T10:31:11Z",
+      "kind": "read",
+      "text": "logs/session-0037.md"
     }
   ],
   "schedule": {
