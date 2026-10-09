@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-09T18:26:35Z",
+  "updated_at": "2026-10-09T18:27:08Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 39,
     "started_at": "2026-10-09T18:20:33Z",
-    "turns": 29
+    "turns": 35
   },
   "round": {
     "number": null,
@@ -390,51 +390,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-09T10:32:42Z",
-      "kind": "run",
-      "text": "ls logs/ | sort -V | tail -10"
-    },
-    {
-      "t": "2026-10-09T10:32:49Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && grep -n \"dev buy\\|bundledBuy\\|scheduleHolderRescore\\|RESCORE_DELAY_MS\" README.md"
-    },
-    {
-      "t": "2026-10-09T10:32:53Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-09T10:32:58Z",
-      "kind": "run",
-      "text": "grep -n \"^Session\\|bundled dev buy\\|scheduleHolderRescore\\|^## \" README.md"
-    },
-    {
-      "t": "2026-10-09T10:33:05Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-09T10:33:12Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -l \"discovery.ts\\|bundledBuy\" logs/*.md"
-    },
-    {
-      "t": "2026-10-09T10:33:14Z",
-      "kind": "run",
-      "text": "grep -n \"bundledBuy\" logs/session-0033.md logs/session-0034.md logs/session-0036.md"
-    },
-    {
-      "t": "2026-10-09T10:33:19Z",
-      "kind": "read",
-      "text": "logs/session-0036.md"
-    },
-    {
-      "t": "2026-10-09T10:33:39Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && sed -n '1,230p' src/discovery.ts"
-    },
-    {
       "t": "2026-10-09T10:33:42Z",
       "kind": "think",
       "text": "Now let me check `server.ts`'s `scheduleHolderRescore` to see exactly how `bundledBuy` is used:"
@@ -788,6 +743,51 @@
       "t": "2026-10-09T18:26:35Z",
       "kind": "edit",
       "text": "rug-radar/src/data/bundledBuys.test.ts"
+    },
+    {
+      "t": "2026-10-09T18:26:40Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -20"
+    },
+    {
+      "t": "2026-10-09T18:26:46Z",
+      "kind": "think",
+      "text": "163/163 passing. Let me verify the new test actually catches the bug by reverting the fix temporarily."
+    },
+    {
+      "t": "2026-10-09T18:26:47Z",
+      "kind": "run",
+      "text": "git stash -- src/data/bundledBuys.ts && node --test src/data/bundledBuys.test.ts 2>&1 | tail -30; git stash pop"
+    },
+    {
+      "t": "2026-10-09T18:26:49Z",
+      "kind": "run",
+      "text": "cat package.json | grep -A2 '\"test\"'"
+    },
+    {
+      "t": "2026-10-09T18:26:51Z",
+      "kind": "run",
+      "text": "git stash -- src/data/bundledBuys.ts && node --import tsx --test --test-reporter spec src/data/bundledBuys.test.ts 2>&1 | tail -40; git stash pop"
+    },
+    {
+      "t": "2026-10-09T18:26:53Z",
+      "kind": "think",
+      "text": "Confirmed: the new test fails without the fix (proving it's a real regression test) and passes with it. Now let's run the full suite again with the fix restored, then live-verify \u2026"
+    },
+    {
+      "t": "2026-10-09T18:26:53Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10"
+    },
+    {
+      "t": "2026-10-09T18:27:01Z",
+      "kind": "think",
+      "text": "Clean. Now let's live-verify the actual fix with the real `fetchBundledBuysInput` function against mainnet-beta."
+    },
+    {
+      "t": "2026-10-09T18:27:08Z",
+      "kind": "edit",
+      "text": "rug-radar/tmp-verify-funding-fix.ts"
     }
   ],
   "schedule": {
