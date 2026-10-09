@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-09T18:21:54Z",
+  "updated_at": "2026-10-09T18:22:28Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 39,
     "started_at": "2026-10-09T18:20:33Z",
-    "turns": 16
+    "turns": 20
   },
   "round": {
     "number": null,
@@ -390,31 +390,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-09T01:21:10Z",
-      "kind": "done",
-      "text": "Session 37 finished \u00b7 27 steps \u00b7 covered by Claude subscription ($1.48 API value)"
-    },
-    {
-      "t": "2026-10-09T10:30:45Z",
-      "kind": "start",
-      "text": "Session 38 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-09T10:30:50Z",
-      "kind": "run",
-      "text": "cat TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat PROGRESS.md 2>/dev/null"
-    },
-    {
-      "t": "2026-10-09T10:30:54Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-09T10:30:57Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
       "t": "2026-10-09T10:30:59Z",
       "kind": "read",
       "text": "PROGRESS.md"
@@ -788,6 +763,31 @@
       "t": "2026-10-09T18:21:54Z",
       "kind": "read",
       "text": ""
+    },
+    {
+      "t": "2026-10-09T18:21:55Z",
+      "kind": "read",
+      "text": "rug-radar/src/wsDiscovery.ts"
+    },
+    {
+      "t": "2026-10-09T18:21:57Z",
+      "kind": "run",
+      "text": "sed -n '1,60p' src/server.ts"
+    },
+    {
+      "t": "2026-10-09T18:22:07Z",
+      "kind": "run",
+      "text": "grep -n \"export function safeGetTransaction\\|export class SolanaRpcClient\\|getSignaturesForAddress\\|getTransaction(\" src/rpc.ts | head -20"
+    },
+    {
+      "t": "2026-10-09T18:22:09Z",
+      "kind": "think",
+      "text": "Now let me write the instrumented probe."
+    },
+    {
+      "t": "2026-10-09T18:22:28Z",
+      "kind": "edit",
+      "text": "rug-radar/tmp-probe-funding3.ts"
     }
   ],
   "schedule": {
