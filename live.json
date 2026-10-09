@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-09T01:19:11Z",
+  "updated_at": "2026-10-09T01:19:45Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 37,
     "started_at": "2026-10-09T01:12:38Z",
-    "turns": 15
+    "turns": 20
   },
   "round": {
     "number": null,
@@ -372,46 +372,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-08T18:50:49Z",
-      "kind": "read",
-      "text": "rug-radar/src/config.ts"
-    },
-    {
-      "t": "2026-10-08T18:50:50Z",
-      "kind": "think",
-      "text": "All public config, no secrets. Now let's check `data/bondingCurve.ts` and `discovery.ts` types quickly before writing the probe."
-    },
-    {
-      "t": "2026-10-08T18:50:50Z",
-      "kind": "run",
-      "text": "cat src/data/bondingCurve.ts; echo ---; cat src/discovery.ts | head -40"
-    },
-    {
-      "t": "2026-10-08T18:50:52Z",
-      "kind": "think",
-      "text": "Now I'll write the throwaway probe script, tracking all discovered launches for a longer window to catch a buy-then-sell pattern."
-    },
-    {
-      "t": "2026-10-08T18:51:02Z",
-      "kind": "edit",
-      "text": "rug-radar/tmp-probe-rescore2.ts"
-    },
-    {
-      "t": "2026-10-08T18:51:04Z",
-      "kind": "run",
-      "text": "npx tsx tmp-probe-rescore2.ts 2>&1"
-    },
-    {
-      "t": "2026-10-08T18:52:38Z",
-      "kind": "run",
-      "text": "cat package.json | grep -A3 '\"scripts\"'; grep -n \"experimental-websocket\\|NODE_OPTIONS\" -r . --include=*.md --include=*.json --include=*.ts 2>/dev/null | grep -v node_modules"
-    },
-    {
-      "t": "2026-10-08T18:52:40Z",
-      "kind": "run",
-      "text": "NODE_OPTIONS=--experimental-websocket npx tsx tmp-probe-rescore2.ts 2>&1"
-    },
-    {
       "t": "2026-10-08T18:54:23Z",
       "kind": "read",
       "text": "rug-radar/src/wsDiscovery.ts"
@@ -770,6 +730,46 @@
       "t": "2026-10-09T01:16:40Z",
       "kind": "run",
       "text": "NODE_OPTIONS=--experimental-websocket timeout 170 node --import tsx tmp-probe-rescore2.ts 2>&1 | tail -150; echo \"PROBE_EXIT=$?\""
+    },
+    {
+      "t": "2026-10-09T01:19:18Z",
+      "kind": "think",
+      "text": "This is the confirmation needed \u2014 got a real end-to-end result: mint with 3 buys + 10 sells produced 2 positive-balance holders and a valid rescore signal. Let me clean up and doc\u2026"
+    },
+    {
+      "t": "2026-10-09T01:19:19Z",
+      "kind": "run",
+      "text": "rm -f tmp-probe-rescore2.ts && git status"
+    },
+    {
+      "t": "2026-10-09T01:19:25Z",
+      "kind": "think",
+      "text": "Now let's find the right place in README to document this confirmation."
+    },
+    {
+      "t": "2026-10-09T01:19:27Z",
+      "kind": "run",
+      "text": "grep -n \"Session 35\\|Session 34\\|RESCORE_DELAY_MS\\|rescore mechanism\\|Known limitations\" README.md | head -40"
+    },
+    {
+      "t": "2026-10-09T01:19:31Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-09T01:19:34Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-09T01:19:35Z",
+      "kind": "think",
+      "text": "Now I'll append the Session 36 confirmation right after the Session 35 writeup."
+    },
+    {
+      "t": "2026-10-09T01:19:45Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
     }
   ],
   "schedule": {
