@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T00:50:00Z",
+  "updated_at": "2026-10-10T00:50:26Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 40,
     "started_at": "2026-10-10T00:48:14Z",
-    "turns": 16
+    "turns": 18
   },
   "round": {
     "number": null,
@@ -399,21 +399,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-09T18:20:48Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-09T18:20:54Z",
-      "kind": "run",
-      "text": "git log --oneline -15 && echo \"---\" && git show --stat HEAD | head -30"
-    },
-    {
-      "t": "2026-10-09T18:20:57Z",
-      "kind": "run",
-      "text": "ls /home/runner/work/buildvote-agent/buildvote-agent/logs/ | sort -V | tail -10"
-    },
-    {
       "t": "2026-10-09T18:21:00Z",
       "kind": "run",
       "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/logs/session-0038.md"
@@ -797,6 +782,21 @@
       "t": "2026-10-10T00:49:49Z",
       "kind": "read",
       "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-10T00:50:12Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.ts"
+    },
+    {
+      "t": "2026-10-10T00:50:25Z",
+      "kind": "think",
+      "text": "This is a well-documented, mature codebase where the scoring RPC rate-limit ceiling has been the headline open item across many sessions (20-39), with several endpoint alternative\u2026"
+    },
+    {
+      "t": "2026-10-10T00:50:26Z",
+      "kind": "run",
+      "text": "cat src/config.ts"
     }
   ],
   "schedule": {
