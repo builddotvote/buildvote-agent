@@ -248,7 +248,10 @@ question open since session 34.
    curve's transaction history, then walks each buyer's known transaction
    history oldest-to-newest to find the first one that actually funded them
    with SOL — see "Known limitations" (session 39) for why it scans more than
-   just the single oldest signature).
+   just the single oldest signature). The signature-limit default is 20, not
+   50 (lowered session 41, see "Known limitations" for the measured RPC-call
+   cost that drove this — same shape as deployer-history's session 40 cut,
+   without an index covering the lost recall).
 3. **Holder concentration** — top 10 holder share, excluding the bonding
    curve and known program accounts. **Built:** `src/signals/holderConcentration.ts`
    (pure scoring function) + `src/data/holderConcentration.ts` (gathers the
@@ -587,6 +590,39 @@ doesn't fix.
   scan still hit 429s in the same run, so the ceiling itself is not gone —
   this is a measured reduction in how hard scoring pushes against it, not a
   fix for the endpoint's own throughput.
+  **Session 41** applied the same instrumented-call-count measurement to
+  bundled-buys specifically, the item session 40 left open (its window-scan
+  `signatureLimit`, default 50, bounded by real early-buy activity rather
+  than the limit itself — not touched in session 40). Watched the real
+  websocket feed for 90s, then ran the real, unmodified
+  `fetchBundledBuysInput` against each discovered launch in turn (12
+  processed) with an instrumented scoring RPC counting calls per method.
+  Result: the outer bonding-curve scan reached **20, 25, and a full 50/50
+  signatures** across different launches in the same run (not bounded by low
+  activity the way session 40 speculated — a mint scored even ~90s after
+  discovery can already have accumulated enough bonding-curve traffic to hit
+  the cap), and the resulting concurrent `getTransaction` resolves against
+  the official scoring endpoint hit HTTP 429 on **648 of 658 calls (98.5%)**
+  across the 12 launches — worse than session 40's single-launch measurement
+  for this same signal (25/28, 89%). Fixed: lowered
+  `fetchBundledBuysInput`'s default `signatureLimit` from 50 to 20
+  (`src/data/bundledBuys.ts`) — the same tradeoff shape as session 40's
+  deployer-history cut, but **without** an equivalent index covering the
+  lost recall (there is no `BalanceIndex`-for-early-buyers), so this is a
+  real recall-vs-call-volume tradeoff, not a free win. Live-reverified with
+  the same instrumented probe after the fix (90s window, 21 launches
+  discovered, 12 processed): outer scans now cap at 20 as intended (several
+  launches showed exactly `20/20` instead of reaching 50), but the overall
+  429 rate was effectively unchanged (**741 of 751 calls, 98.7%**) — at this
+  level of endpoint saturation, nearly everything fails regardless of how
+  many signatures are requested, so the fix bounds worst-case request volume
+  per launch without measurably improving (or, within this sample,
+  measurably hurting) how much actually gets through. Honest conclusion:
+  this is the same class of fix as session 40 (reduce how hard one signal
+  pushes on an already-overwhelmed endpoint), but at this saturation level
+  the scoring endpoint's throughput — not any one signal's call count — is
+  now clearly the dominant constraint, more so than session 40's one-launch
+  sample suggested.
 - Previously documented here (session 19): a thrown 429 error (after
   `rpc.ts`'s own 4 retries were exhausted) used to be swallowed by
   `safeGetTransaction` to the same `null` as a genuine "not found yet"

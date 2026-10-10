@@ -2342,3 +2342,88 @@ happening — see below.)*
 - `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
   priority, unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 41 — 2026-10-10
+
+### Done
+- Re-verified the repo first (`npm install`, 163/163 tests, clean
+  typecheck/build), then picked up session 40's top "Next" item: apply the
+  same call-count measurement to bundled-buys that session 40 applied to
+  deployer-history, to decide whether its window-scan `signatureLimit`
+  (default 50, shared between the outer bonding-curve scan and each buyer's
+  funding-source lookback) is worth tuning.
+- Wrote a throwaway instrumented probe (`tmp-probe-bundledbuys-calls.ts`,
+  deleted after use) that watched the real websocket feed for 90s, then ran
+  the real, unmodified `fetchBundledBuysInput` against each discovered
+  launch in turn with a scoring RPC client wrapped to count calls/429s per
+  JSON-RPC method, plus a per-call probe on `getSignaturesForAddress` to
+  log the outer bonding-curve scan's actual returned size. First run (12
+  launches processed, public mainnet-beta, no keys): outer scan sizes of 1,
+  2, 4, 5, 10, 20, 25, and a full 50/50 observed across different launches
+  in the same run — the outer scan is *not* reliably bounded by low early
+  activity the way session 40's "Next" speculated; a mint scored even ~90s
+  after discovery can already have enough bonding-curve traffic to hit the
+  cap. The resulting concurrent `getTransaction` resolves hit HTTP 429 on
+  **648 of 658 calls (98.5%)** across the run — worse than session 40's
+  single-launch measurement for this same signal (25/28, 89%).
+- Fixed: lowered `fetchBundledBuysInput`'s default `signatureLimit` from 50
+  to 20 in `src/data/bundledBuys.ts` (comment explains the measurement and
+  the tradeoff) — same shape as session 40's deployer-history cut, but
+  **without** an equivalent index covering the lost recall (no
+  `BalanceIndex`-for-early-buyers exists), so unlike session 40's fix this
+  is a real recall-vs-call-volume tradeoff, not a free win. No test hardcoded
+  the old default; `npm run typecheck`/`npm test` stayed clean (163/163,
+  unchanged count — a default-value change, not new behavior needing new
+  tests).
+- Live-reverified with the same instrumented probe after the fix (90s
+  window, 21 launches discovered, 12 processed): outer scans now cap at 20
+  as intended (several launches showed exactly `20/20` instead of reaching
+  50), but the overall 429 rate was effectively unchanged (**741 of 751
+  calls, 98.7%**) — at this level of endpoint saturation, nearly everything
+  fails regardless of how many signatures are requested, so the fix bounds
+  worst-case request volume per launch without measurably improving (or,
+  within this sample, measurably hurting) how much actually resolves.
+  Honest conclusion, not oversold: this is the same class of fix as session
+  40 (reduce how hard one signal pushes on an already-overwhelmed endpoint),
+  but at this saturation level the scoring endpoint's own throughput — not
+  any one signal's call count — is clearly the dominant constraint, more so
+  than session 40's single-launch sample suggested.
+- Deleted `tmp-probe-bundledbuys-calls.ts` after both runs (same cleanup
+  habit as every prior session's scratch probes); confirmed no leftover
+  server/probe process via `ps aux`.
+- Updated `rug-radar/README.md`: "Bundled buys" signal entry under
+  "Signals" now notes the new default; "Known limitations" top entry gained
+  a "Session 41" continuation with the measurement/fix/live numbers above.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 163/163 passing (unchanged — a default-value change, no new
+  test surface), all offline, ~2.6-2.8s.
+- Live-measured the real, unmodified-then-fixed `fetchBundledBuysInput`
+  against public mainnet-beta (two ~90s instrumented probes, before/after
+  the fix) — see "Done" above for both results.
+- `git status`/`ps aux` after cleanup show only the intended
+  `bundledBuys.ts`/README/PROGRESS changes — no stray files, no leftover
+  process.
+
+### Next
+- The scoring endpoint's rate-limit ceiling is now more clearly the
+  dominant constraint than any single signal's call volume (this session's
+  648/658 and 741/751 429 rates are both far higher than session 40's
+  single-launch 44/54 for deployer-history) — further per-signal call-count
+  cuts are likely to keep hitting diminishing returns the way this one did.
+  Worth considering a fundamentally different angle next: client-side
+  request pacing/throttling tuned to the endpoint's actual budget (e.g.
+  measuring its real requests-per-second allowance and spacing calls to
+  stay under it, rather than firing bursts and retrying after the fact), or
+  accepting the free/keyless ceiling as a documented constraint and
+  focusing future sessions elsewhere.
+  `RESCORE_DELAY_MS` (20s, session 34) is still untuned — unchanged this
+  session.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session; a lower `signatureLimit` (50→20) could
+  plausibly raise this rate slightly for buyers whose true funding
+  transaction sat beyond 20 signatures, but wasn't isolated from the
+  429-driven failures in this session's measurement — not a concern given
+  how dominant the rate-limit effect was in both runs.
+- All five TASK.md steps remain functionally complete.

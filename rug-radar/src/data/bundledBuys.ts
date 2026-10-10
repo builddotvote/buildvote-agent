@@ -14,7 +14,17 @@ export interface FetchBundledBuysOptions {
 }
 
 const DEFAULT_WINDOW_SECONDS = 300;
-const DEFAULT_SIGNATURE_LIMIT = 50;
+// Lowered from 50 (session 41): live-measured across 12 real launches, the
+// outer bonding-curve scan itself reaches up toward this cap for any mint
+// with real trading activity by the time it's scored (observed 20, 25, and
+// a full 50/50 in the same run), and each of those launches' concurrent
+// getTransaction resolves against the official scoring endpoint hit HTTP 429
+// on 648 of 658 calls (98.5%) — worse than session 40's single-launch
+// measurement for this same signal (25/28, 89%). A smaller cap doesn't fix
+// the endpoint's throughput ceiling, but it bounds how many requests one
+// launch throws at an already-saturated endpoint, the same tradeoff session
+// 40 made for deployer-history's retroactive scan.
+const DEFAULT_SIGNATURE_LIMIT = 20;
 
 export async function fetchBundledBuysInput(
   rpc: BuysFetcher,
