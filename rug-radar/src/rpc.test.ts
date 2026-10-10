@@ -251,6 +251,63 @@ test("caps the number of in-flight requests at maxConcurrent", async () => {
   assert.equal(maxActive, 2);
 });
 
+test("minIntervalMs spaces consecutive request starts by at least that much", async () => {
+  // Uses the real default sleep/clock (not an injected fake): a shared fake
+  // "clock" variable bumped synchronously by a fake sleep can't faithfully
+  // model concurrent real time (bumping it is an instant side effect, not an
+  // actual wait), so asserting on which call landed at which fake timestamp
+  // is order-dependent on microtask interleaving, not on pacing being
+  // correct. Measuring real elapsed time for a small, fixed interval instead
+  // sidesteps that: it only takes tens of ms, well within an offline test's
+  // budget, and still fails if pacing is removed or broken.
+  let calls = 0;
+  const fetchImpl: FetchLike = (async () => {
+    calls++;
+    return new Response(
+      JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        result: { context: { slot: 1 }, value: { amount: "1", decimals: 0, uiAmount: 1, uiAmountString: "1" } },
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    );
+  }) as FetchLike;
+
+  const client = new SolanaRpcClient("https://example.test/rpc", fetchImpl, { minIntervalMs: 25 });
+
+  const start = Date.now();
+  await Promise.all([
+    client.getTokenSupply("Mint1"),
+    client.getTokenSupply("Mint2"),
+    client.getTokenSupply("Mint3"),
+    client.getTokenSupply("Mint4"),
+  ]);
+  const elapsed = Date.now() - start;
+
+  assert.equal(calls, 4);
+  // 4 calls spaced >=25ms apart means >=3 gaps; allow slack for scheduling jitter.
+  assert.ok(elapsed >= 70, `expected >=70ms elapsed from pacing, got ${elapsed}ms`);
+});
+
+test("minIntervalMs of 0 (the default) does not space requests at all", async () => {
+  let calls = 0;
+  const fetchImpl: FetchLike = (async () => {
+    calls++;
+    return new Response(
+      JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        result: { context: { slot: 1 }, value: { amount: "1", decimals: 0, uiAmount: 1, uiAmountString: "1" } },
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    );
+  }) as FetchLike;
+
+  const client = new SolanaRpcClient("https://example.test/rpc", fetchImpl);
+  await Promise.all([client.getTokenSupply("Mint1"), client.getTokenSupply("Mint2")]);
+  assert.equal(calls, 2);
+});
+
 test("safeGetTransaction returns the transaction on success", async () => {
   const rpc = { getTransaction: async () => ({ ok: true }) as any };
   const result = await safeGetTransaction(rpc, "sig1");

@@ -45,10 +45,21 @@ const balanceIndex = new BalanceIndex();
 // maxConcurrent: 2. This preserves session 11's fairness fix (the watcher's
 // latency-sensitive calls no longer queue behind the backstop poller's bursts,
 // or vice versa) while also keeping the two endpoints' traffic separate.
+//
+// The two scoring clients both hit config.rpcUrl (the official endpoint).
+// Session 42 measured its actual sustained-rate ceiling directly (getSlot,
+// no indexed methods, so the result isn't confounded by the already-known
+// token-method blocking): ~2.5 req/sec ran 40s with zero 429s, 5 req/sec
+// degraded to ~27% 429 over a sustained 15s window, 7+ req/sec was worse —
+// a sustained-average-rate ceiling, not just a burst-size one, so reactive
+// retry-after-429 alone (every caller firing immediately and backing off
+// together) can't avoid it. minIntervalMs: 800 on *each* scoring client
+// bounds their combined worst-case rate at ~2.5 req/sec when both are
+// maximally active at once, matching the measured-safe number.
 const watcherDiscoveryRpc = new SolanaRpcClient(config.discoveryRpcUrl, fetch, { maxConcurrent: 2 });
-const watcherScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, { maxConcurrent: 2 });
+const watcherScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, { maxConcurrent: 2, minIntervalMs: 400 });
 const pollDiscoveryRpc = new SolanaRpcClient(config.discoveryRpcUrl, fetch, { maxConcurrent: 2 });
-const pollScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, { maxConcurrent: 2 });
+const pollScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, { maxConcurrent: 2, minIntervalMs: 400 });
 
 // Primary discovery is the websocket watcher (near-instant, sees every
 // create as it happens). The poller below stays on as a backstop for

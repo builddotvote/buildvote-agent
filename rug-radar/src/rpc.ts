@@ -116,11 +116,26 @@ export interface RetryOptions {
   // instead of draining (observed live). Queuing them here, one client-wide
   // limit shared by every caller, spaces requests out instead.
   maxConcurrent?: number;
+  // Minimum spacing, in ms, between the *start* of consecutive requests from
+  // this client — reactive retry-after-429 alone still lets every caller fire
+  // at once and then all back off together. Measured live against the
+  // official endpoint (session 42, getSlot, no indexed methods): a sustained
+  // ~2.5 req/sec (400ms spacing) ran 40s with zero 429s, while 5 req/sec
+  // degraded to ~27% 429 over a sustained 15s window and 7+ req/sec was worse
+  // — the ceiling is a sustained average rate, not just burst size. Disabled
+  // (0) by default so every existing caller/test is unaffected; callers that
+  // hit the rate-limited endpoint should opt in explicitly.
+  minIntervalMs?: number;
+  // Injectable clock for minIntervalMs's spacing math, same reasoning as the
+  // injectable `sleep` above: keeps pacing tests instant and deterministic
+  // instead of depending on real elapsed wall-clock time.
+  now?: () => number;
 }
 
 const DEFAULT_MAX_RETRIES = 4;
 const DEFAULT_BASE_DELAY_MS = 300;
 const DEFAULT_MAX_CONCURRENT = 4;
+const DEFAULT_MIN_INTERVAL_MS = 0;
 
 function defaultSleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -134,6 +149,10 @@ export class SolanaRpcClient {
   private readonly maxConcurrent: number;
   private activeCount = 0;
   private readonly waiters: Array<() => void> = [];
+  private readonly minIntervalMs: number;
+  private readonly now: () => number;
+  private lastRequestStartedAt = -Infinity;
+  private paceChain: Promise<void> = Promise.resolve();
 
   constructor(
     private readonly url: string,
@@ -144,6 +163,23 @@ export class SolanaRpcClient {
     this.baseDelayMs = retry.baseDelayMs ?? DEFAULT_BASE_DELAY_MS;
     this.sleep = retry.sleep ?? defaultSleep;
     this.maxConcurrent = retry.maxConcurrent ?? DEFAULT_MAX_CONCURRENT;
+    this.minIntervalMs = retry.minIntervalMs ?? DEFAULT_MIN_INTERVAL_MS;
+    this.now = retry.now ?? Date.now;
+  }
+
+  // Reserves the next request-start slot at least minIntervalMs after the
+  // previous one. Chained (not just read-then-write) so concurrent callers
+  // queue for a slot in call order instead of racing on lastRequestStartedAt
+  // and under-spacing each other.
+  private pace(): Promise<void> {
+    if (this.minIntervalMs <= 0) return Promise.resolve();
+    const ticket = this.paceChain.then(async () => {
+      const wait = this.lastRequestStartedAt + this.minIntervalMs - this.now();
+      if (wait > 0) await this.sleep(wait);
+      this.lastRequestStartedAt = this.now();
+    });
+    this.paceChain = ticket;
+    return ticket;
   }
 
   private acquireSlot(): Promise<void> {
@@ -164,6 +200,7 @@ export class SolanaRpcClient {
   }
 
   private async request<T>(method: string, params: unknown[]): Promise<T> {
+    await this.pace();
     await this.acquireSlot();
     try {
       for (let attempt = 0; ; attempt++) {

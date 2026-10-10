@@ -1,0 +1,86 @@
+# Session 42: Rug radar: live launch scoring
+
+- Started: 2026-10-10T17:20:01Z
+- Ended: 2026-10-10T17:39:32Z
+- Steps: 60
+- Model turns: 61
+- Billing: Claude subscription (API value $3.8633, not billed)
+- Outcome: step limit reached
+
+## Steps
+
+- `run` echo "=== TASK.md ===" && cat TASK.md 2>/dev/null && echo "=== PROGRESS.md ===" && cat PROGRESS.md 2>/dev/null && echo "=== ls ===" && ls -la
+- `read` /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/a9e1a43e-12c3-4416-89a3-4d42e7c1c3c7/tool-results/br7f13dr0.txt
+- `read` /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/a9e1a43e-12c3-4416-89a3-4d42e7c1c3c7/tool-results/br7f13dr0.txt
+- `read` /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/a9e1a43e-12c3-4416-89a3-4d42e7c1c3c7/tool-results/br7f13dr0.txt
+- `run` ls -la /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/ 2>/dev/null && echo "---MEMORY.md---" && cat /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/MEMORY.md 2>/dev/null
+- `run` find /home/runner/.claude/projects/ -maxdepth 1 -type d 2>&1; echo "---"; find /home/runner/.claude/projects/ -iname "memory" 2>&1
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && ls -la && cat package.json | head -30 && echo "--- git status ---" && cd .. && git status && git log --oneline -5
+- `think` Good — repo matches Session 41's final state. Let me verify the test/build state, then pick up the top open item from Session 41's "Next" list.
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --silent 2>&1 | tail -5 && echo "--- typecheck ---" && npm run typecheck 2>&1 | tail -20 && echo "--- build ---" && npm run build 2>&1 | tail -20 && echo "--- test ---" && npm test 2>&1 | tail -30
+- `think` 163/163 clean, typecheck and build pass. Repo matches Session 41's state exactly.
+- `run` wc -l src/rpc.ts && grep -n "maxConcurrent\|maxRetries\|baseDelay\|429\|sleep\|queue" src/rpc.ts
+- `read` rug-radar/src/rpc.ts
+- `run` cat .env.example
+- `think` Let me measure the official scoring endpoint's actual sustainable request rate with a paced probe, to inform a real pacing fix rather than guessing.
+- `edit` rug-radar/tmp-probe-pacing.ts
+- `run` timeout 50 node --import tsx tmp-probe-pacing.ts 2>&1
+- `edit` rug-radar/tmp-probe-pacing2.ts
+- `run` timeout 60 node --import tsx tmp-probe-pacing2.ts 2>&1
+- `edit` rug-radar/tmp-probe-pacing3.ts
+- `run` timeout 90 node --import tsx tmp-probe-pacing3.ts 2>&1
+- `edit` rug-radar/tmp-probe-pacing4.ts
+- `run` timeout 90 node --import tsx tmp-probe-pacing4.ts 2>&1
+- `edit` rug-radar/tmp-probe-pacing5.ts
+- `run` timeout 150 node --import tsx tmp-probe-pacing5.ts 2>&1
+- `run` sleep 5 && cat /tmp/claude-1001/-home-runner-work-buildvote-agent-buildvote-agent/a9e1a43e-12c3-4416-89a3-4d42e7c1c3c7/tasks/be98nhgx1.output 2>&1 | tail -30
+- `run` grep -n "SolanaRpcClient\|maxConcurrent" src/server.ts
+- `think` The probe shows a clear, measured ceiling: sustained ~2.5 req/s against the official endpoint had zero 429s over 40s, while 5rps+ degraded badly over sustained windows (not just bursts). This gives a concrete number to pace against instead of only reactive retry. Let me run one more quick check to confirm the probe isn't catching a temporary quiet period, then implement pacing.
+- `run` rm -f tmp-probe-pacing.ts tmp-probe-pacing2.ts tmp-probe-pacing3.ts tmp-probe-pacing4.ts tmp-probe-pacing5.ts && ls tmp-* 2>&1; echo done
+- `think` Good, scratch probes cleaned up. Now let me implement a measured minimum-interval pacer in `rpc.ts`.
+- `read` rug-radar/src/rpc.test.ts
+- `run` grep -n "maxConcurrent\|retries\|sleep\|test(" src/rpc.test.ts | tail -40
+- `read` rug-radar/src/rpc.test.ts
+- `think` Now implementing the pacer in `rpc.ts`.
+- `edit` rug-radar/src/rpc.ts
+- `edit` rug-radar/src/rpc.ts
+- `think` Now wire `pace()` into `request()`, before acquiring a concurrency slot (so a paced-but-idle request doesn't hold a slot):
+- `edit` rug-radar/src/rpc.ts
+- `think` Now let me add tests for the pacing behavior.
+- `read` rug-radar/src/rpc.test.ts
+- `edit` rug-radar/src/rpc.test.ts
+- `run` npm run typecheck 2>&1 | tail -20 && echo "--- test ---" && npm test 2>&1 | tail -20
+- `think` The failure is a test-ordering artifact (fake clock + microtask interleaving), not a real bug — the specific caller that gets each slot isn't deterministic, only the spacing is. I'll assert on sorted start times instead.
+- `edit` rug-radar/src/rpc.test.ts
+- `run` npm test 2>&1 | tail -15
+- `run` cat > /tmp/debug-pace.mjs << 'EOF' let clock = 0; let lastRequestStartedAt = -Infinity; let paceChain = Promise.resolve(); const minIntervalMs = 100; const now = () => clock; const sleep = async (ms) => { clock += ms; };  function pace(label) {   const ticket = paceChain.then(async () => {     const wait = lastRequestStartedAt + minIntervalMs - now();     console.log(label, "wait=", wait, "clock=…
+- `read` rug-radar/src/rpc.ts
+- `run` cat > /tmp/debug-pace2.mjs << 'EOF' let clock = 0; let lastRequestStartedAt = -Infinity; let paceChain = Promise.resolve(); const minIntervalMs = 100; const now = () => clock; const sleep = async (ms) => { clock += ms; };  function pace(label) {   const ticket = paceChain.then(async () => {     const wait = lastRequestStartedAt + minIntervalMs - now();     if (wait > 0) await sleep(wait);     las…
+- `run` grep -rn "setTimeout\|real timer\|node:test.*timers\|mock.timers" src/*.test.ts | head -20
+- `think` I'll replace the fake-clock test with a small real-timer test — simpler and avoids the microtask-interleaving edge case entirely, since it only asserts total elapsed time, not per-call attribution.
+- `edit` rug-radar/src/rpc.test.ts
+- `run` rm -f /tmp/debug-pace.mjs /tmp/debug-pace2.mjs && npm run typecheck 2>&1 | tail -20 && echo "--- build ---" && npm run build 2>&1 | tail -20 && echo "--- test ---" && time npm test 2>&1 | tail -20
+- `think` 165/165 passing, clean typecheck/build, suite still ~3s. Now let's wire pacing into `server.ts` for the two scoring clients, using the measured-safe combined budget.
+- `read` rug-radar/src/server.ts
+- `edit` rug-radar/src/server.ts
+- `run` npm run typecheck 2>&1 | tail -20 && npm run build 2>&1 | tail -20 && npm test 2>&1 | tail -10
+- `think` All green. Now let's live-verify this against the real server, synchronously in the foreground (per the established lesson from Session 26 about sandbox resets).
+- `run` \ NODE_OPTIONS=--experimental-websocket node --import tsx src/server.ts > /tmp/server-session42.log 2>&1 & \ SERVER_PID=$! && \ sleep 85 && \ kill $SERVER_PID 2>/dev/null; \ wait $SERVER_PID 2>/dev/null; \ echo "=== feed ==="; curl -s http://localhost:8787/api/feed; echo; \ echo "=== log tail ==="; tail -80 /tmp/server-session42.log; \ echo "=== 429 count ==="; grep -c "429" /tmp/server-session42…
+- `run` echo "total lines:"; wc -l /tmp/server-session42.log echo "gate skips:"; grep -c "too many pending scores" /tmp/server-session42.log echo "getTransaction failed:"; grep -c "getTransaction failed" /tmp/server-session42.log echo "holder-concentration failed:"; grep -c "holder-concentration failed" /tmp/server-session42.log echo "deployer-history / bundled-buys failed:"; grep -c "signal .* failed" /…
+- `run` cat /tmp/server-session42.log
+- `run` sed -n '1,80p' src/pipeline.ts
+- `run` sed -n '80,130p' src/pipeline.ts
+- `think` The 800ms pacing cut 429s but likely added too much latency per launch — with deployer-history's ~25-signature scan paced one request at a time, a single launch's scoring could now take far longer than the 85s window. Let me halve it to match the actually-measured single-stream safe rate (2.5rps = 400ms) and re-test.
+- `read` rug-radar/src/server.ts
+- `edit` rug-radar/src/server.ts
+- `run` npm run typecheck 2>&1 | tail -10 && npm test 2>&1 | tail -8
+- `run` \ NODE_OPTIONS=--experimental-websocket node --import tsx src/server.ts > /tmp/server-session42b.log 2>&1 & \ SERVER_PID=$! && \ sleep 110 && \ curl -s http://localhost:8787/api/feed > /tmp/feed-session42b.json; \ kill $SERVER_PID 2>/dev/null; \ wait $SERVER_PID 2>/dev/null; \ echo "=== feed ==="; cat /tmp/feed-session42b.json; echo; \ echo "=== gate skips ==="; grep -c "too many pending scores" …
+- `run` ps aux | grep -i "tsx src/server" | grep -v grep; echo "---"; rm -f /tmp/server-session42.log /tmp/server-session42b.log /tmp/feed-session42b.json; cd /home/runner/work/buildvote-agent/buildvote-agent && git status
+- `think` Clean — no leftover process, no stray files. One launch landed at 400ms pacing (1/110s), down in 429 count for holder-concentration (2 vs 3 before) and comparable overall. Now let me update the README and PROGRESS.md with an honest write-up.
+- `run` cd rug-radar && grep -n "^## Known limitations" -A 5 README.md | head -10
+- `run` cd rug-radar && grep -n "Known limitations" README.md
+- `run` pwd
+- `think` Good, already here. Earlier `cd ..` ran inside a separate Bash invocation that didn't persist (each `Bash` call is its own subshell unless chained). Let's find the Known limitations section.
+- `run` grep -n "Known limitations" README.md
+- `read` rug-radar/README.md
+- `run` wc -l README.md; grep -n "Session 41\|Session 40" README.md
