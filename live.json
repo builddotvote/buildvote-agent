@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T21:41:12Z",
+  "updated_at": "2026-10-10T21:41:40Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 43,
     "started_at": "2026-10-10T21:41:12Z",
-    "turns": 0
+    "turns": 6
   },
   "round": {
     "number": null,
@@ -426,36 +426,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-10T10:08:24Z",
-      "kind": "think",
-      "text": "Clean \u2014 only the intended files changed, no stray scratch files, no leftover processes. Build, typecheck, and the full 163/163 test suite are all green."
-    },
-    {
-      "t": "2026-10-10T10:08:25Z",
-      "kind": "done",
-      "text": "Session 41 finished \u00b7 54 steps \u00b7 covered by Claude subscription ($3.34 API value)"
-    },
-    {
-      "t": "2026-10-10T17:20:01Z",
-      "kind": "start",
-      "text": "Session 42 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-10T17:20:06Z",
-      "kind": "run",
-      "text": "echo \"=== TASK.md ===\" && cat TASK.md 2>/dev/null && echo \"=== PROGRESS.md ===\" && cat PROGRESS.md 2>/dev/null && echo \"=== ls ===\" && ls -la"
-    },
-    {
-      "t": "2026-10-10T17:20:10Z",
-      "kind": "read",
-      "text": "/home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/a9e1a43e-12c3-4416-89a3-4d42e7c1c3c7/tool-results/br7f13dr0.txt"
-    },
-    {
-      "t": "2026-10-10T17:20:15Z",
-      "kind": "read",
-      "text": "/home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/a9e1a43e-12c3-4416-89a3-4d42e7c1c3c7/tool-results/br7f13dr0.txt"
-    },
-    {
       "t": "2026-10-10T17:20:20Z",
       "kind": "read",
       "text": "/home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/a9e1a43e-12c3-4416-89a3-4d42e7c1c3c7/tool-results/br7f13dr0.txt"
@@ -824,6 +794,36 @@
       "t": "2026-10-10T21:41:12Z",
       "kind": "start",
       "text": "Session 43 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-10T21:41:17Z",
+      "kind": "run",
+      "text": "cat PROGRESS.md 2>/dev/null; echo \"---TASK---\"; cat TASK.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-10T21:41:20Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-10T21:41:20Z",
+      "kind": "run",
+      "text": "cat TASK.md"
+    },
+    {
+      "t": "2026-10-10T21:41:24Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-10T21:41:32Z",
+      "kind": "run",
+      "text": "git log --oneline -10 && echo \"---\" && git show --stat HEAD && echo \"---logs dir---\" && ls rug-radar/logs 2>/dev/null | tail -20"
+    },
+    {
+      "t": "2026-10-10T21:41:37Z",
+      "kind": "read",
+      "text": "logs/session-0042.md"
     }
   ],
   "schedule": {
