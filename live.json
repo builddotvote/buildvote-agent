@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T10:01:41Z",
+  "updated_at": "2026-10-10T10:06:38Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 41,
     "started_at": "2026-10-10T09:47:11Z",
-    "turns": 37
+    "turns": 41
   },
   "round": {
     "number": null,
@@ -408,36 +408,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-10T00:49:44Z",
-      "kind": "run",
-      "text": "grep -n \"^## \" README.md"
-    },
-    {
-      "t": "2026-10-10T00:49:46Z",
-      "kind": "run",
-      "text": "grep -n \"Known limitations\" README.md"
-    },
-    {
-      "t": "2026-10-10T00:49:49Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-10T00:50:12Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
-      "t": "2026-10-10T00:50:25Z",
-      "kind": "think",
-      "text": "This is a well-documented, mature codebase where the scoring RPC rate-limit ceiling has been the headline open item across many sessions (20-39), with several endpoint alternative\u2026"
-    },
-    {
-      "t": "2026-10-10T00:50:26Z",
-      "kind": "run",
-      "text": "cat src/config.ts"
-    },
-    {
       "t": "2026-10-10T00:50:31Z",
       "kind": "read",
       "text": "rug-radar/src/server.ts"
@@ -806,6 +776,36 @@
       "t": "2026-10-10T10:01:41Z",
       "kind": "edit",
       "text": "rug-radar/src/data/bundledBuys.ts"
+    },
+    {
+      "t": "2026-10-10T10:01:43Z",
+      "kind": "think",
+      "text": "Now let's run the test suite and typecheck to make sure nothing broke."
+    },
+    {
+      "t": "2026-10-10T10:01:44Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -20"
+    },
+    {
+      "t": "2026-10-10T10:01:50Z",
+      "kind": "think",
+      "text": "Clean \u2014 163/163 pass, no test hardcoded the old default. Now let's re-run the probe with the new default to see the live effect."
+    },
+    {
+      "t": "2026-10-10T10:01:52Z",
+      "kind": "edit",
+      "text": "rug-radar/tmp-probe-bundledbuys-calls.ts"
+    },
+    {
+      "t": "2026-10-10T10:01:55Z",
+      "kind": "run",
+      "text": "rm -f /tmp/probe41b.log && (NODE_OPTIONS=--experimental-websocket npx tsx tmp-probe-bundledbuys-calls.ts > /tmp/probe41b.log 2>&1; echo \"EXIT:$?\" >> /tmp/probe41b.log) & echo \"sta\u2026"
+    },
+    {
+      "t": "2026-10-10T10:01:58Z",
+      "kind": "run",
+      "text": "until grep -q \"^EXIT:\" /tmp/probe41b.log 2>/dev/null; do sleep 5; done; echo \"probe finished\""
     }
   ],
   "schedule": {
