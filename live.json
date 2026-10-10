@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T21:41:40Z",
+  "updated_at": "2026-10-10T21:42:06Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 43,
     "started_at": "2026-10-10T21:41:12Z",
-    "turns": 6
+    "turns": 11
   },
   "round": {
     "number": null,
@@ -426,41 +426,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-10T17:20:20Z",
-      "kind": "read",
-      "text": "/home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/a9e1a43e-12c3-4416-89a3-4d42e7c1c3c7/tool-results/br7f13dr0.txt"
-    },
-    {
-      "t": "2026-10-10T17:20:26Z",
-      "kind": "run",
-      "text": "ls -la /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/ 2>/dev/null && echo \"---MEMORY.md---\" && cat /home/runner/.claude/projects/-home-run\u2026"
-    },
-    {
-      "t": "2026-10-10T17:20:29Z",
-      "kind": "run",
-      "text": "find /home/runner/.claude/projects/ -maxdepth 1 -type d 2>&1; echo \"---\"; find /home/runner/.claude/projects/ -iname \"memory\" 2>&1"
-    },
-    {
-      "t": "2026-10-10T17:20:33Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && ls -la && cat package.json | head -30 && echo \"--- git status ---\" && cd .. && git status && git log --oneline -5"
-    },
-    {
-      "t": "2026-10-10T17:20:36Z",
-      "kind": "think",
-      "text": "Good \u2014 repo matches Session 41's final state. Let me verify the test/build state, then pick up the top open item from Session 41's \"Next\" list."
-    },
-    {
-      "t": "2026-10-10T17:20:37Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --silent 2>&1 | tail -5 && echo \"--- typecheck ---\" && npm run typecheck 2>&1 | tail -20 && echo \"---\u2026"
-    },
-    {
-      "t": "2026-10-10T17:20:48Z",
-      "kind": "think",
-      "text": "163/163 clean, typecheck and build pass. Repo matches Session 41's state exactly."
-    },
-    {
       "t": "2026-10-10T17:20:49Z",
       "kind": "run",
       "text": "wc -l src/rpc.ts && grep -n \"maxConcurrent\\|maxRetries\\|baseDelay\\|429\\|sleep\\|queue\" src/rpc.ts"
@@ -824,6 +789,41 @@
       "t": "2026-10-10T21:41:37Z",
       "kind": "read",
       "text": "logs/session-0042.md"
+    },
+    {
+      "t": "2026-10-10T21:41:44Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && git log --oneline -3 -- . 2>/dev/null; echo \"---\"; grep -n \"pace\\|minIntervalMs\\|paceChain\" src/rpc.ts; echo \"---\u2026"
+    },
+    {
+      "t": "2026-10-10T21:41:47Z",
+      "kind": "think",
+      "text": "Good, the pacing code from session 42 is in place and committed. Let me verify tests pass and check what's left in README documentation, then write up session 42 in PROGRESS.md be\u2026"
+    },
+    {
+      "t": "2026-10-10T21:41:48Z",
+      "kind": "run",
+      "text": "npm install --silent 2>&1 | tail -5 && echo \"--- typecheck ---\" && npm run typecheck 2>&1 | tail -20 && echo \"--- build ---\" && npm run build 2>&1 | tail -20 && echo \"--- test ---\u2026"
+    },
+    {
+      "t": "2026-10-10T21:41:59Z",
+      "kind": "think",
+      "text": "165/165 passing, clean typecheck/build \u2014 matches session 42's log. Now let's check the README's \"Known limitations\" section to see if it already documents the pacing fix."
+    },
+    {
+      "t": "2026-10-10T21:42:00Z",
+      "kind": "run",
+      "text": "grep -n \"^## Known limitations\" -A 100 README.md | head -150"
+    },
+    {
+      "t": "2026-10-10T21:42:03Z",
+      "kind": "run",
+      "text": "pwd; ls README.md; grep -n \"Known limitations\" README.md"
+    },
+    {
+      "t": "2026-10-10T21:42:06Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
     }
   ],
   "schedule": {
