@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T00:55:32Z",
+  "updated_at": "2026-10-10T00:56:00Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 40,
     "started_at": "2026-10-10T00:48:14Z",
-    "turns": 25
+    "turns": 27
   },
   "round": {
     "number": null,
@@ -399,26 +399,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-09T18:21:54Z",
-      "kind": "read",
-      "text": ""
-    },
-    {
-      "t": "2026-10-09T18:21:55Z",
-      "kind": "read",
-      "text": "rug-radar/src/wsDiscovery.ts"
-    },
-    {
-      "t": "2026-10-09T18:21:57Z",
-      "kind": "run",
-      "text": "sed -n '1,60p' src/server.ts"
-    },
-    {
-      "t": "2026-10-09T18:22:07Z",
-      "kind": "run",
-      "text": "grep -n \"export function safeGetTransaction\\|export class SolanaRpcClient\\|getSignaturesForAddress\\|getTransaction(\" src/rpc.ts | head -20"
-    },
-    {
       "t": "2026-10-09T18:22:09Z",
       "kind": "think",
       "text": "Now let me write the instrumented probe."
@@ -797,6 +777,26 @@
       "t": "2026-10-10T00:55:32Z",
       "kind": "edit",
       "text": "rug-radar/src/data/deployerHistory.ts"
+    },
+    {
+      "t": "2026-10-10T00:55:34Z",
+      "kind": "think",
+      "text": "Now let's run the offline tests, typecheck, and build to confirm nothing broke."
+    },
+    {
+      "t": "2026-10-10T00:55:35Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -20 && echo \"---TEST---\" && npm test 2>&1 | tail -15"
+    },
+    {
+      "t": "2026-10-10T00:55:42Z",
+      "kind": "think",
+      "text": "163/163 still pass. Now let's live-verify the actual effect of this change with the same measurement probe, against a fresh real launch."
+    },
+    {
+      "t": "2026-10-10T00:55:43Z",
+      "kind": "run",
+      "text": "NODE_OPTIONS=--experimental-websocket timeout 180 npx tsx tmp-probe-callcount.ts 2>&1 | grep -v \"RPC HTTP error 429\""
     }
   ],
   "schedule": {
