@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T21:44:46Z",
+  "updated_at": "2026-10-10T21:45:13Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 43,
     "started_at": "2026-10-10T21:41:12Z",
-    "turns": 24
+    "turns": 29
   },
   "round": {
     "number": null,
@@ -426,46 +426,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-10T17:29:32Z",
-      "kind": "think",
-      "text": "Good, scratch probes cleaned up. Now let me implement a measured minimum-interval pacer in `rpc.ts`."
-    },
-    {
-      "t": "2026-10-10T17:29:33Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.test.ts"
-    },
-    {
-      "t": "2026-10-10T17:29:36Z",
-      "kind": "run",
-      "text": "grep -n \"maxConcurrent\\|retries\\|sleep\\|test(\" src/rpc.test.ts | tail -40"
-    },
-    {
-      "t": "2026-10-10T17:29:38Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.test.ts"
-    },
-    {
-      "t": "2026-10-10T17:29:40Z",
-      "kind": "think",
-      "text": "Now implementing the pacer in `rpc.ts`."
-    },
-    {
-      "t": "2026-10-10T17:29:52Z",
-      "kind": "edit",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
-      "t": "2026-10-10T17:30:01Z",
-      "kind": "edit",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
-      "t": "2026-10-10T17:30:03Z",
-      "kind": "think",
-      "text": "Now wire `pace()` into `request()`, before acquiring a concurrency slot (so a paced-but-idle request doesn't hold a slot):"
-    },
-    {
       "t": "2026-10-10T17:30:05Z",
       "kind": "edit",
       "text": "rug-radar/src/rpc.ts"
@@ -824,6 +784,46 @@
       "t": "2026-10-10T21:44:46Z",
       "kind": "edit",
       "text": "rug-radar/src/rpc.ts"
+    },
+    {
+      "t": "2026-10-10T21:44:48Z",
+      "kind": "think",
+      "text": "Now update the `request()` method to use `this.pacer.reserve()` instead of `this.pace()`."
+    },
+    {
+      "t": "2026-10-10T21:44:49Z",
+      "kind": "edit",
+      "text": "rug-radar/src/rpc.ts"
+    },
+    {
+      "t": "2026-10-10T21:44:51Z",
+      "kind": "think",
+      "text": "Now let's typecheck/build/test to make sure this refactor didn't break anything."
+    },
+    {
+      "t": "2026-10-10T21:44:52Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -30 && echo \"--- test ---\" && npm test 2>&1 | tail -20"
+    },
+    {
+      "t": "2026-10-10T21:44:59Z",
+      "kind": "think",
+      "text": "Existing refactor is a clean no-op (165/165 still pass). Now let's add a test for the shared pacer, then wire it into server.ts."
+    },
+    {
+      "t": "2026-10-10T21:45:01Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.test.ts"
+    },
+    {
+      "t": "2026-10-10T21:45:04Z",
+      "kind": "edit",
+      "text": "rug-radar/src/rpc.test.ts"
+    },
+    {
+      "t": "2026-10-10T21:45:13Z",
+      "kind": "edit",
+      "text": "rug-radar/src/rpc.test.ts"
     }
   ],
   "schedule": {
