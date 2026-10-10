@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T09:47:38Z",
+  "updated_at": "2026-10-10T09:48:05Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 41,
     "started_at": "2026-10-10T09:47:11Z",
-    "turns": 6
+    "turns": 10
   },
   "round": {
     "number": null,
@@ -408,26 +408,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-09T18:30:14Z",
-      "kind": "think",
-      "text": "No stray files or processes. Now let's update the README and PROGRESS.md."
-    },
-    {
-      "t": "2026-10-09T18:30:15Z",
-      "kind": "run",
-      "text": "grep -n \"signatureLimit\\|findFundingSource\\|33%\\|lookback-limit\\|Known limitations\" README.md | head -40"
-    },
-    {
-      "t": "2026-10-09T18:30:17Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-09T18:30:19Z",
-      "kind": "think",
-      "text": "Now let's find the \"Bundled buys\" signal description section to add context about the fix itself (not just the limitations entry)."
-    },
-    {
       "t": "2026-10-09T18:30:19Z",
       "kind": "run",
       "text": "grep -n \"fetchBundledBuysInput\\|### Bundled\\|## Bundled\\|Bundled buys\" README.md | head -20"
@@ -806,6 +786,26 @@
       "t": "2026-10-10T09:47:33Z",
       "kind": "run",
       "text": "npm install --silent 2>&1 | tail -20 && npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -40"
+    },
+    {
+      "t": "2026-10-10T09:47:43Z",
+      "kind": "run",
+      "text": "cat src/data/bundledBuys.ts"
+    },
+    {
+      "t": "2026-10-10T09:47:54Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvota-agent 2>/dev/null; sed -n '1,400p' README.md | grep -n \"Known limitations\""
+    },
+    {
+      "t": "2026-10-10T09:47:58Z",
+      "kind": "run",
+      "text": "sed -n '380,520p' README.md"
+    },
+    {
+      "t": "2026-10-10T09:48:02Z",
+      "kind": "run",
+      "text": "cat src/config.ts"
     }
   ],
   "schedule": {
