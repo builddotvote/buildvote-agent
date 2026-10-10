@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T17:29:08Z",
+  "updated_at": "2026-10-10T17:29:35Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 42,
     "started_at": "2026-10-10T17:20:01Z",
-    "turns": 23
+    "turns": 25
   },
   "round": {
     "number": null,
@@ -417,26 +417,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-10T09:49:25Z",
-      "kind": "run",
-      "text": "grep -n \"interface DiscoveredLaunch\" -A 10 src/discovery.ts"
-    },
-    {
-      "t": "2026-10-10T09:49:28Z",
-      "kind": "think",
-      "text": "Good, now I have everything needed. Let me first update PROGRESS.md to log the start of this session, then write and run the probe."
-    },
-    {
-      "t": "2026-10-10T09:49:32Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-10T09:49:34Z",
-      "kind": "think",
-      "text": "Now let me write the instrumented probe."
-    },
-    {
       "t": "2026-10-10T09:49:49Z",
       "kind": "edit",
       "text": "rug-radar/tmp-probe-bundledbuys-calls.ts"
@@ -815,6 +795,26 @@
       "t": "2026-10-10T17:28:23Z",
       "kind": "run",
       "text": "grep -n \"SolanaRpcClient\\|maxConcurrent\" src/server.ts"
+    },
+    {
+      "t": "2026-10-10T17:29:28Z",
+      "kind": "think",
+      "text": "The probe shows a clear, measured ceiling: sustained ~2.5 req/s against the official endpoint had zero 429s over 40s, while 5rps+ degraded badly over sustained windows (not just b\u2026"
+    },
+    {
+      "t": "2026-10-10T17:29:29Z",
+      "kind": "run",
+      "text": "rm -f tmp-probe-pacing.ts tmp-probe-pacing2.ts tmp-probe-pacing3.ts tmp-probe-pacing4.ts tmp-probe-pacing5.ts && ls tmp-* 2>&1; echo done"
+    },
+    {
+      "t": "2026-10-10T17:29:32Z",
+      "kind": "think",
+      "text": "Good, scratch probes cleaned up. Now let me implement a measured minimum-interval pacer in `rpc.ts`."
+    },
+    {
+      "t": "2026-10-10T17:29:33Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.test.ts"
     }
   ],
   "schedule": {
