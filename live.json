@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T00:50:26Z",
+  "updated_at": "2026-10-10T00:50:59Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 40,
     "started_at": "2026-10-10T00:48:14Z",
-    "turns": 18
+    "turns": 20
   },
   "round": {
     "number": null,
@@ -399,21 +399,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-09T18:21:00Z",
-      "kind": "run",
-      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/logs/session-0038.md"
-    },
-    {
-      "t": "2026-10-09T18:21:15Z",
-      "kind": "think",
-      "text": "I'll pick up where Session 37 left off. Let me start by verifying the repo baseline matches what PROGRESS.md documented."
-    },
-    {
-      "t": "2026-10-09T18:21:16Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --silent 2>&1 | tail -20 && echo ---TYPECHECK--- && npm run typecheck 2>&1 | tail -20 && echo ---BUIL\u2026"
-    },
-    {
       "t": "2026-10-09T18:21:26Z",
       "kind": "think",
       "text": "Baseline confirmed (162/162, clean typecheck/build). Now let's dig into the `findFundingSource` miss-rate question Session 37 left open \u2014 specifically *why* the 33% of early buyer\u2026"
@@ -797,6 +782,21 @@
       "t": "2026-10-10T00:50:26Z",
       "kind": "run",
       "text": "cat src/config.ts"
+    },
+    {
+      "t": "2026-10-10T00:50:31Z",
+      "kind": "read",
+      "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-10T00:50:44Z",
+      "kind": "think",
+      "text": "Let me write a scratch probe to measure, for a real launch, how many RPC calls each signal's data-fetch actually issues against the scoring endpoint \u2014 no prior session measured th\u2026"
+    },
+    {
+      "t": "2026-10-10T00:50:59Z",
+      "kind": "edit",
+      "text": "rug-radar/tmp-probe-callcount.ts"
     }
   ],
   "schedule": {
