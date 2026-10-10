@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T09:55:05Z",
+  "updated_at": "2026-10-10T09:55:32Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 41,
     "started_at": "2026-10-10T09:47:11Z",
-    "turns": 22
+    "turns": 26
   },
   "round": {
     "number": null,
@@ -408,31 +408,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-10T00:48:19Z",
-      "kind": "read",
-      "text": "TASK.md"
-    },
-    {
-      "t": "2026-10-10T00:48:20Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-10T00:48:22Z",
-      "kind": "think",
-      "text": "This is a large progress file. Let me read the rest to see the most recent sessions and current state."
-    },
-    {
-      "t": "2026-10-10T00:48:23Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-10T00:48:25Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
       "t": "2026-10-10T00:48:29Z",
       "kind": "read",
       "text": "PROGRESS.md"
@@ -806,6 +781,31 @@
       "t": "2026-10-10T09:55:05Z",
       "kind": "edit",
       "text": "rug-radar/tmp-probe-bundledbuys-calls.ts"
+    },
+    {
+      "t": "2026-10-10T09:55:19Z",
+      "kind": "read",
+      "text": "rug-radar/tmp-probe-bundledbuys-calls.ts"
+    },
+    {
+      "t": "2026-10-10T09:55:23Z",
+      "kind": "edit",
+      "text": "rug-radar/tmp-probe-bundledbuys-calls.ts"
+    },
+    {
+      "t": "2026-10-10T09:55:26Z",
+      "kind": "edit",
+      "text": "rug-radar/tmp-probe-bundledbuys-calls.ts"
+    },
+    {
+      "t": "2026-10-10T09:55:30Z",
+      "kind": "edit",
+      "text": "rug-radar/tmp-probe-bundledbuys-calls.ts"
+    },
+    {
+      "t": "2026-10-10T09:55:32Z",
+      "kind": "think",
+      "text": "Now run it with output redirected to a file so partial progress survives even if the overall command gets cut off."
     }
   ],
   "schedule": {
