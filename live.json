@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T09:49:24Z",
+  "updated_at": "2026-10-10T09:49:51Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 41,
     "started_at": "2026-10-10T09:47:11Z",
-    "turns": 14
+    "turns": 17
   },
   "round": {
     "number": null,
@@ -408,31 +408,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-09T18:30:42Z",
-      "kind": "think",
-      "text": "Now let's update PROGRESS.md with the Session 39 entry."
-    },
-    {
-      "t": "2026-10-09T18:31:00Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-09T18:31:01Z",
-      "kind": "think",
-      "text": "Let's do a final verification pass to confirm everything is clean before finishing."
-    },
-    {
-      "t": "2026-10-09T18:31:02Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10 && echo --- && cd .. && git status --short && ps aux | grep -i \"tsx\\|node\" | grep -v\u2026"
-    },
-    {
-      "t": "2026-10-09T18:31:10Z",
-      "kind": "think",
-      "text": "Clean: typecheck/build/tests all pass, only the intended files changed, no stray scratch files or processes."
-    },
-    {
       "t": "2026-10-09T18:31:10Z",
       "kind": "tool",
       "text": "TaskUpdate"
@@ -806,6 +781,31 @@
       "t": "2026-10-10T09:48:46Z",
       "kind": "run",
       "text": "sed -n '1,260p' src/rpc.ts"
+    },
+    {
+      "t": "2026-10-10T09:49:25Z",
+      "kind": "run",
+      "text": "grep -n \"interface DiscoveredLaunch\" -A 10 src/discovery.ts"
+    },
+    {
+      "t": "2026-10-10T09:49:28Z",
+      "kind": "think",
+      "text": "Good, now I have everything needed. Let me first update PROGRESS.md to log the start of this session, then write and run the probe."
+    },
+    {
+      "t": "2026-10-10T09:49:32Z",
+      "kind": "edit",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-10T09:49:34Z",
+      "kind": "think",
+      "text": "Now let me write the instrumented probe."
+    },
+    {
+      "t": "2026-10-10T09:49:49Z",
+      "kind": "edit",
+      "text": "rug-radar/tmp-probe-bundledbuys-calls.ts"
     }
   ],
   "schedule": {
