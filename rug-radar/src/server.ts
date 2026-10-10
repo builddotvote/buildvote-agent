@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { loadConfig } from "./config.js";
-import { SolanaRpcClient } from "./rpc.js";
+import { SolanaRpcClient, RequestPacer } from "./rpc.js";
 import { LiveFeed } from "./feed.js";
 import { pollOnce, type PollState } from "./poller.js";
 import { scoreLaunch } from "./pipeline.js";
@@ -53,13 +53,18 @@ const balanceIndex = new BalanceIndex();
 // degraded to ~27% 429 over a sustained 15s window, 7+ req/sec was worse —
 // a sustained-average-rate ceiling, not just a burst-size one, so reactive
 // retry-after-429 alone (every caller firing immediately and backing off
-// together) can't avoid it. minIntervalMs: 800 on *each* scoring client
-// bounds their combined worst-case rate at ~2.5 req/sec when both are
-// maximally active at once, matching the measured-safe number.
+// together) can't avoid it. Session 42 first paced each scoring client
+// independently (minIntervalMs: 400 each), which left a gap it flagged but
+// didn't fix: two independently-paced clients combine to ~5 req/sec against
+// the ~2.5 req/sec-safe ceiling, double the measured-safe rate. Session 43
+// closed that gap: one shared RequestPacer(400) between both scoring
+// clients enforces a single combined ~2.5 req/sec ceiling across whichever
+// one is calling, instead of each getting its own budget.
+const scoringPacer = new RequestPacer(400);
 const watcherDiscoveryRpc = new SolanaRpcClient(config.discoveryRpcUrl, fetch, { maxConcurrent: 2 });
-const watcherScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, { maxConcurrent: 2, minIntervalMs: 400 });
+const watcherScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, { maxConcurrent: 2, pacer: scoringPacer });
 const pollDiscoveryRpc = new SolanaRpcClient(config.discoveryRpcUrl, fetch, { maxConcurrent: 2 });
-const pollScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, { maxConcurrent: 2, minIntervalMs: 400 });
+const pollScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, { maxConcurrent: 2, pacer: scoringPacer });
 
 // Primary discovery is the websocket watcher (near-instant, sees every
 // create as it happens). The poller below stays on as a backstop for

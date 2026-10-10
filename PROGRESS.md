@@ -2427,3 +2427,156 @@ happening — see below.)*
   429-driven failures in this session's measurement — not a concern given
   how dominant the rate-limit effect was in both runs.
 - All five TASK.md steps remain functionally complete.
+
+## Session 42 — 2026-10-10
+
+*(Written up now, in Session 43 — Session 42 hit its step limit right after
+reading the README to prepare this entry and never wrote it; same recurring
+pattern as sessions 6-9/17/20/22-25/36. Reconstructed from
+`logs/session-0042.md`, which records every step, plus the code it left
+committed.)*
+
+### Done
+- Re-verified the repo first (163/163 tests, clean typecheck/build), then
+  tried a different angle on the scoring endpoint's rate-limit ceiling
+  (headline open item since session 20, with per-signal call-count cuts
+  from sessions 40-41 already hitting diminishing returns): proactive
+  client-side pacing instead of only reactive retry-after-429.
+- Measured the official endpoint's sustained safe rate with a throwaway
+  paced probe (`tmp-probe-pacing*.ts`, 5 iterations, all deleted after use)
+  using `getSlot` (a non-indexed method, so the measurement isn't skewed by
+  the separate indexed-method throttling sessions 20/28 found): a steady
+  ~2.5 req/sec (400ms spacing) ran 40s with zero 429s; 5 req/sec degraded to
+  ~27% 429 over a sustained 15s window; 7+ req/sec was worse. Conclusion:
+  the ceiling is a sustained average rate, not just burst size.
+- Implemented `minIntervalMs` in `src/rpc.ts`: a chained pacer
+  (`pace()`/`paceChain`) that reserves each request's start time at least
+  `minIntervalMs` after the previous one, queued in call order so concurrent
+  callers space out instead of racing on `lastRequestStartedAt`. Disabled
+  (`0`) by default so every existing caller/test is unaffected. 2 new tests
+  in `rpc.test.ts`; a first fake-clock version hit a microtask-ordering
+  flake (not a real bug — call attribution to a slot isn't deterministic
+  under a fake clock, only the spacing is), replaced with a simpler
+  real-timer test asserting total elapsed time instead.
+- Wired into `src/server.ts`: `watcherScoringRpc`/`pollScoringRpc` (the two
+  scoring clients) each got `minIntervalMs: 400`. First tried `800`, live
+  checked (85s foreground boot), found deployer-history's `getTransaction`-
+  heavy scan paced one-at-a-time took long enough that zero new launches
+  landed in the window; halved to `400` (the measured single-stream safe
+  rate) and re-checked over 110s: **1 launch landed in `/api/feed`**, plus a
+  measurable drop in holder-concentration's 429 count (2 vs 3 in a
+  comparable unpaced run).
+- Updated `rug-radar/README.md`'s "Known limitations" top entry with the
+  measurement, implementation, and both live-check results (session 42
+  paragraph, ends with the honest caveat that the two scoring clients pace
+  independently so their combined rate against the one shared endpoint is
+  still roughly double the measured single-stream-safe rate).
+- Cleaned up all 5 `tmp-probe-pacing*.ts` scratch files and confirmed no
+  leftover server process, per the step log.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 165/165 passing (2 new, in `rpc.test.ts`), all offline, ~3.5s.
+- Live-measured the official endpoint's safe sustained rate with 5
+  instrumented probes (deleted after use) and live-booted the real server
+  twice (85s at `minIntervalMs: 800`, then 110s at `400`) — see "Done" above
+  for both results.
+- `git status` after this session's own cleanup (confirmed in Session 43)
+  showed no leftover scratch files from session 42's work.
+
+### Next (confirmed in Session 43)
+- The scoring-endpoint rate-limit ceiling is reduced but still the binding
+  constraint — one launch in 110s is far below real-time discovery's rate.
+  The two scoring clients (`watcherScoringRpc`, `pollScoringRpc`) pace
+  independently at 400ms each, so their combined request rate against the
+  one shared endpoint is still roughly double the measured single-stream-
+  safe rate (2.5 req/sec). A shared, cross-client pacer — one `minIntervalMs`
+  budget split across both clients instead of 400ms each — is the logical
+  next step and wasn't attempted.
+- `RESCORE_DELAY_MS` (20s, session 34) is still untuned.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority.
+- All five TASK.md steps remain functionally complete.
+
+## Session 43 — 2026-10-10
+
+### Done
+- Re-verified the repo first (165/165 tests, clean typecheck/build — the
+  165 reflects session 42's 2 new pacing tests, confirmed uncommitted-doc
+  work didn't affect code), then found session 42's PROGRESS.md/README
+  write-up had never been written (same step-limit pattern as sessions
+  6-9/17/20/22-25/36) and backfilled both from `logs/session-0042.md` before
+  starting new work — see the "Session 42" entry above.
+- Picked up the exact gap session 42 flagged in its own `server.ts` comment
+  (which was already internally inconsistent: it described `minIntervalMs:
+  800` while the code next to it actually set `400`) and in its README/
+  PROGRESS write-up: the two scoring clients (`watcherScoringRpc`,
+  `pollScoringRpc`) paced independently at 400ms each, so their *combined*
+  request rate against the one shared official endpoint could still reach
+  ~5 req/sec — double the ~2.5 req/sec measured-safe ceiling from session
+  42's probe.
+- Fixed in `src/rpc.ts`: extracted the chained slot-reservation logic out of
+  `SolanaRpcClient` into a standalone `RequestPacer` class (`reserve()`),
+  and added a `pacer` option to `RetryOptions` that takes priority over
+  `minIntervalMs`/`now` when given. `SolanaRpcClient` now always has exactly
+  one `RequestPacer` (injected via `pacer`, or built internally from
+  `minIntervalMs` for backward compatibility) — existing callers/tests using
+  `minIntervalMs` directly are unaffected (verified: all pre-existing tests
+  passed unchanged after the refactor, before any new test was added). 1 new
+  test in `rpc.test.ts`: two `SolanaRpcClient`s sharing one `RequestPacer`
+  instance, asserted via combined real-elapsed-time the same way the
+  existing single-client `minIntervalMs` test asserts spacing.
+- `src/server.ts`: `watcherScoringRpc`/`pollScoringRpc` now share one
+  `new RequestPacer(400)` via the `pacer` option instead of each getting its
+  own `minIntervalMs: 400`. Rewrote the stale comment block above them
+  (the one with the 800-vs-400 inconsistency) to describe the shared pacer
+  and why session 42 left this gap open.
+- Live-checked foreground (110s, public mainnet-beta, no keys, same pattern
+  as every session since 26): **1 launch landed in `/api/feed`** — not more
+  than session 42's independently-paced check, so this is a correctness fix
+  for the double-rate gap, not a throughput win by itself. New, more
+  specific finding from the run's logs: of 39 total 429s, **37 were on
+  `getTransaction` and only 2 on `getTokenLargestAccounts`** — since session
+  42's rate measurement used `getSlot` (cheap, non-indexed) to find the
+  ~2.5 req/sec ceiling, the endpoint may throttle expensive calls like
+  `getTransaction` more strictly than cheap ones at the same request rate,
+  which a flat combined-RPS pacer across all methods wouldn't capture. Not
+  confirmed with a dedicated measurement this session.
+- Updated `rug-radar/README.md`'s "Known limitations" top entry with a
+  "Session 43" continuation (the fix, the live numbers, and the new
+  getTransaction-vs-getSlot throttling question raised above).
+- Confirmed no leftover scratch files or server process after the live
+  check (`ps aux`, `git status`) — this session used no scratch probe files
+  at all (the fix and its test were built directly, and the live check used
+  the real server/log/feed files in `/tmp`, all deleted after reading).
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 166/166 passing (1 new, in `rpc.test.ts`), all offline, ~3.2s.
+- Live-booted the real server once (110s, foreground, public mainnet-beta,
+  no keys): 1 launch landed in `/api/feed`, 39 total 429s (37
+  `getTransaction`, 2 `getTokenLargestAccounts`), 52 scoring-gate skips —
+  see "Done" above.
+- `git status`/`ps aux` after cleanup show only the intended
+  `rpc.ts`/`rpc.test.ts`/`server.ts`/README/PROGRESS changes — no stray
+  files, no leftover process.
+
+### Next
+- The new `getTransaction`-vs-`getSlot` throttling question (above) is the
+  most concrete open item: if confirmed, `RequestPacer` would need to be
+  per-method (or at least distinguish expensive indexed/transaction calls
+  from cheap ones) rather than one flat rate shared across every JSON-RPC
+  method a client calls. Worth a dedicated paced probe against
+  `getTransaction` specifically (same shape as session 42's `getSlot` probe)
+  before changing anything, not guessed at.
+- The scoring-endpoint rate-limit ceiling is still the binding constraint —
+  this session closed a real double-rate gap but didn't move the
+  launches-landed-per-window number in this one sample; sessions 40-43 have
+  now each made a structurally-correct, verified-honest improvement without
+  a dramatic throughput change, consistent with session 41's conclusion that
+  the endpoint's own throughput (not any one signal's or client's request
+  shape) is the dominant constraint.
+- `RESCORE_DELAY_MS` (20s, session 34) is still untuned.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority.
+- All five TASK.md steps remain functionally complete.

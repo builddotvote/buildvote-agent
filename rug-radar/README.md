@@ -696,6 +696,68 @@ doesn't fix.
   from session 37's 33% to **2% (5 of 217 buyers)** — the remaining handful
   are genuine "no funding transaction within `signatureLimit: 50`" cases, the
   kind of miss this lookback limit was always expected to have.
+  **Session 42** tried a different angle on the scoring-endpoint ceiling
+  (sessions 20-41, above) than any prior session: proactive client-side
+  pacing instead of only reactive retry-after-429. Measured the official
+  endpoint's sustained safe rate directly with a throwaway paced probe
+  (`getSlot`, a non-indexed method, so the measurement isn't skewed by the
+  indexed-method throttling sessions 20/28 found separately): a steady
+  ~2.5 req/sec (400ms between request starts) ran 40s with zero 429s, while
+  5 req/sec degraded to ~27% 429 over a sustained 15s window and 7+ req/sec
+  was worse — the ceiling is a sustained average rate, not just burst size,
+  so spacing requests out should help where retry-after-the-fact alone
+  hadn't. Implemented `minIntervalMs` in `src/rpc.ts`: a chained pacer that
+  reserves each request's start time at least `minIntervalMs` after the
+  previous one, queued in call order so concurrent callers space out instead
+  of racing (disabled by default — `0` — so every existing caller/test is
+  unaffected; opt-in only). 2 new tests in `rpc.test.ts` (real-timer-based,
+  not the fake-clock pattern used elsewhere, after a fake-clock version hit a
+  microtask-ordering flake unrelated to the spacing guarantee itself — see
+  the test file's comment). Wired into `src/server.ts`'s two scoring clients
+  (`watcherScoringRpc`, `pollScoringRpc`) at `minIntervalMs: 400` each (not
+  800, after a first live check — see below). Live-checked twice, foreground,
+  same pattern as sessions 26/27/34/40/41: at 800ms the single
+  `getTransaction`-heavy deployer-history scan, paced one request at a time,
+  took long enough that an 85s window still logged zero new launches
+  landing; dropping to 400ms (matching the measured single-stream safe rate
+  directly, since each scoring client paces independently rather than
+  sharing one combined budget) and re-checking over 110s got **1 launch
+  landing in `/api/feed`**, plus a measurable drop in holder-concentration's
+  429 count (2 vs 3 in a comparable unpaced run). Honest read: this is a
+  small, verified improvement in the same direction as sessions 40-41
+  (reduce pressure on an overwhelmed endpoint), not a fix for the ceiling —
+  one launch in 110s is still far below real-time discovery's rate, and the
+  two scoring clients pace independently of each other, so their *combined*
+  request rate against the one shared endpoint is still roughly double the
+  single-stream-safe rate this session measured. A shared, cross-client
+  pacer (one `minIntervalMs` budget split across
+  `watcherScoringRpc`/`pollScoringRpc` rather than 400ms each) is the
+  logical next step and wasn't attempted this session.
+  **Session 43** closed that gap: extracted `RequestPacer` out of
+  `SolanaRpcClient` in `src/rpc.ts` (same reserve-a-slot chaining logic, now
+  a standalone class) so one instance can be shared between multiple
+  clients instead of each client pacing independently.
+  `watcherScoringRpc`/`pollScoringRpc` in `src/server.ts` now share one
+  `RequestPacer(400)` (via the new `pacer` option, which takes priority over
+  `minIntervalMs`) instead of each getting its own `minIntervalMs: 400` —
+  whichever one calls next waits for the shared slot, so the combined rate
+  against the one endpoint they both hit is held to the measured-safe
+  ~2.5 req/sec regardless of which client is busier. 1 new test in
+  `rpc.test.ts` (two clients sharing one pacer, asserted via combined
+  elapsed time the same way the original `minIntervalMs` test asserts a
+  single client's spacing). Live-checked (110s, foreground, same pattern as
+  prior sessions): **1 launch landed in `/api/feed`** — not more than
+  session 42's independently-paced check, so this is a correctness fix for
+  the double-rate gap rather than a throughput win on its own. A new,
+  more specific finding from this run: of 39 total 429s logged, 37 were on
+  `getTransaction` specifically and only 2 on `getTokenLargestAccounts` —
+  since session 42's rate measurement used `getSlot` (a cheap, non-indexed
+  method) to find the ~2.5 req/sec ceiling, it's possible the endpoint
+  throttles expensive calls like `getTransaction` more strictly than cheap
+  ones at the same request rate, which a flat combined-RPS pacer across all
+  methods wouldn't capture. Not confirmed with a dedicated measurement this
+  session — worth a `getTransaction`-specific paced probe before tuning
+  `minIntervalMs` further.
 
 ## Setup
 

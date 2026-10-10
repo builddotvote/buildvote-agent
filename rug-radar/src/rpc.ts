@@ -124,12 +124,21 @@ export interface RetryOptions {
   // degraded to ~27% 429 over a sustained 15s window and 7+ req/sec was worse
   // — the ceiling is a sustained average rate, not just burst size. Disabled
   // (0) by default so every existing caller/test is unaffected; callers that
-  // hit the rate-limited endpoint should opt in explicitly.
+  // hit the rate-limited endpoint should opt in explicitly. Ignored if `pacer`
+  // is also given.
   minIntervalMs?: number;
   // Injectable clock for minIntervalMs's spacing math, same reasoning as the
   // injectable `sleep` above: keeps pacing tests instant and deterministic
-  // instead of depending on real elapsed wall-clock time.
+  // instead of depending on real elapsed wall-clock time. Ignored if `pacer`
+  // is also given (the pacer carries its own clock).
   now?: () => number;
+  // Share one RequestPacer across multiple SolanaRpcClient instances that hit
+  // the *same* rate-limited endpoint. Each client pacing independently via
+  // minIntervalMs still lets their combined rate exceed the measured-safe
+  // ceiling — e.g. two 400ms-paced clients combine to ~5 req/sec against a
+  // ~2.5 req/sec-safe endpoint (session 42's gap, closed session 43). Takes
+  // priority over minIntervalMs/now when given.
+  pacer?: RequestPacer;
 }
 
 const DEFAULT_MAX_RETRIES = 4;
@@ -141,6 +150,39 @@ function defaultSleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Reserves request-start slots at least minIntervalMs apart. Standalone (not
+// private to one SolanaRpcClient) so several clients hitting the same
+// rate-limited endpoint can share a single instance and get one combined
+// rate ceiling instead of each pacing independently — see RetryOptions.pacer.
+export class RequestPacer {
+  private lastRequestStartedAt = -Infinity;
+  private chain: Promise<void> = Promise.resolve();
+  private readonly now: () => number;
+  private readonly sleep: (ms: number) => Promise<void>;
+
+  constructor(
+    private readonly minIntervalMs: number,
+    opts: { now?: () => number; sleep?: (ms: number) => Promise<void> } = {},
+  ) {
+    this.now = opts.now ?? Date.now;
+    this.sleep = opts.sleep ?? defaultSleep;
+  }
+
+  // Chained (not just read-then-write) so concurrent callers queue for a slot
+  // in call order instead of racing on lastRequestStartedAt and
+  // under-spacing each other.
+  reserve(): Promise<void> {
+    if (this.minIntervalMs <= 0) return Promise.resolve();
+    const ticket = this.chain.then(async () => {
+      const wait = this.lastRequestStartedAt + this.minIntervalMs - this.now();
+      if (wait > 0) await this.sleep(wait);
+      this.lastRequestStartedAt = this.now();
+    });
+    this.chain = ticket;
+    return ticket;
+  }
+}
+
 export class SolanaRpcClient {
   private nextId = 1;
   private readonly maxRetries: number;
@@ -149,10 +191,7 @@ export class SolanaRpcClient {
   private readonly maxConcurrent: number;
   private activeCount = 0;
   private readonly waiters: Array<() => void> = [];
-  private readonly minIntervalMs: number;
-  private readonly now: () => number;
-  private lastRequestStartedAt = -Infinity;
-  private paceChain: Promise<void> = Promise.resolve();
+  private readonly pacer: RequestPacer;
 
   constructor(
     private readonly url: string,
@@ -163,23 +202,9 @@ export class SolanaRpcClient {
     this.baseDelayMs = retry.baseDelayMs ?? DEFAULT_BASE_DELAY_MS;
     this.sleep = retry.sleep ?? defaultSleep;
     this.maxConcurrent = retry.maxConcurrent ?? DEFAULT_MAX_CONCURRENT;
-    this.minIntervalMs = retry.minIntervalMs ?? DEFAULT_MIN_INTERVAL_MS;
-    this.now = retry.now ?? Date.now;
-  }
-
-  // Reserves the next request-start slot at least minIntervalMs after the
-  // previous one. Chained (not just read-then-write) so concurrent callers
-  // queue for a slot in call order instead of racing on lastRequestStartedAt
-  // and under-spacing each other.
-  private pace(): Promise<void> {
-    if (this.minIntervalMs <= 0) return Promise.resolve();
-    const ticket = this.paceChain.then(async () => {
-      const wait = this.lastRequestStartedAt + this.minIntervalMs - this.now();
-      if (wait > 0) await this.sleep(wait);
-      this.lastRequestStartedAt = this.now();
-    });
-    this.paceChain = ticket;
-    return ticket;
+    this.pacer =
+      retry.pacer ??
+      new RequestPacer(retry.minIntervalMs ?? DEFAULT_MIN_INTERVAL_MS, { now: retry.now, sleep: this.sleep });
   }
 
   private acquireSlot(): Promise<void> {
@@ -200,7 +225,7 @@ export class SolanaRpcClient {
   }
 
   private async request<T>(method: string, params: unknown[]): Promise<T> {
-    await this.pace();
+    await this.pacer.reserve();
     await this.acquireSlot();
     try {
       for (let attempt = 0; ; attempt++) {

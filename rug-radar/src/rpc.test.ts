@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { SolanaRpcClient, RpcError, safeGetTransaction, type FetchLike } from "./rpc.js";
+import { SolanaRpcClient, RpcError, RequestPacer, safeGetTransaction, type FetchLike } from "./rpc.js";
 
 // All fixtures below mirror real Solana JSON-RPC response shapes
 // (https://solana.com/docs/rpc/http). No live network calls happen here.
@@ -306,6 +306,46 @@ test("minIntervalMs of 0 (the default) does not space requests at all", async ()
   const client = new SolanaRpcClient("https://example.test/rpc", fetchImpl);
   await Promise.all([client.getTokenSupply("Mint1"), client.getTokenSupply("Mint2")]);
   assert.equal(calls, 2);
+});
+
+test("a shared RequestPacer paces two SolanaRpcClient instances to one combined rate", async () => {
+  // Same real-timer reasoning as the minIntervalMs test above. Two clients
+  // each with their own independent minIntervalMs would combine to roughly
+  // double the paced rate (session 42's gap); sharing one RequestPacer
+  // instance between them should hold the *combined* call rate to one
+  // spacing budget instead.
+  let calls = 0;
+  const fetchImpl: FetchLike = (async () => {
+    calls++;
+    return new Response(
+      JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        result: { context: { slot: 1 }, value: { amount: "1", decimals: 0, uiAmount: 1, uiAmountString: "1" } },
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    );
+  }) as FetchLike;
+
+  const pacer = new RequestPacer(25);
+  const clientA = new SolanaRpcClient("https://example.test/rpc", fetchImpl, { pacer });
+  const clientB = new SolanaRpcClient("https://example.test/rpc", fetchImpl, { pacer });
+
+  const start = Date.now();
+  await Promise.all([
+    clientA.getTokenSupply("Mint1"),
+    clientB.getTokenSupply("Mint2"),
+    clientA.getTokenSupply("Mint3"),
+    clientB.getTokenSupply("Mint4"),
+  ]);
+  const elapsed = Date.now() - start;
+
+  assert.equal(calls, 4);
+  // 4 calls spaced >=25ms apart across BOTH clients combined means >=3 gaps —
+  // if each client paced independently instead, the combined rate would need
+  // only >=2 gaps (2 calls per client) to pass, so this threshold is only
+  // reachable if the pacer is actually shared.
+  assert.ok(elapsed >= 70, `expected >=70ms elapsed from shared pacing, got ${elapsed}ms`);
 });
 
 test("safeGetTransaction returns the transaction on success", async () => {
