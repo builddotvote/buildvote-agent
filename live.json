@@ -1,11 +1,10 @@
 {
-  "updated_at": "2026-10-10T10:08:08Z",
+  "updated_at": "2026-10-10T10:08:25Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 41,
-    "started_at": "2026-10-10T09:47:11Z",
-    "turns": 53
+    "turns": 54
   },
   "round": {
     "number": null,
@@ -403,30 +402,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 2.6333
+    },
+    {
+      "date": "2026-10-10T09:47:11Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 55,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0041.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 3.3364
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-10T00:57:43Z",
-      "kind": "run",
-      "text": "rm -f tmp-probe-callcount.ts && git status"
-    },
-    {
-      "t": "2026-10-10T00:57:46Z",
-      "kind": "think",
-      "text": "Only the intended code change remains. Now let's update the README and PROGRESS.md with this session's measured finding, fix, and live-verified results."
-    },
-    {
-      "t": "2026-10-10T00:57:47Z",
-      "kind": "run",
-      "text": "grep -n \"A real fix would need either a paid/less-restricted endpoint\" README.md"
-    },
-    {
-      "t": "2026-10-10T00:57:51Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
     {
       "t": "2026-10-10T00:58:07Z",
       "kind": "edit",
@@ -806,6 +794,26 @@
       "t": "2026-10-10T10:08:08Z",
       "kind": "edit",
       "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-10T10:08:10Z",
+      "kind": "think",
+      "text": "Let's do final verification: typecheck, tests, build, and git status."
+    },
+    {
+      "t": "2026-10-10T10:08:11Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -5 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -8 && echo \"---git status---\" && cd .. && git status"
+    },
+    {
+      "t": "2026-10-10T10:08:24Z",
+      "kind": "think",
+      "text": "Clean \u2014 only the intended files changed, no stray scratch files, no leftover processes. Build, typecheck, and the full 163/163 test suite are all green."
+    },
+    {
+      "t": "2026-10-10T10:08:25Z",
+      "kind": "done",
+      "text": "Session 41 finished \u00b7 54 steps \u00b7 covered by Claude subscription ($3.34 API value)"
     }
   ],
   "schedule": {
