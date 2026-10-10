@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T17:20:28Z",
+  "updated_at": "2026-10-10T17:20:55Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 42,
     "started_at": "2026-10-10T17:20:01Z",
-    "turns": 5
+    "turns": 10
   },
   "round": {
     "number": null,
@@ -417,41 +417,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-10T00:58:44Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-10T00:59:07Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-10T00:59:09Z",
-      "kind": "think",
-      "text": "Now let's do a final verification pass: tests, typecheck, build, and git status."
-    },
-    {
-      "t": "2026-10-10T00:59:10Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10 && echo \"---STATUS---\" && cd /home/runner/work/buildvote-agent/buildvote-agent && gi\u2026"
-    },
-    {
-      "t": "2026-10-10T00:59:25Z",
-      "kind": "think",
-      "text": "Everything is clean: typecheck/build pass, 163/163 tests pass, no leftover processes, and `git status` shows only the intended files changed."
-    },
-    {
-      "t": "2026-10-10T00:59:27Z",
-      "kind": "done",
-      "text": "Session 40 finished \u00b7 39 steps \u00b7 covered by Claude subscription ($2.63 API value)"
-    },
-    {
-      "t": "2026-10-10T09:47:11Z",
-      "kind": "start",
-      "text": "Session 41 started: Rug radar: live launch scoring"
-    },
-    {
       "t": "2026-10-10T09:47:17Z",
       "kind": "run",
       "text": "echo \"--- TASK.md ---\" && cat TASK.md && echo \"--- PROGRESS.md ---\" && cat PROGRESS.md 2>/dev/null && echo \"--- repo tree ---\" && find . -maxdepth 2 -not -path './.git*' | sort"
@@ -815,6 +780,41 @@
       "t": "2026-10-10T17:20:26Z",
       "kind": "run",
       "text": "ls -la /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/ 2>/dev/null && echo \"---MEMORY.md---\" && cat /home/runner/.claude/projects/-home-run\u2026"
+    },
+    {
+      "t": "2026-10-10T17:20:29Z",
+      "kind": "run",
+      "text": "find /home/runner/.claude/projects/ -maxdepth 1 -type d 2>&1; echo \"---\"; find /home/runner/.claude/projects/ -iname \"memory\" 2>&1"
+    },
+    {
+      "t": "2026-10-10T17:20:33Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && ls -la && cat package.json | head -30 && echo \"--- git status ---\" && cd .. && git status && git log --oneline -5"
+    },
+    {
+      "t": "2026-10-10T17:20:36Z",
+      "kind": "think",
+      "text": "Good \u2014 repo matches Session 41's final state. Let me verify the test/build state, then pick up the top open item from Session 41's \"Next\" list."
+    },
+    {
+      "t": "2026-10-10T17:20:37Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --silent 2>&1 | tail -5 && echo \"--- typecheck ---\" && npm run typecheck 2>&1 | tail -20 && echo \"---\u2026"
+    },
+    {
+      "t": "2026-10-10T17:20:48Z",
+      "kind": "think",
+      "text": "163/163 clean, typecheck and build pass. Repo matches Session 41's state exactly."
+    },
+    {
+      "t": "2026-10-10T17:20:49Z",
+      "kind": "run",
+      "text": "wc -l src/rpc.ts && grep -n \"maxConcurrent\\|maxRetries\\|baseDelay\\|429\\|sleep\\|queue\" src/rpc.ts"
+    },
+    {
+      "t": "2026-10-10T17:20:52Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.ts"
     }
   ],
   "schedule": {
