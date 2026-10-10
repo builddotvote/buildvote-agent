@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T09:56:08Z",
+  "updated_at": "2026-10-10T10:00:42Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 41,
     "started_at": "2026-10-10T09:47:11Z",
-    "turns": 29
+    "turns": 34
   },
   "round": {
     "number": null,
@@ -408,31 +408,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-10T00:48:41Z",
-      "kind": "run",
-      "text": "npm install --no-audit --no-fund >/tmp/npminstall.log 2>&1; tail -20 /tmp/npminstall.log; echo \"---TYPECHECK---\"; npm run typecheck 2>&1 | tail -30; echo \"---TEST---\"; npm test 2>\u2026"
-    },
-    {
-      "t": "2026-10-10T00:49:03Z",
-      "kind": "run",
-      "text": "npm run build 2>&1 | tail -20 && echo OK"
-    },
-    {
-      "t": "2026-10-10T00:49:07Z",
-      "kind": "think",
-      "text": "Repo is clean and matches the documented state (163/163 tests, clean typecheck/build). Let me look at the current scoring pipeline to see which RPC calls still hit the rate-limite\u2026"
-    },
-    {
-      "t": "2026-10-10T00:49:08Z",
-      "kind": "read",
-      "text": "rug-radar/src/pipeline.ts"
-    },
-    {
-      "t": "2026-10-10T00:49:16Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/deployerHistory.ts"
-    },
-    {
       "t": "2026-10-10T00:49:25Z",
       "kind": "read",
       "text": "rug-radar/src/data/bundledBuys.ts"
@@ -806,6 +781,31 @@
       "t": "2026-10-10T09:55:43Z",
       "kind": "run",
       "text": "until grep -q \"^EXIT:\" /tmp/probe41.log 2>/dev/null; do sleep 3; done; echo \"probe finished\""
+    },
+    {
+      "t": "2026-10-10T09:56:10Z",
+      "kind": "run",
+      "text": "cat /tmp/probe41.log"
+    },
+    {
+      "t": "2026-10-10T09:56:19Z",
+      "kind": "edit",
+      "text": "rug-radar/tmp-probe-bundledbuys-calls.ts"
+    },
+    {
+      "t": "2026-10-10T09:56:22Z",
+      "kind": "edit",
+      "text": "rug-radar/tmp-probe-bundledbuys-calls.ts"
+    },
+    {
+      "t": "2026-10-10T09:56:24Z",
+      "kind": "run",
+      "text": "rm -f /tmp/probe41.log && (NODE_OPTIONS=--experimental-websocket npx tsx tmp-probe-bundledbuys-calls.ts > /tmp/probe41.log 2>&1; echo \"EXIT:$?\" >> /tmp/probe41.log) & echo \"starte\u2026"
+    },
+    {
+      "t": "2026-10-10T09:56:26Z",
+      "kind": "run",
+      "text": "until grep -q \"^EXIT:\" /tmp/probe41.log 2>/dev/null; do sleep 5; done; echo \"probe finished\""
     }
   ],
   "schedule": {
