@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T10:07:08Z",
+  "updated_at": "2026-10-10T10:07:38Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 41,
     "started_at": "2026-10-10T09:47:11Z",
-    "turns": 46
+    "turns": 51
   },
   "round": {
     "number": null,
@@ -408,41 +408,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-10T00:55:19Z",
-      "kind": "think",
-      "text": "Good, no test pins the default value. Now let's make the bounded, measured fix: lower `deployerHistory`'s default signature-scan limit."
-    },
-    {
-      "t": "2026-10-10T00:55:21Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/deployerHistory.ts"
-    },
-    {
-      "t": "2026-10-10T00:55:32Z",
-      "kind": "edit",
-      "text": "rug-radar/src/data/deployerHistory.ts"
-    },
-    {
-      "t": "2026-10-10T00:55:34Z",
-      "kind": "think",
-      "text": "Now let's run the offline tests, typecheck, and build to confirm nothing broke."
-    },
-    {
-      "t": "2026-10-10T00:55:35Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -20 && echo \"---TEST---\" && npm test 2>&1 | tail -15"
-    },
-    {
-      "t": "2026-10-10T00:55:42Z",
-      "kind": "think",
-      "text": "163/163 still pass. Now let's live-verify the actual effect of this change with the same measurement probe, against a fresh real launch."
-    },
-    {
-      "t": "2026-10-10T00:55:43Z",
-      "kind": "run",
-      "text": "NODE_OPTIONS=--experimental-websocket timeout 180 npx tsx tmp-probe-callcount.ts 2>&1 | grep -v \"RPC HTTP error 429\""
-    },
-    {
       "t": "2026-10-10T00:56:05Z",
       "kind": "think",
       "text": "Dramatic improvement: deployer-history dropped from 54 calls/113s/44 errors to 4 calls/0.3s/0 errors; bundled-buys from 28 calls/88s/25 errors to 2 calls/2.5s/0 errors. Let's now \u2026"
@@ -804,6 +769,41 @@
     },
     {
       "t": "2026-10-10T10:07:08Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-10T10:07:14Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-10T10:07:16Z",
+      "kind": "think",
+      "text": "Now let's add the detailed finding to \"Known limitations\" at the end of the existing top entry (session 40's writeup)."
+    },
+    {
+      "t": "2026-10-10T10:07:16Z",
+      "kind": "run",
+      "text": "grep -n \"Session 40\\|session 40\" README.md"
+    },
+    {
+      "t": "2026-10-10T10:07:19Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-10T10:07:21Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-10T10:07:23Z",
+      "kind": "think",
+      "text": "Now I'll insert a Session 41 continuation right after the session 40 paragraph (line 592)."
+    },
+    {
+      "t": "2026-10-10T10:07:38Z",
       "kind": "edit",
       "text": "rug-radar/README.md"
     }
