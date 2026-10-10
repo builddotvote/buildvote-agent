@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T17:34:05Z",
+  "updated_at": "2026-10-10T17:35:36Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 42,
     "started_at": "2026-10-10T17:20:01Z",
-    "turns": 44
+    "turns": 45
   },
   "round": {
     "number": null,
@@ -417,16 +417,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-10T10:01:52Z",
-      "kind": "edit",
-      "text": "rug-radar/tmp-probe-bundledbuys-calls.ts"
-    },
-    {
-      "t": "2026-10-10T10:01:55Z",
-      "kind": "run",
-      "text": "rm -f /tmp/probe41b.log && (NODE_OPTIONS=--experimental-websocket npx tsx tmp-probe-bundledbuys-calls.ts > /tmp/probe41b.log 2>&1; echo \"EXIT:$?\" >> /tmp/probe41b.log) & echo \"sta\u2026"
-    },
-    {
       "t": "2026-10-10T10:01:58Z",
       "kind": "run",
       "text": "until grep -q \"^EXIT:\" /tmp/probe41b.log 2>/dev/null; do sleep 5; done; echo \"probe finished\""
@@ -815,6 +805,16 @@
       "t": "2026-10-10T17:33:58Z",
       "kind": "run",
       "text": "npm run typecheck 2>&1 | tail -20 && npm run build 2>&1 | tail -20 && npm test 2>&1 | tail -10"
+    },
+    {
+      "t": "2026-10-10T17:34:08Z",
+      "kind": "think",
+      "text": "All green. Now let's live-verify this against the real server, synchronously in the foreground (per the established lesson from Session 26 about sandbox resets)."
+    },
+    {
+      "t": "2026-10-10T17:34:10Z",
+      "kind": "run",
+      "text": "\\ NODE_OPTIONS=--experimental-websocket node --import tsx src/server.ts > /tmp/server-session42.log 2>&1 & \\ SERVER_PID=$! && \\ sleep 85 && \\ kill $SERVER_PID 2>/dev/null; \\ wait \u2026"
     }
   ],
   "schedule": {
