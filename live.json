@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T10:06:38Z",
+  "updated_at": "2026-10-10T10:07:08Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 41,
     "started_at": "2026-10-10T09:47:11Z",
-    "turns": 41
+    "turns": 46
   },
   "round": {
     "number": null,
@@ -408,36 +408,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-10T00:50:31Z",
-      "kind": "read",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-10T00:50:44Z",
-      "kind": "think",
-      "text": "Let me write a scratch probe to measure, for a real launch, how many RPC calls each signal's data-fetch actually issues against the scoring endpoint \u2014 no prior session measured th\u2026"
-    },
-    {
-      "t": "2026-10-10T00:50:59Z",
-      "kind": "edit",
-      "text": "rug-radar/tmp-probe-callcount.ts"
-    },
-    {
-      "t": "2026-10-10T00:51:02Z",
-      "kind": "run",
-      "text": "NODE_OPTIONS=--experimental-websocket timeout 240 npx tsx tmp-probe-callcount.ts 2>&1 | tail -100"
-    },
-    {
-      "t": "2026-10-10T00:55:14Z",
-      "kind": "run",
-      "text": "grep -n \"signatureLimit\\|DEFAULT_SIGNATURE_LIMIT\\|100\" src/data/deployerHistory.test.ts"
-    },
-    {
-      "t": "2026-10-10T00:55:17Z",
-      "kind": "run",
-      "text": "grep -rn \"signatureLimit\" src/ | grep -v test"
-    },
-    {
       "t": "2026-10-10T00:55:19Z",
       "kind": "think",
       "text": "Good, no test pins the default value. Now let's make the bounded, measured fix: lower `deployerHistory`'s default signature-scan limit."
@@ -806,6 +776,36 @@
       "t": "2026-10-10T10:01:58Z",
       "kind": "run",
       "text": "until grep -q \"^EXIT:\" /tmp/probe41b.log 2>/dev/null; do sleep 5; done; echo \"probe finished\""
+    },
+    {
+      "t": "2026-10-10T10:06:41Z",
+      "kind": "run",
+      "text": "grep -E \"^(discovered .*|---|.*: outerScanSize|.*: [0-9]+ms|getSignaturesForAddress:|getTransaction:|EXIT)\" /tmp/probe41b.log | grep -v \"^discovered\""
+    },
+    {
+      "t": "2026-10-10T10:06:54Z",
+      "kind": "run",
+      "text": "rm -f tmp-probe-bundledbuys-calls.ts && rm -f /tmp/probe41.log /tmp/probe41b.log && ps aux | grep -i tsx | grep -v grep"
+    },
+    {
+      "t": "2026-10-10T10:06:56Z",
+      "kind": "think",
+      "text": "Good, probe deleted and no leftover processes. Now let's update the README's \"Known limitations\" and bundled-buys signal description."
+    },
+    {
+      "t": "2026-10-10T10:06:57Z",
+      "kind": "run",
+      "text": "grep -n \"Bundled buys\" README.md | head -10"
+    },
+    {
+      "t": "2026-10-10T10:07:00Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-10T10:07:08Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
     }
   ],
   "schedule": {
