@@ -238,6 +238,8 @@ question open since session 34.
    discovery paths (websocket watcher and backstop poller, see `server.ts`)
    record every launch into as they see it live; `fetchDeployerHistoryInput`
    merges this live-observed history in alongside its own retroactive scan.
+   The scan's signature-limit default is 25, not 100 (lowered session 40,
+   see "Known limitations" for the measured RPC-call cost that drove this).
    See "Known limitations" below for why the retroactive scan alone wasn't
    enough, and what this does and doesn't fix.
 2. **Bundled buys** — wallets funded from one source that bought in the first
@@ -549,6 +551,42 @@ doesn't fix.
   The scoring-endpoint rate-limit ceiling itself (the headline open item
   below) is unchanged by this — the balance index is a workaround for one
   signal's indexed RPC call, not a fix for the ceiling overall.
+  **Session 40** measured something none of sessions 20-39's endpoint
+  searches had directly checked: how many RPC calls one signal issues per
+  launch, not just whether the endpoint rate-limits them. Instrumented the
+  real (unmocked) `fetchDeployerHistoryInput`/`fetchBundledBuysInput`/
+  `fetchHolderConcentrationInput` against one real launch from a known
+  prolific deployer and counted calls directly. Result: deployer-history's
+  retroactive scan alone issued **54 `getTransaction` calls, 44 of them
+  429s, taking 113 seconds** for that one launch — by far the largest
+  contributor measured (bundled-buys: 28 calls/25 429s/88s; holder-
+  concentration: 1 call, failed immediately). The scoring gate (session 21)
+  bounds how many launches can score *concurrently*, but says nothing about
+  how many calls *one* launch's scoring costs — a single deployer-history
+  scan alone can cost more calls than the gate's entire concurrency budget,
+  which explains why even one launch getting through the gate so often
+  still failed to finish. Fixed by lowering `fetchDeployerHistoryInput`'s
+  default `signatureLimit` from 100 to 25 (`src/data/deployerHistory.ts`):
+  `DeployerIndex` (session 13) already covers the recall this scan would
+  otherwise lose for a deployer this process has seen create twice, so the
+  retroactive scan's main remaining job is a deployer's pre-existing
+  history, not the common repeat-offender case — trading some of that depth
+  for a ~4x cut in worst-case calls was the right side of the tradeoff.
+  Live-reverified with the same instrumented measurement against a fresh
+  launch after the fix: deployer-history dropped to **4 calls, 0 errors,
+  297ms**; bundled-buys to **2 calls, 0 errors, 2.5s** (same real deployer,
+  different mint, so not an apples-to-apples pair, but the call-count drop
+  is a direct, reproducible consequence of scanning fewer signatures, not
+  noise). Then live-booted the real server end-to-end (85s, foreground,
+  same pattern as sessions 26/27/34): **2 launches landed in `/api/feed`**
+  in the window, plus one successful holder-concentration rescore from
+  `BalanceIndex` logged — more launches landing in one run than any prior
+  session's live check on record (sessions 21/26 got zero; session 27 got
+  one). `getTokenLargestAccounts` (holder-concentration's remaining indexed
+  call, confirmed un-droppable in session 28) and bundled-buys' own window
+  scan still hit 429s in the same run, so the ceiling itself is not gone —
+  this is a measured reduction in how hard scoring pushes against it, not a
+  fix for the endpoint's own throughput.
 - Previously documented here (session 19): a thrown 429 error (after
   `rpc.ts`'s own 4 retries were exhausted) used to be swallowed by
   `safeGetTransaction` to the same `null` as a genuine "not found yet"

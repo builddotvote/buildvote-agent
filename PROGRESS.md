@@ -2250,3 +2250,95 @@ happening — see below.)*
 - `RESCORE_DELAY_MS` (20s, session 34) is still untuned — unchanged this
   session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 40 — 2026-10-10
+
+### Done
+- Re-verified the repo first (`npm install`, 163/163 tests, clean
+  typecheck/build), then picked up the scoring endpoint's rate-limit
+  ceiling — the headline open item since Session 20, with 9+ alternative
+  free endpoints already found dead-ended (Sessions 27-28) — from an angle
+  no prior session had checked directly: how many RPC calls one signal
+  issues per launch, not just whether the endpoint throttles them.
+- Wrote a throwaway instrumented probe (`tmp-probe-callcount.ts`, deleted
+  after use) that wrapped the real (unmocked) scoring RPC client in a
+  per-method call/error counter and ran `fetchDeployerHistoryInput` /
+  `fetchBundledBuysInput` / `fetchHolderConcentrationInput` sequentially
+  (not concurrently, so each signal's own cost is isolated) against one real
+  launch from the known prolific deployer used in prior sessions'
+  deployer-history checks. **Result: deployer-history's retroactive scan
+  alone issued 54 `getTransaction` calls (44 of them HTTP 429) and took
+  113 seconds for that one launch** — by far the largest RPC-call
+  contributor of any signal measured (bundled-buys: 28 calls/25 429s/88s;
+  holder-concentration: 1 call, failed immediately on `getTokenLargestAccounts`).
+  This is a real, concrete explanation that sharpens every prior session's
+  "the endpoint is rate-limited" finding: the `ScoringGate` (Session 21)
+  bounds how many launches score *concurrently*, but says nothing about how
+  many calls *one* launch costs — a single deployer-history scan can cost
+  more calls than the gate's entire concurrency budget, which is why even
+  the rare launch that got through the gate so often still failed to finish
+  in a short live-boot window.
+- Fixed: lowered `fetchDeployerHistoryInput`'s default `signatureLimit` from
+  100 to 25 (`src/data/deployerHistory.ts`). Reasoning, not just a number
+  pulled down: `DeployerIndex` (Session 13) already catches a repeat
+  deployer's prior launches going forward once this process has seen them
+  create twice, so the retroactive scan's remaining job is mainly a
+  deployer's *pre-existing* (pre-startup) history — trading some of that
+  depth for a ~4x cut in worst-case calls against the rate-limited endpoint
+  is the right side of the tradeoff right now. No test hardcoded the old
+  default; `npm run typecheck`/`npm test` stayed clean (163/163, unchanged
+  count — a default-value change, not new behavior needing new tests).
+- Live-reverified with the same instrumented probe against a fresh launch
+  (same deployer, different mint) after the fix: deployer-history dropped to
+  **4 calls, 0 errors, 297ms**; bundled-buys to **2 calls, 0 errors, 2.5s**.
+  Not an apples-to-apples pair (different mint/moment), but the call-count
+  drop is a direct, structural consequence of scanning fewer signatures, not
+  noise.
+- Live-booted the real server end-to-end afterward (85s, synchronous
+  foreground, same "no ScheduleWakeup/backgrounding" pattern every session
+  has followed since Session 26's sandbox-reset lesson): **2 launches
+  landed in `/api/feed`** in the window, plus one successful
+  holder-concentration rescore from `BalanceIndex` logged — more launches
+  landing in a single live check than any prior session on record (Sessions
+  21/26 got zero; Session 27 got one). `getTokenLargestAccounts`
+  (holder-concentration's remaining indexed call, confirmed un-droppable in
+  Session 28) and bundled-buys' own window scan still hit 429s in the same
+  run, so the rate-limit ceiling itself is not gone — this is a measured
+  reduction in how hard scoring pushes against it, not a fix for the
+  endpoint's own throughput.
+- Deleted `tmp-probe-callcount.ts` after use (same cleanup habit as every
+  prior session's scratch probes); confirmed no leftover server process via
+  `ps aux`.
+- Updated `rug-radar/README.md`: "Known limitations" top entry gained this
+  session's measurement/fix/live numbers; the "Deployer history" signal
+  entry under "Signals" now notes the new default.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 163/163 passing (unchanged — a default-value change, no new
+  test surface), all offline, ~3.3s.
+- Live-measured the real, unmodified-then-fixed data-fetch functions against
+  public mainnet-beta (two ~60-90s instrumented probes, before/after the
+  fix) and live-booted the real server (85s) afterward — see "Done" above
+  for all three results.
+- `git status`/`ps aux` after cleanup show only the intended
+  `deployerHistory.ts`/README/PROGRESS changes — no stray files, no
+  leftover process.
+
+### Next
+- The scoring endpoint's rate-limit ceiling is still not fully resolved —
+  this session reduced one signal's call volume by ~4x and it visibly
+  helped (0→2 launches in a comparable live-boot window), but
+  holder-concentration's `getTokenLargestAccounts` and bundled-buys' window
+  scan still hit 429s regularly. Worth the same measurement approach applied
+  to bundled-buys specifically: its outer window-scan `signatureLimit`
+  (default 50, unchanged this session) is bounded by how much real activity
+  falls in the early window rather than the limit itself, so it wasn't
+  touched here — a live measurement of whether lowering it (or the window
+  itself) trades away meaningful early-buy recall would need its own check
+  before changing it, not guessed at.
+- `RESCORE_DELAY_MS` (20s, session 34) is still untuned — unchanged this
+  session.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- All five TASK.md steps remain functionally complete.

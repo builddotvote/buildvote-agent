@@ -24,7 +24,16 @@ export interface FetchDeployerHistoryOptions {
   observedPriorLaunches?: { mint: string; bondingCurve: string }[];
 }
 
-const DEFAULT_SIGNATURE_LIMIT = 100;
+// Lowered from 100 (session 40): measured live against a real prolific
+// deployer that this scan alone cost 54 getTransaction calls, 44 of them
+// 429s, taking 113 seconds for one launch's deployer-history signal — the
+// single largest RPC-call contributor of any signal measured. DeployerIndex
+// already covers the recall this scan would otherwise lose for a deployer
+// this process has seen create twice (session 13); this scan mainly matters
+// for a deployer's pre-existing history before that index has anything, so
+// trading some of that depth for a ~4x cut in worst-case calls against the
+// rate-limited scoring endpoint is the right side of that tradeoff right now.
+const DEFAULT_SIGNATURE_LIMIT = 25;
 
 export async function fetchDeployerHistoryInput(
   rpc: HistoryFetcher,
