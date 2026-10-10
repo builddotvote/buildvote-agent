@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T21:48:09Z",
+  "updated_at": "2026-10-10T21:48:35Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 43,
     "started_at": "2026-10-10T21:41:12Z",
-    "turns": 35
+    "turns": 38
   },
   "round": {
     "number": null,
@@ -426,26 +426,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-10T17:31:59Z",
-      "kind": "run",
-      "text": "cat > /tmp/debug-pace.mjs << 'EOF' let clock = 0; let lastRequestStartedAt = -Infinity; let paceChain = Promise.resolve(); const minIntervalMs = 100; const now = () => clock; cons\u2026"
-    },
-    {
-      "t": "2026-10-10T17:32:04Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
-      "t": "2026-10-10T17:32:09Z",
-      "kind": "run",
-      "text": "cat > /tmp/debug-pace2.mjs << 'EOF' let clock = 0; let lastRequestStartedAt = -Infinity; let paceChain = Promise.resolve(); const minIntervalMs = 100; const now = () => clock; con\u2026"
-    },
-    {
-      "t": "2026-10-10T17:33:12Z",
-      "kind": "run",
-      "text": "grep -rn \"setTimeout\\|real timer\\|node:test.*timers\\|mock.timers\" src/*.test.ts | head -20"
-    },
-    {
       "t": "2026-10-10T17:33:19Z",
       "kind": "think",
       "text": "I'll replace the fake-clock test with a small real-timer test \u2014 simpler and avoids the microtask-interleaving edge case entirely, since it only asserts total elapsed time, not per\u2026"
@@ -824,6 +804,26 @@
       "t": "2026-10-10T21:47:50Z",
       "kind": "run",
       "text": "sed -n '1,100p' src/pipeline.ts"
+    },
+    {
+      "t": "2026-10-10T21:48:12Z",
+      "kind": "run",
+      "text": "echo \"total lines:\"; wc -l /tmp/server-session43.log echo \"429 by call type:\"; grep \"429\" /tmp/server-session43.log | grep -o \"for get[A-Za-z]*\" | sort | uniq -c echo \"errors othe\u2026"
+    },
+    {
+      "t": "2026-10-10T21:48:22Z",
+      "kind": "run",
+      "text": "ps aux | grep -i \"tsx src/server\" | grep -v grep; echo \"---cleanup---\"; rm -f /tmp/server-session43.log /tmp/feed-session43.json; cd /home/runner/work/buildvote-agent/buildvote-ag\u2026"
+    },
+    {
+      "t": "2026-10-10T21:48:24Z",
+      "kind": "think",
+      "text": "No leftover process, no stray files. Now let's document Session 43 in both README and PROGRESS.md."
+    },
+    {
+      "t": "2026-10-10T21:48:35Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
     }
   ],
   "schedule": {
