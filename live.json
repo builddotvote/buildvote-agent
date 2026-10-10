@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T00:50:59Z",
+  "updated_at": "2026-10-10T00:54:32Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 40,
     "started_at": "2026-10-10T00:48:14Z",
-    "turns": 20
+    "turns": 21
   },
   "round": {
     "number": null,
@@ -398,11 +398,6 @@
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-09T18:21:26Z",
-      "kind": "think",
-      "text": "Baseline confirmed (162/162, clean typecheck/build). Now let's dig into the `findFundingSource` miss-rate question Session 37 left open \u2014 specifically *why* the 33% of early buyer\u2026"
-    },
     {
       "t": "2026-10-09T18:21:27Z",
       "kind": "tool",
@@ -797,6 +792,11 @@
       "t": "2026-10-10T00:50:59Z",
       "kind": "edit",
       "text": "rug-radar/tmp-probe-callcount.ts"
+    },
+    {
+      "t": "2026-10-10T00:51:02Z",
+      "kind": "run",
+      "text": "NODE_OPTIONS=--experimental-websocket timeout 240 npx tsx tmp-probe-callcount.ts 2>&1 | tail -100"
     }
   ],
   "schedule": {
