@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T00:48:41Z",
+  "updated_at": "2026-10-10T00:49:07Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 40,
     "started_at": "2026-10-10T00:48:14Z",
-    "turns": 7
+    "turns": 8
   },
   "round": {
     "number": null,
@@ -399,16 +399,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-09T10:39:42Z",
-      "kind": "think",
-      "text": "Everything's clean: 162/162 tests pass, typecheck/build clean, only the intended `PROGRESS.md`/`README.md` changes, no stray files or processes."
-    },
-    {
-      "t": "2026-10-09T10:39:43Z",
-      "kind": "tool",
-      "text": "TaskUpdate"
-    },
-    {
       "t": "2026-10-09T10:39:50Z",
       "kind": "think",
       "text": "## Summary"
@@ -797,6 +787,16 @@
       "t": "2026-10-10T00:48:41Z",
       "kind": "run",
       "text": "npm install --no-audit --no-fund >/tmp/npminstall.log 2>&1; tail -20 /tmp/npminstall.log; echo \"---TYPECHECK---\"; npm run typecheck 2>&1 | tail -30; echo \"---TEST---\"; npm test 2>\u2026"
+    },
+    {
+      "t": "2026-10-10T00:49:03Z",
+      "kind": "run",
+      "text": "npm run build 2>&1 | tail -20 && echo OK"
+    },
+    {
+      "t": "2026-10-10T00:49:07Z",
+      "kind": "think",
+      "text": "Repo is clean and matches the documented state (163/163 tests, clean typecheck/build). Let me look at the current scoring pipeline to see which RPC calls still hit the rate-limite\u2026"
     }
   ],
   "schedule": {
