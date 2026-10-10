@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-10T00:57:32Z",
+  "updated_at": "2026-10-10T00:58:07Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 40,
     "started_at": "2026-10-10T00:48:14Z",
-    "turns": 28
+    "turns": 33
   },
   "round": {
     "number": null,
@@ -399,41 +399,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-09T18:22:30Z",
-      "kind": "run",
-      "text": "grep -n \"interface DiscoveredLaunch\" -A 15 src/discovery.ts"
-    },
-    {
-      "t": "2026-10-09T18:22:32Z",
-      "kind": "edit",
-      "text": "rug-radar/tmp-probe-funding3.ts"
-    },
-    {
-      "t": "2026-10-09T18:22:34Z",
-      "kind": "tool",
-      "text": "TaskUpdate"
-    },
-    {
-      "t": "2026-10-09T18:22:35Z",
-      "kind": "think",
-      "text": "Now let's run it live against mainnet-beta synchronously (foreground, per Session 26's lesson about avoiding background+ScheduleWakeup)."
-    },
-    {
-      "t": "2026-10-09T18:22:36Z",
-      "kind": "run",
-      "text": "NODE_OPTIONS=--experimental-websocket timeout 200 node --import tsx tmp-probe-funding3.ts 2>&1 | tail -200; echo \"PROBE_EXIT=$?\""
-    },
-    {
-      "t": "2026-10-09T18:25:40Z",
-      "kind": "run",
-      "text": "NODE_OPTIONS=--experimental-websocket timeout 5 node -e \"1\" 2>/dev/null; echo done"
-    },
-    {
-      "t": "2026-10-09T18:26:13Z",
-      "kind": "think",
-      "text": "Clear result: nearly every \"unknown\" case is the same root cause \u2014 `earliest-tx-not-funding-BUT-a-later-one-within-limit-is`. This is a real logic bug (only checking the single ol\u2026"
-    },
-    {
       "t": "2026-10-09T18:26:14Z",
       "kind": "run",
       "text": "rm -f tmp-probe-funding3.ts && git status --short"
@@ -797,6 +762,41 @@
       "t": "2026-10-10T00:56:07Z",
       "kind": "run",
       "text": "(NODE_OPTIONS=--experimental-websocket npx tsx src/server.ts > /tmp/server-session40.log 2>&1 &) ; sleep 85; curl -s http://localhost:8787/api/feed; echo; echo \"---LOG TAIL---\"; t\u2026"
+    },
+    {
+      "t": "2026-10-10T00:57:40Z",
+      "kind": "run",
+      "text": "ps aux | grep -i \"tsx src/server\" | grep -v grep; echo \"---\"; ps aux | grep node | grep -v grep"
+    },
+    {
+      "t": "2026-10-10T00:57:42Z",
+      "kind": "think",
+      "text": "Good, no leftover process. Now let's clean up the scratch probe and check `git status`."
+    },
+    {
+      "t": "2026-10-10T00:57:43Z",
+      "kind": "run",
+      "text": "rm -f tmp-probe-callcount.ts && git status"
+    },
+    {
+      "t": "2026-10-10T00:57:46Z",
+      "kind": "think",
+      "text": "Only the intended code change remains. Now let's update the README and PROGRESS.md with this session's measured finding, fix, and live-verified results."
+    },
+    {
+      "t": "2026-10-10T00:57:47Z",
+      "kind": "run",
+      "text": "grep -n \"A real fix would need either a paid/less-restricted endpoint\" README.md"
+    },
+    {
+      "t": "2026-10-10T00:57:51Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-10T00:58:07Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
     }
   ],
   "schedule": {
