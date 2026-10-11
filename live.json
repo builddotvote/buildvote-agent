@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-11T05:44:47Z",
+  "updated_at": "2026-10-11T05:45:56Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 44,
     "started_at": "2026-10-11T05:42:54Z",
-    "turns": 11
+    "turns": 13
   },
   "round": {
     "number": null,
@@ -435,21 +435,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-10T17:39:21Z",
-      "kind": "run",
-      "text": "cd rug-radar && grep -n \"Known limitations\" README.md"
-    },
-    {
-      "t": "2026-10-10T17:39:23Z",
-      "kind": "run",
-      "text": "pwd"
-    },
-    {
-      "t": "2026-10-10T17:39:26Z",
-      "kind": "think",
-      "text": "Good, already here. Earlier `cd ..` ran inside a separate Bash invocation that didn't persist (each `Bash` call is its own subshell unless chained). Let's find the Known limitatio\u2026"
-    },
-    {
       "t": "2026-10-10T17:39:26Z",
       "kind": "run",
       "text": "grep -n \"Known limitations\" README.md"
@@ -831,6 +816,21 @@
     },
     {
       "t": "2026-10-11T05:43:50Z",
+      "kind": "run",
+      "text": "timeout 90 npx tsx tmp-probe-gettx-pacing.ts 2>&1"
+    },
+    {
+      "t": "2026-10-11T05:44:50Z",
+      "kind": "think",
+      "text": "This confirms the hypothesis strongly: at the same 2.5 req/sec rate where `getSlot` had zero 429s, `getTransaction` hits 90% 429s. Let me find the actual safe rate for `getTransac\u2026"
+    },
+    {
+      "t": "2026-10-11T05:44:54Z",
+      "kind": "edit",
+      "text": "rug-radar/tmp-probe-gettx-pacing.ts"
+    },
+    {
+      "t": "2026-10-11T05:44:56Z",
       "kind": "run",
       "text": "timeout 90 npx tsx tmp-probe-gettx-pacing.ts 2>&1"
     }
