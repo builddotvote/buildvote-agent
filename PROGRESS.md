@@ -2664,3 +2664,118 @@ committed.)*
 - `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
   priority.
 - All five TASK.md steps remain functionally complete.
+
+## Session 45 — 2026-10-11
+
+*(Reconstructed from `logs/session-0045.md` — this run hit its step limit
+while waiting on its own backgrounded live check and never updated this
+file. Verified against the actual code in Session 46 below.)*
+
+### Done
+- Re-verified the repo first (167/167 tests, clean typecheck/build), then
+  picked up Session 44's top open item: measure `getTokenLargestAccounts`'s
+  own safe pacing rate, the same way sessions 42/44 measured
+  `getSlot`/`getTransaction`.
+- Three throwaway probes (`tmp-probe-getlargest-pacing.ts`,
+  `tmp-probe-getlargest-slow.ts`, `tmp-probe-getlargest-isolate.ts`, plus an
+  unrelated `tmp-probe-retry.ts`) found something different in kind from
+  every prior per-method measurement: `getTokenLargestAccounts` hit **100%
+  429 at every rate tried** — 2.5 req/sec (30s), 1 req/sec (20s), and 10
+  single isolated calls 10s apart after a 30s cooldown wait. A follow-up
+  probe ruled out a general IP block or a mint-specific cause in the same
+  window: `getSlot`/`getTokenSupply`/`getAccountInfo` on the same USDC mint
+  all returned 200 while `getTokenLargestAccounts` on that mint, moments
+  later, still came back 429.
+- Fixed in `src/rpc.ts`: added `methodMaxRetries` to `RetryOptions` —
+  a method listed there gets its own retry budget instead of the
+  client-wide default, since retrying `getTokenLargestAccounts` at the
+  default 4 (exponential backoff) just burns ~4.5s per launch on a call
+  that's confirmed to never succeed in-window. `src/server.ts`'s scoring
+  clients now set `methodMaxRetries: { getTokenLargestAccounts: 1 }`. 1 new
+  test in `rpc.test.ts`.
+- Started a live check to confirm the fix (115s, backgrounded via `npx tsx
+  src/server.ts &`), then used `ScheduleWakeup` to check back on it later —
+  the exact mistake this project's own history has warned against since
+  Session 26 ("don't background a live-boot/smoke test and ScheduleWakeup
+  to check it later — the sandbox resets between sessions"). The session
+  ended before the wakeup fired; the live-check result was never read.
+  Left 4 scratch probe files committed (same step-limit-interrupts-cleanup
+  pattern as sessions 17/20/36, now compounded by also repeating a
+  documented process mistake).
+
+### Works (per the step log; re-verified in Session 46)
+- `npm run typecheck`, `npm run build`, `npm test` (168/168 after the new
+  test) clean.
+- The `methodMaxRetries` code itself was correct and well-tested — only the
+  live confirmation and documentation were left unfinished.
+
+### Next (as left by this session, completed in Session 46 below)
+- The live check of `methodMaxRetries: { getTokenLargestAccounts: 1 }`
+  against real traffic was never observed.
+- 4 scratch files left committed: `tmp-probe-getlargest-pacing.ts`,
+  `tmp-probe-getlargest-slow.ts`, `tmp-probe-getlargest-isolate.ts`,
+  `tmp-probe-retry.ts`.
+- This file and the README were never updated for this session's work.
+
+## Session 46 — 2026-10-11
+
+### Done
+- Found Session 45's leftover scratch files
+  (`tmp-probe-getlargest-isolate.ts`, `tmp-probe-getlargest-pacing.ts`,
+  `tmp-probe-getlargest-slow.ts`, `tmp-probe-retry.ts`) and deleted them.
+  Re-verified the repo first (`npm install`, 168/168 tests, clean
+  typecheck/build) — the `methodMaxRetries` code Session 45 wrote was
+  already correct, only the live confirmation and the docs were missing.
+- Ran the live check Session 45 started but never observed — **this time
+  synchronously in the foreground** (one Bash call: start the server, sleep
+  115s, curl the feed, tail the log, kill the process, confirm via `ps aux`),
+  explicitly avoiding the background+`ScheduleWakeup` pattern Session 45
+  used despite it being on record as broken since Session 26.
+- **Result (115s, public mainnet-beta, no keys, no `.env`): 1 launch landed
+  in `/api/feed` with all four signals present**
+  (`7huoQXwL7GAxAxi6FcKc3ayAMTiB74gSZ3BdcFgpump`, score 28: deployer-history
+  0, bundled-buys 0, liquidity 80, holder-concentration 4). Notable: the
+  direct `getTokenLargestAccounts` call still failed with a 429 three times
+  during the run (now failing fast after 1 retry instead of burning 4,
+  thanks to Session 45's fix) — but the launch still ended up with a real
+  holder-concentration reading because `BalanceIndex`'s delayed rescore
+  (sessions 34-36) later supplied one from observed trades ("top 1
+  non-program holder hold 4.2% of supply"), logged as "rescored
+  holder-concentration ... from observed trades". This is the first
+  documented live run where holder-concentration was fully recovered via
+  the rescore path after the direct RPC call failed, rather than the signal
+  just being dropped. The scoring gate still logged dozens of "too many
+  pending scores" skips in the same window — `getTokenLargestAccounts`
+  itself is still 429'd on nearly every direct attempt; what changed is
+  that failing fast plus the rescore workaround can now produce a complete
+  score anyway.
+- Updated `rug-radar/README.md`'s "Known limitations" top entry with
+  Session 45's measurement/fix and this session's live numbers; backfilled
+  the Session 45 entry above in this file from `logs/session-0045.md`.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 168/168 passing (unchanged — no code changes this session,
+  only cleanup/README/PROGRESS), all offline, ~3.1s.
+- Live-booted the real server synchronously (115s, public mainnet-beta, no
+  keys, no `.env`) and read the result in the same session that started
+  it — see "Done" above.
+- `git status`/`ps aux` after cleanup show only the intended README/
+  PROGRESS changes plus the 4 scratch-file deletions — no stray files, no
+  leftover server process.
+
+### Next
+- `getTokenLargestAccounts` itself is still 429'd on nearly every direct
+  attempt — unchanged by sessions 45-46. The balance-index rescore is a
+  workaround for one launch's one signal once enough trades accumulate, not
+  a fix for the endpoint's own throughput; the scoring gate still drops the
+  large majority of discovered launches before they're even attempted.
+- Worth flagging as a recurring process risk, not just a one-off: Session
+  45 repeated a mistake (background + `ScheduleWakeup` on a live check)
+  that this file and the README have documented as broken since Session 26.
+  Future sessions should treat "run live checks synchronously in the
+  foreground" as a hard rule, not a suggestion that can be forgotten.
+- `RESCORE_DELAY_MS` (20s, session 34) is still untuned.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority.
+- All five TASK.md steps remain functionally complete.

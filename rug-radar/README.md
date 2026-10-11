@@ -805,6 +805,57 @@ doesn't fix.
   fix for the rate-limit ceiling, which is still `getTokenLargestAccounts`'s
   turn to be the dominant 429 source now that `getTransaction`'s own lane
   mostly clears it.
+  **Session 45** picked up that exact follow-up — measuring
+  `getTokenLargestAccounts` the same paced-probe way sessions 42/44 measured
+  `getSlot`/`getTransaction` — and found something qualitatively different
+  from either of those: **100% 429, at every rate tried.** 2.5 req/sec (30s),
+  1 req/sec (20s), and 10 single isolated calls 10s apart after a 30s
+  cooldown wait all came back 429 — never once succeeded. A follow-up probe
+  ruled out a general IP block or a mint-specific issue in the same window:
+  `getSlot`/`getTokenSupply`/`getAccountInfo` on the same USDC mint all
+  returned 200 while `getTokenLargestAccounts` on that same mint, moments
+  later, still came back 429. Conclusion: this call is throttled far more
+  strictly than pacing can fix — no rate tried, including one far slower
+  than the 2.5 req/sec ceiling that works for every other measured method,
+  got a single success. Retrying it at the client's default `maxRetries`
+  (4, exponential backoff) therefore just burns ~4.5s per launch on a call
+  confirmed to never succeed in that window. Fixed by adding
+  `methodMaxRetries` to `RetryOptions`/`SolanaRpcClient` in `src/rpc.ts`: a
+  method listed there gets its own retry budget instead of the client-wide
+  default. `src/server.ts`'s scoring clients now set
+  `methodMaxRetries: { getTokenLargestAccounts: 1 }` — one quick retry
+  instead of four, failing fast so the slot frees up for the next launch
+  instead of holding it hostage on a call that's confirmed not to help.
+  1 new test in `rpc.test.ts`. Session 45 started a live check to confirm
+  this live but made the exact mistake its own README/PROGRESS history
+  warns against (documented since session 26): it backgrounded the server
+  and used `ScheduleWakeup` to check back later, then ended before the
+  wakeup fired — the result was never observed, same lost-result pattern as
+  sessions 24-25, just recurring again despite being on record as the
+  thing not to do.
+  **Session 46** picked up where 45 left off: deleted the 4 leftover
+  scratch probe files (`tmp-probe-getlargest-*.ts`, `tmp-probe-retry.ts`)
+  session 45 left committed, re-verified the suite (168/168, clean
+  typecheck/build — session 45's `methodMaxRetries` code was already
+  correct), then ran the live check **synchronously in the foreground**
+  (115s, public mainnet-beta, no keys, no `.env` — the pattern every
+  session since 26 is supposed to follow) instead of repeating session 45's
+  background/`ScheduleWakeup` mistake. Result: **1 launch landed in
+  `/api/feed` with all four signals present**
+  (`7huoQXwL7GAxAxi6FcKc3ayAMTiB74gSZ3BdcFgpump`, score 28) — notably,
+  holder-concentration's *direct* `getTokenLargestAccounts` call still
+  failed with a 429 three times during the run (now failing fast thanks to
+  session 45's fix, instead of burning retries), but the launch still ended
+  up with a real holder-concentration reading because `BalanceIndex`'s
+  delayed rescore (sessions 34-36) later supplied one from observed trades
+  ("top 1 non-program holder hold 4.2% of supply"). This is the first
+  documented live run where a launch's holder-concentration signal was
+  fully recovered by the rescore path after the direct RPC call failed,
+  rather than just being dropped. The scoring gate still logged dozens of
+  "too many pending scores" skips in the same window — `getTokenLargestAccounts`
+  itself is still 429'd on nearly every direct attempt, unchanged by this
+  session's fix or session 46's observation; what changed is that failing
+  fast plus the rescore workaround can now produce a complete score anyway.
 
 ## Setup
 
