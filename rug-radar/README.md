@@ -758,6 +758,53 @@ doesn't fix.
   methods wouldn't capture. Not confirmed with a dedicated measurement this
   session — worth a `getTransaction`-specific paced probe before tuning
   `minIntervalMs` further.
+  **Session 44** ran that `getTransaction`-specific probe (same shape as
+  session 42's `getSlot` measurement: a steady paced loop against the
+  official endpoint, this time using real recent signatures pulled from the
+  discovery endpoint instead of a cheap method). Confirmed the hypothesis
+  directly, and more severely than guessed: at 2.5 req/sec — the rate that
+  ran `getSlot` 40s with **zero** 429s (session 42) — `getTransaction` hit
+  **90% 429** (90 of 100 calls). Narrowing down: 1 req/sec still showed 6.7%
+  429, while 0.5 req/sec (2000ms spacing) ran 30s with **zero** 429s.
+  `getTransaction` needs roughly 5x more spacing than other calls on this
+  endpoint, confirming session 43's suspicion that one flat combined-RPS
+  pacer across every method can't serve both. Fixed by making `RequestPacer`
+  (`src/rpc.ts`) support per-method lanes: `reserve(method)` now checks an
+  optional `methodIntervalsMs` map; a method listed there gets its own
+  independent last-call timestamp and queue instead of sharing the default
+  lane every other method uses, so slowing down `getTransaction` doesn't
+  also slow down `getTokenLargestAccounts`/`getAccountInfo`/
+  `getSignaturesForAddress` (and vice versa). `SolanaRpcClient.request`
+  passes its own method name through to `reserve()`, so this needed no
+  caller-side changes beyond the one `server.ts` config. 1 new test in
+  `rpc.test.ts` (two methods on one shared pacer, one with its own slower
+  lane, asserted via elapsed time the same way the existing pacing tests
+  assert spacing). `src/server.ts`'s shared `scoringPacer` now reads
+  `new RequestPacer(400, { methodIntervalsMs: { getTransaction: 2000 } })` —
+  every other scoring call keeps the existing 400ms/2.5-req/sec lane,
+  `getTransaction` gets its own 2000ms/0.5-req/sec lane. Live-checked twice,
+  foreground, same pattern as every session since 26: a 112s run logged
+  **zero** `getTransaction` 429s and zero `getTransaction` failures (all 5
+  429s that run were on `getTokenLargestAccounts`, which has no dedicated
+  lane) — down from session 43's 37 of 39 429s on `getTransaction` at the
+  flat-rate pacer. A 100s run found 0 launches landed (the three that got
+  past `ScoringGate` were apparently still mid-score — the new 2000ms lane
+  serializes *every* `getTransaction` call across every signal and every
+  launch currently scoring, so a signal needing several sequential calls
+  — e.g. deployer-history's retroactive scan, bundled-buys' window scan and
+  per-buyer funding lookups — now takes noticeably longer wall-clock per
+  launch, even though each individual call succeeds). A longer 200s run
+  confirmed launches do land, just later: **2 launches** in `/api/feed`
+  (one with 3 signals present, one with all 4 including a successful
+  holder-concentration rescore from `BalanceIndex`), still zero
+  `getTransaction` 429s/failures across the whole window. Honest
+  conclusion: this trades per-launch latency for correctness on the
+  endpoint's most heavily-throttled call — a real, measured improvement
+  (zero `getTransaction` 429s, more launches landing in a comparable or
+  longer window than any single prior session's live check), not a full
+  fix for the rate-limit ceiling, which is still `getTokenLargestAccounts`'s
+  turn to be the dominant 429 source now that `getTransaction`'s own lane
+  mostly clears it.
 
 ## Setup
 

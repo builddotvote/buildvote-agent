@@ -139,6 +139,18 @@ export interface RetryOptions {
   // ~2.5 req/sec-safe endpoint (session 42's gap, closed session 43). Takes
   // priority over minIntervalMs/now when given.
   pacer?: RequestPacer;
+  // Per-method override of minIntervalMs. Measured live (session 44): at the
+  // same 2.5 req/sec rate that ran getSlot 40s with zero 429s (session 42),
+  // getTransaction hit 90% 429 — its own safe rate is closer to 0.5 req/sec
+  // (2000ms spacing, 0% 429 over 30s; 1 req/sec already showed 6.7% 429).
+  // getTransaction is evidently throttled far more strictly than cheap calls
+  // at the same request rate, so pacing every method to one shared interval
+  // either starves getTransaction (too fast) or needlessly slows everything
+  // else (too slow). A method listed here gets its own independent pacing
+  // lane (and its own last-call timestamp) instead of sharing the default
+  // bucket every other method uses. Ignored if `pacer` is also given — pass
+  // this to the RequestPacer constructor directly in that case.
+  methodIntervalsMs?: Record<string, number>;
 }
 
 const DEFAULT_MAX_RETRIES = 4;
@@ -150,35 +162,62 @@ function defaultSleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// One independently-paced lane: requests reserved through the same bucket are
+// spaced at least intervalMs apart; different buckets don't wait on each
+// other at all.
+interface PacerBucket {
+  lastRequestStartedAt: number;
+  chain: Promise<void>;
+}
+
 // Reserves request-start slots at least minIntervalMs apart. Standalone (not
 // private to one SolanaRpcClient) so several clients hitting the same
 // rate-limited endpoint can share a single instance and get one combined
 // rate ceiling instead of each pacing independently — see RetryOptions.pacer.
+// A method named in methodIntervalsMs gets its own lane at its own interval
+// (see RetryOptions.methodIntervalsMs for why); every other method shares one
+// default lane at minIntervalMs, same behavior as before per-method lanes
+// existed.
 export class RequestPacer {
-  private lastRequestStartedAt = -Infinity;
-  private chain: Promise<void> = Promise.resolve();
+  private readonly buckets = new Map<string, PacerBucket>();
   private readonly now: () => number;
   private readonly sleep: (ms: number) => Promise<void>;
+  private readonly methodIntervalsMs: Record<string, number>;
 
   constructor(
     private readonly minIntervalMs: number,
-    opts: { now?: () => number; sleep?: (ms: number) => Promise<void> } = {},
+    opts: {
+      now?: () => number;
+      sleep?: (ms: number) => Promise<void>;
+      methodIntervalsMs?: Record<string, number>;
+    } = {},
   ) {
     this.now = opts.now ?? Date.now;
     this.sleep = opts.sleep ?? defaultSleep;
+    this.methodIntervalsMs = opts.methodIntervalsMs ?? {};
   }
 
-  // Chained (not just read-then-write) so concurrent callers queue for a slot
-  // in call order instead of racing on lastRequestStartedAt and
-  // under-spacing each other.
-  reserve(): Promise<void> {
-    if (this.minIntervalMs <= 0) return Promise.resolve();
-    const ticket = this.chain.then(async () => {
-      const wait = this.lastRequestStartedAt + this.minIntervalMs - this.now();
+  // Chained (not just read-then-write) so concurrent callers of the same
+  // lane queue for a slot in call order instead of racing on
+  // lastRequestStartedAt and under-spacing each other. `method` is optional
+  // so RequestPacer still works standalone (e.g. in tests) without naming one.
+  reserve(method?: string): Promise<void> {
+    const hasOwnLane = method !== undefined && method in this.methodIntervalsMs;
+    const intervalMs = hasOwnLane ? this.methodIntervalsMs[method!] : this.minIntervalMs;
+    if (intervalMs <= 0) return Promise.resolve();
+
+    const bucketKey = hasOwnLane ? method! : "__default__";
+    let bucket = this.buckets.get(bucketKey);
+    if (!bucket) {
+      bucket = { lastRequestStartedAt: -Infinity, chain: Promise.resolve() };
+      this.buckets.set(bucketKey, bucket);
+    }
+    const ticket = bucket.chain.then(async () => {
+      const wait = bucket!.lastRequestStartedAt + intervalMs - this.now();
       if (wait > 0) await this.sleep(wait);
-      this.lastRequestStartedAt = this.now();
+      bucket!.lastRequestStartedAt = this.now();
     });
-    this.chain = ticket;
+    bucket.chain = ticket;
     return ticket;
   }
 }
@@ -204,7 +243,11 @@ export class SolanaRpcClient {
     this.maxConcurrent = retry.maxConcurrent ?? DEFAULT_MAX_CONCURRENT;
     this.pacer =
       retry.pacer ??
-      new RequestPacer(retry.minIntervalMs ?? DEFAULT_MIN_INTERVAL_MS, { now: retry.now, sleep: this.sleep });
+      new RequestPacer(retry.minIntervalMs ?? DEFAULT_MIN_INTERVAL_MS, {
+        now: retry.now,
+        sleep: this.sleep,
+        methodIntervalsMs: retry.methodIntervalsMs,
+      });
   }
 
   private acquireSlot(): Promise<void> {
@@ -225,7 +268,7 @@ export class SolanaRpcClient {
   }
 
   private async request<T>(method: string, params: unknown[]): Promise<T> {
-    await this.pacer.reserve();
+    await this.pacer.reserve(method);
     await this.acquireSlot();
     try {
       for (let attempt = 0; ; attempt++) {

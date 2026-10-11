@@ -60,7 +60,19 @@ const balanceIndex = new BalanceIndex();
 // closed that gap: one shared RequestPacer(400) between both scoring
 // clients enforces a single combined ~2.5 req/sec ceiling across whichever
 // one is calling, instead of each getting its own budget.
-const scoringPacer = new RequestPacer(400);
+//
+// Session 43's own live check then found getTransaction taking 37 of 39
+// 429s at that shared 400ms rate, far more than getTokenLargestAccounts (2).
+// Session 44 measured getTransaction specifically (same paced-probe shape as
+// session 42's getSlot measurement, against real signatures): at 2.5 req/sec
+// (the rate that ran getSlot 40s with zero 429s) getTransaction hit 90% 429;
+// its own safe rate is closer to 0.5 req/sec (2000ms, 0% 429 over 30s; 1
+// req/sec already showed 6.7%). getTransaction is throttled far more
+// strictly than cheap/other calls at the same request rate, so it gets its
+// own slower lane on the shared pacer instead of the 400ms default every
+// other scoring call (getTokenLargestAccounts, getAccountInfo,
+// getSignaturesForAddress) still uses.
+const scoringPacer = new RequestPacer(400, { methodIntervalsMs: { getTransaction: 2000 } });
 const watcherDiscoveryRpc = new SolanaRpcClient(config.discoveryRpcUrl, fetch, { maxConcurrent: 2 });
 const watcherScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, { maxConcurrent: 2, pacer: scoringPacer });
 const pollDiscoveryRpc = new SolanaRpcClient(config.discoveryRpcUrl, fetch, { maxConcurrent: 2 });

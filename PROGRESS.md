@@ -2580,3 +2580,87 @@ committed.)*
 - `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
   priority.
 - All five TASK.md steps remain functionally complete.
+
+## Session 44 — 2026-10-11
+
+### Done
+- Re-verified the repo first (166/166 tests, clean typecheck/build), then
+  picked up Session 43's top open item: run a dedicated paced probe against
+  `getTransaction` (same shape as session 42's `getSlot` measurement) to
+  check whether the official endpoint throttles it more strictly than other
+  calls at the same request rate.
+- Wrote a throwaway probe (`tmp-probe-gettx-pacing.ts`, deleted after use)
+  that fetched real recent signatures from the discovery endpoint, then
+  called the real `getTransaction` against the official endpoint at a
+  steady pace. **Result: at 2.5 req/sec (the rate that ran `getSlot` 40s
+  with zero 429s in session 42), `getTransaction` hit 90% 429 (90/100).**
+  Narrowed further: 1 req/sec still showed 6.7% 429; 0.5 req/sec (2000ms
+  spacing) ran 30s with zero 429s. `getTransaction` needs roughly 5x more
+  spacing than other calls — confirms session 43's suspicion, more severely
+  than guessed.
+- Fixed in `src/rpc.ts`: `RequestPacer` now supports per-method pacing
+  lanes via an optional `methodIntervalsMs` map passed to its constructor
+  (and threaded through `SolanaRpcClient`'s `RetryOptions`). A method listed
+  in the map gets its own independent last-call timestamp and queue
+  ("bucket") instead of sharing the default lane every other method uses,
+  so pacing `getTransaction` slower doesn't also slow down
+  `getTokenLargestAccounts`/`getAccountInfo`/`getSignaturesForAddress`.
+  `SolanaRpcClient.request` now passes its own method name to
+  `pacer.reserve(method)` (previously called with no argument). 1 new test
+  in `rpc.test.ts`: two methods sharing one pacer, one with its own slower
+  lane, asserted via elapsed time (same pattern as the existing pacing
+  tests).
+- `src/server.ts`: the shared `scoringPacer` is now
+  `new RequestPacer(400, { methodIntervalsMs: { getTransaction: 2000 } })`
+  — every other scoring call keeps the 400ms/2.5-req/sec lane,
+  `getTransaction` gets its own 2000ms/0.5-req/sec lane. Rewrote the stale
+  comment block above it to explain the measurement and the fix.
+- Live-checked three times, foreground, same pattern as every session since
+  26: a 112s run logged **zero** `getTransaction` 429s/failures (5 total
+  429s, all on `getTokenLargestAccounts`) — down from session 43's 37/39 on
+  `getTransaction`. A 100s run found 0 launches landed (3 got past
+  `ScoringGate` but were apparently still mid-score — the slower lane
+  serializes every `getTransaction` call across every in-flight signal/
+  launch, so signals needing several sequential calls now take longer
+  wall-clock per launch). A longer 200s run confirmed launches do land, just
+  later: **2 launches** landed in `/api/feed` (one with 3 signals, one with
+  all 4 including a successful holder-concentration rescore from
+  `BalanceIndex`), still zero `getTransaction` 429s/failures across the
+  whole window.
+- Deleted `tmp-probe-gettx-pacing.ts` after use (same cleanup habit as every
+  prior session's scratch probes); confirmed no leftover server process via
+  `ps aux`.
+- Updated `rug-radar/README.md`'s "Known limitations" top entry with a
+  "Session 44" continuation covering the measurement, fix, and all three
+  live-check results.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 167/167 passing (1 new, in `rpc.test.ts`), all offline, ~2.5s.
+- Live-checked the real, unmodified-then-fixed `getTransaction` pacing
+  against public mainnet-beta via a scratch probe (deleted after use), then
+  live-booted the real server three times (112s, 100s, 200s, foreground, no
+  keys, no `.env`) — see "Done" above for all results.
+- `git status`/`ps aux` after cleanup show only the intended
+  `rpc.ts`/`rpc.test.ts`/`server.ts`/README/PROGRESS changes — no stray
+  files, no leftover process.
+
+### Next
+- This session's fix trades per-launch latency for correctness on
+  `getTransaction` specifically — `getTokenLargestAccounts` is now the
+  dominant 429 source (it has no dedicated lane and still shares the
+  400ms/2.5-req/sec default). Worth the same per-method measurement applied
+  to it directly (a dedicated paced probe, same shape as this session's) to
+  decide whether it also needs its own, different-from-default lane, rather
+  than assuming the same 2.5 req/sec ceiling that worked for `getSlot`
+  applies to it too.
+- Whether the latency tradeoff (3 launches stuck mid-score at 100s, 2 landed
+  by 200s) meaningfully changes real-world launches-per-minute versus the
+  flat-rate pacer is not rigorously compared — only observed via two
+  differently-sized live windows, not a controlled before/after on the same
+  window length. Worth a same-duration comparison if this becomes a
+  priority.
+- `RESCORE_DELAY_MS` (20s, session 34) is still untuned.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority.
+- All five TASK.md steps remain functionally complete.

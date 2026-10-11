@@ -348,6 +348,48 @@ test("a shared RequestPacer paces two SolanaRpcClient instances to one combined 
   assert.ok(elapsed >= 70, `expected >=70ms elapsed from shared pacing, got ${elapsed}ms`);
 });
 
+test("methodIntervalsMs gives a named method its own pacing lane, independent of the default lane", async () => {
+  // Same real-timer reasoning as the other pacing tests above. getTransaction
+  // gets a much slower lane (50ms) than the default lane every other method
+  // shares (10ms, used here by getTokenSupply) — session 44's finding that
+  // getTransaction is throttled far more strictly than other calls at the
+  // same combined rate. If methodIntervalsMs were ignored (every call paced
+  // at the 10ms default instead), 4 calls across 2 methods would finish in
+  // ~30ms; if getTransaction's own lane is respected, total time is
+  // dominated by its 2 calls needing >=50ms between them, run concurrently
+  // with (not serialized after) the default lane's own spacing.
+  let calls = 0;
+  const fetchImpl: FetchLike = (async () => {
+    calls++;
+    return new Response(
+      JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        result: { context: { slot: 1 }, value: { amount: "1", decimals: 0, uiAmount: 1, uiAmountString: "1" } },
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    );
+  }) as FetchLike;
+
+  const client = new SolanaRpcClient("https://example.test/rpc", fetchImpl, {
+    minIntervalMs: 10,
+    methodIntervalsMs: { getTransaction: 50 },
+  });
+
+  const start = Date.now();
+  await Promise.all([
+    client.getTransaction("sig1"),
+    client.getTransaction("sig2"),
+    client.getTokenSupply("Mint1"),
+    client.getTokenSupply("Mint2"),
+  ]);
+  const elapsed = Date.now() - start;
+
+  assert.equal(calls, 4);
+  assert.ok(elapsed >= 45, `expected >=45ms from getTransaction's own 50ms lane, got ${elapsed}ms`);
+  assert.ok(elapsed < 90, `expected the default lane not to serialize behind getTransaction's lane, got ${elapsed}ms`);
+});
+
 test("safeGetTransaction returns the transaction on success", async () => {
   const rpc = { getTransaction: async () => ({ ok: true }) as any };
   const result = await safeGetTransaction(rpc, "sig1");
