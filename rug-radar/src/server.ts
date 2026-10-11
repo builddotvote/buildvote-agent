@@ -72,11 +72,34 @@ const balanceIndex = new BalanceIndex();
 // own slower lane on the shared pacer instead of the 400ms default every
 // other scoring call (getTokenLargestAccounts, getAccountInfo,
 // getSignaturesForAddress) still uses.
+//
+// Session 45 measured getTokenLargestAccounts itself the same way (a
+// dedicated paced probe, varying rate and mint): unlike getTransaction, no
+// rate tried got even one success — 100% 429 at 2.5 req/sec (75 calls), 1
+// req/sec (20 calls), and 10 isolated single calls 10s apart after a 30s
+// cooldown wait, while getSlot/getTokenSupply/getAccountInfo against the
+// same endpoint in the same window all returned 200. A slower lane (session
+// 44's fix for getTransaction) assumes a slow-enough rate eventually
+// succeeds; this method never did at any rate tried, so pacing it slower
+// wouldn't help — it would just add latency for the same 429. The real cost
+// right now is the default 4 retries' exponential backoff (~4.5s) spent on
+// a call confirmed to fail regardless, so each scoring client below caps
+// its retries instead (methodMaxRetries, see rpc.ts) rather than getting
+// its own pacing lane.
 const scoringPacer = new RequestPacer(400, { methodIntervalsMs: { getTransaction: 2000 } });
+const scoringMethodMaxRetries = { getTokenLargestAccounts: 1 };
 const watcherDiscoveryRpc = new SolanaRpcClient(config.discoveryRpcUrl, fetch, { maxConcurrent: 2 });
-const watcherScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, { maxConcurrent: 2, pacer: scoringPacer });
+const watcherScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, {
+  maxConcurrent: 2,
+  pacer: scoringPacer,
+  methodMaxRetries: scoringMethodMaxRetries,
+});
 const pollDiscoveryRpc = new SolanaRpcClient(config.discoveryRpcUrl, fetch, { maxConcurrent: 2 });
-const pollScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, { maxConcurrent: 2, pacer: scoringPacer });
+const pollScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, {
+  maxConcurrent: 2,
+  pacer: scoringPacer,
+  methodMaxRetries: scoringMethodMaxRetries,
+});
 
 // Primary discovery is the websocket watcher (near-instant, sees every
 // create as it happens). The poller below stays on as a backstop for

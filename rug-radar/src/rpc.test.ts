@@ -209,6 +209,27 @@ test("gives up after maxRetries consecutive 429s and throws", async () => {
   assert.equal(call, 3); // initial attempt + 2 retries
 });
 
+test("methodMaxRetries gives a named method its own retry budget, independent of maxRetries", async () => {
+  let calls = 0;
+  const fetchImpl: FetchLike = (async () => {
+    calls++;
+    return new Response("", { status: 429 });
+  }) as FetchLike;
+
+  const client = new SolanaRpcClient("https://example.test/rpc", fetchImpl, {
+    maxRetries: 4,
+    methodMaxRetries: { getTokenLargestAccounts: 1 },
+    sleep: async () => {},
+  });
+
+  await assert.rejects(() => client.getTokenLargestAccounts("Mint1"), /RPC HTTP error 429/);
+  assert.equal(calls, 2); // initial attempt + 1 retry, not maxRetries' 4
+
+  calls = 0;
+  await assert.rejects(() => client.getTokenSupply("Mint1"), /RPC HTTP error 429/);
+  assert.equal(calls, 5); // unlisted method still uses maxRetries: initial + 4
+});
+
 test("caps the number of in-flight requests at maxConcurrent", async () => {
   let active = 0;
   let maxActive = 0;

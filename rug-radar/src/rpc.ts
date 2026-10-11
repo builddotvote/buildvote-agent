@@ -151,6 +151,20 @@ export interface RetryOptions {
   // bucket every other method uses. Ignored if `pacer` is also given — pass
   // this to the RequestPacer constructor directly in that case.
   methodIntervalsMs?: Record<string, number>;
+  // Per-method override of maxRetries. Measured live (session 45): unlike
+  // every other scoring call, getTokenLargestAccounts hit HTTP 429 on
+  // *every* attempt against the official endpoint — 100% across 75 calls at
+  // 2.5 req/sec, 20 at 1 req/sec, and 10 isolated single calls 10s apart
+  // (still 100% after a 30s cooldown wait) — while getSlot/getTokenSupply/
+  // getAccountInfo against the same endpoint in the same window all
+  // returned 200. Not a pacing problem (no rate tried was slow enough to
+  // get a single success) and not specific to one mint or a general IP
+  // block (other methods on the same mint succeeded). Retrying this method
+  // at the default maxRetries (4, exponential backoff) burns ~4.5s per
+  // launch on a call that's confirmed to fail regardless of how long it
+  // waits between attempts. A method listed here gets its own retry budget
+  // instead of the client-wide maxRetries every other method uses.
+  methodMaxRetries?: Record<string, number>;
 }
 
 const DEFAULT_MAX_RETRIES = 4;
@@ -231,6 +245,7 @@ export class SolanaRpcClient {
   private activeCount = 0;
   private readonly waiters: Array<() => void> = [];
   private readonly pacer: RequestPacer;
+  private readonly methodMaxRetries: Record<string, number>;
 
   constructor(
     private readonly url: string,
@@ -238,6 +253,7 @@ export class SolanaRpcClient {
     retry: RetryOptions = {},
   ) {
     this.maxRetries = retry.maxRetries ?? DEFAULT_MAX_RETRIES;
+    this.methodMaxRetries = retry.methodMaxRetries ?? {};
     this.baseDelayMs = retry.baseDelayMs ?? DEFAULT_BASE_DELAY_MS;
     this.sleep = retry.sleep ?? defaultSleep;
     this.maxConcurrent = retry.maxConcurrent ?? DEFAULT_MAX_CONCURRENT;
@@ -270,6 +286,7 @@ export class SolanaRpcClient {
   private async request<T>(method: string, params: unknown[]): Promise<T> {
     await this.pacer.reserve(method);
     await this.acquireSlot();
+    const maxRetries = this.methodMaxRetries[method] ?? this.maxRetries;
     try {
       for (let attempt = 0; ; attempt++) {
         const res = await this.fetchImpl(this.url, {
@@ -278,7 +295,7 @@ export class SolanaRpcClient {
           body: JSON.stringify({ jsonrpc: "2.0", id: this.nextId++, method, params }),
         });
 
-        if (res.status === 429 && attempt < this.maxRetries) {
+        if (res.status === 429 && attempt < maxRetries) {
           await this.sleep(this.baseDelayMs * 2 ** attempt);
           continue;
         }
