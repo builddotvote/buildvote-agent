@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-12T00:35:35Z",
+  "updated_at": "2026-10-12T00:38:15Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 47,
     "started_at": "2026-10-12T00:31:13Z",
-    "turns": 14
+    "turns": 15
   },
   "round": {
     "number": null,
@@ -462,16 +462,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-11T12:53:20Z",
-      "kind": "edit",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
-      "t": "2026-10-11T12:53:25Z",
-      "kind": "edit",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
       "t": "2026-10-11T12:53:27Z",
       "kind": "think",
       "text": "Now add a test, following the existing style:"
@@ -858,6 +848,16 @@
     },
     {
       "t": "2026-10-12T00:32:38Z",
+      "kind": "run",
+      "text": "NODE_OPTIONS=--experimental-websocket npx tsx tmp-probe-rescore-timing.ts 2>&1 | tail -100"
+    },
+    {
+      "t": "2026-10-12T00:35:42Z",
+      "kind": "think",
+      "text": "One active mint out of 31 traded at all; it started trading 15.4s after tracking began \u2014 cutting close to the current 20s delay. Let me run a second check to see if this pattern h\u2026"
+    },
+    {
+      "t": "2026-10-12T00:35:44Z",
       "kind": "run",
       "text": "NODE_OPTIONS=--experimental-websocket npx tsx tmp-probe-rescore-timing.ts 2>&1 | tail -100"
     }
