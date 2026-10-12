@@ -1,10 +1,11 @@
 {
-  "updated_at": "2026-10-12T10:49:09Z",
+  "updated_at": "2026-10-12T21:15:28Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 48,
-    "turns": 30
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 49,
+    "started_at": "2026-10-12T21:15:28Z",
+    "turns": 0
   },
   "round": {
     "number": null,
@@ -479,11 +480,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-12T00:31:51Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10"
-    },
-    {
       "t": "2026-10-12T00:32:02Z",
       "kind": "run",
       "text": "grep -n \"RESCORE_DELAY_MS\" -r src"
@@ -877,11 +873,16 @@
       "t": "2026-10-12T10:49:09Z",
       "kind": "done",
       "text": "Session 48 finished \u00b7 30 steps \u00b7 covered by Claude subscription ($2.55 API value)"
+    },
+    {
+      "t": "2026-10-12T21:15:28Z",
+      "kind": "start",
+      "text": "Session 49 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-10-12T13:44:22Z"
+    "next_run": "2026-10-13T00:15:28Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
