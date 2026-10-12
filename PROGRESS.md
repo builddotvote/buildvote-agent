@@ -2911,3 +2911,62 @@ file. Verified against the actual code in Session 46 below.)*
 - `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
   priority, unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 49 — 2026-10-12
+
+### Done
+- Re-verified the repo first (`npm install`, 168/168 tests, clean
+  typecheck/build, no leftover scratch files) — matched session 48's
+  write-up exactly, no undocumented drift.
+- Tried a third angle on the scoring endpoint's rate-limit ceiling (sessions
+  27-28 exhausted alternative RPC endpoints; session 48 exhausted non-RPC
+  public APIs): bypass `getTokenLargestAccounts` itself by computing holder
+  concentration from `getProgramAccounts` on the SPL Token program, filtered
+  to the mint (`dataSize: 165` + `memcmp` on the mint field — the standard
+  way to enumerate every token account for a given mint without the indexed
+  convenience method).
+- Verified live against `api.mainnet-beta.solana.com` rather than assuming
+  it would work (same "check it yourself" habit as sessions 30/48): a sanity
+  `getProgramAccounts` call against a small program (the vote program, no
+  filters) returned in well under a second, confirming the method itself
+  isn't disabled outright on this endpoint. The same call against the SPL
+  Token program (`TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`) filtered to
+  USDC's mint timed out with zero bytes received after 20s — consistent with
+  `getProgramAccounts` against the token program needing a secondary mint
+  index the public endpoint likely doesn't enable, making it a strictly
+  heavier scan than the already-throttled `getTokenLargestAccounts` it would
+  replace.
+- **No production code changed this session** — a bounded,
+  negative-but-conclusive research finding, same shape as sessions 28/48.
+  Documented in `rug-radar/README.md`'s "Known limitations" top entry: this
+  closes the "avoid the method, not just the endpoint" angle, leaving the
+  balance-index rescore (sessions 29-36, 46) as the only working mitigation
+  for a dropped `getTokenLargestAccounts` call, not a replacement for it.
+
+### Works
+- `npm run typecheck`, `npm run build`, and `npm test` (168/168, offline)
+  clean in `/rug-radar` — no code changes this session, only README/
+  PROGRESS updates.
+- Verified both the baseline (`getProgramAccounts` not disabled generally)
+  and the negative result (times out for the token program specifically)
+  with direct `curl` calls against the real endpoint, not guessed from
+  general knowledge — see "Done" above.
+- `git status` after this session shows only the intended README/PROGRESS
+  changes — no stray files.
+
+### Next
+- The scoring endpoint's rate-limit ceiling (`getTokenLargestAccounts` still
+  429s on nearly every direct attempt) is unchanged by this session — still
+  the headline open item. Three independent avenues around it are now
+  exhausted from this sandbox: alternative RPC endpoints (27-28), non-RPC
+  public APIs (48), and bypassing the method via `getProgramAccounts` (this
+  session). What remains untried: accepting the balance-index rescore as the
+  permanent mitigation and moving focus elsewhere, or re-checking any of
+  these three avenues from a different deployment network/region if one
+  ever becomes available.
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data (3 trading mints) — unchanged this
+  session.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- All five TASK.md steps remain functionally complete.

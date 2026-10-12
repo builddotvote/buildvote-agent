@@ -890,6 +890,25 @@ doesn't fix.
   sandbox. Worth re-checking from wherever this actually deploys if that
   location differs from this sandbox's IP/region, since the magicblock block
   was geographic rather than a hard "no."
+  **Session 49** tried a third angle: bypass `getTokenLargestAccounts`
+  entirely by computing holder concentration from `getProgramAccounts` on the
+  SPL Token program itself (filtered to the mint via `dataSize: 165` +
+  `memcmp` on the mint field, the standard way to list every token account
+  for a given mint). Verified live against `api.mainnet-beta.solana.com`
+  rather than assuming it would work: a sanity call against a small program
+  (the vote program, no filters) returned in well under a second, confirming
+  `getProgramAccounts` itself isn't disabled outright — but the same call
+  against the SPL Token program (`TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
+  filtered to USDC's mint timed out with zero bytes received after 20s. This
+  is consistent with the well-known operational cost of `getProgramAccounts`
+  against the token program without a secondary mint index enabled — the
+  node has to scan far more account data than the already-indexed
+  `getTokenLargestAccounts` call needs, so it's a strictly worse path on an
+  endpoint that already throttles the cheaper call. **No code changed this
+  session** — another bounded, negative-but-conclusive finding: this closes
+  the "avoid the method, not just the endpoint" angle, leaving the
+  balance-index rescore (sessions 29-36, 46) as the only working mitigation
+  for a dropped `getTokenLargestAccounts` call, not a replacement for it.
 
 ## Setup
 
