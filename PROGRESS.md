@@ -2843,3 +2843,71 @@ file. Verified against the actual code in Session 46 below.)*
 - `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
   priority, unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 48 — 2026-10-12
+
+### Done
+- Re-verified the repo first (`npm install`, 168/168 tests, clean
+  typecheck/build, no leftover scratch files) — matched session 47's
+  write-up exactly, no undocumented drift this time.
+- Tried a genuinely new angle on the scoring endpoint's rate-limit ceiling
+  (headline open item since session 20; sessions 27-28 already exhausted
+  alternative Solana JSON-RPC endpoints for `getTokenLargestAccounts`):
+  TASK.md allows "public RPC endpoints, public APIs," and no prior session
+  had checked a non-RPC public API for token holder data specifically.
+  A web search surfaced two keyless-sounding candidates via a third-party
+  open-source MCP server's README (`pipeworx-io/mcp-solana-rpc`):
+  `rpc.magicblock.app/mainnet` (claimed "the only keyless endpoint found
+  that serves `getTokenLargestAccounts`") and `solana.leorpc.com` with a
+  published shared demo key (`api_key=FREE`).
+- Verified both directly with real RPC calls rather than trusting the
+  README (same "don't trust a secondhand claim, check it yourself" habit
+  as session 30's IDL-fabrication catch):
+  - `rpc.magicblock.app` returned an "Access Restricted ... due to
+    regulatory requirements" page (a geo-block, not a rate limit or an
+    auth error) for both `getTokenLargestAccounts` and `getTokenSupply`
+    from this sandbox's IP. The same README explicitly warns "the endpoint
+    that works on your laptop is not the endpoint that works in
+    production" — so this is inconclusive, not a confirmed dead end; it
+    may or may not work from wherever this pipeline actually deploys.
+  - `solana.leorpc.com/?api_key=FREE` returned a JSON-RPC internal error
+    (`-32603`) on the exact `getTokenLargestAccounts` call needed, and it
+    requires an explicit `api_key` URL parameter — inconsistent with this
+    project's established standard (sessions 20/27) of rejecting any
+    endpoint that needs a key or signup, even a published shared one.
+  - Re-confirmed `solanatracker.io`'s data API and `solscan.io`'s v2 API
+    both return HTTP 401 without a real signup-issued key, matching
+    session 27's precedent for RPC alternatives.
+- **No production code changed this session** — like session 28, this is a
+  bounded research question with a negative-but-conclusive answer for this
+  sandbox: no new, working, genuinely keyless public API (RPC or otherwise)
+  was found for `getTokenLargestAccounts`. Documented in
+  `rug-radar/README.md`'s "Known limitations" top entry, including the
+  honest caveat that the magicblock geo-block is specific to this sandbox's
+  IP and worth re-checking from the actual deployment location if that
+  ever differs.
+
+### Works
+- `npm run typecheck`, `npm run build`, and `npm test` (168/168, offline)
+  clean in `/rug-radar` — no code changes this session, only README/
+  PROGRESS updates.
+- Verified both new candidate endpoints with direct `curl` calls against
+  real mainnet data (not a webpage summary) before concluding either was
+  unusable — see "Done" above for both results.
+- `git status` after this session shows only the intended README/PROGRESS
+  changes — no stray files.
+
+### Next
+- The scoring endpoint's rate-limit ceiling (`getTokenLargestAccounts`
+  still 429s on nearly every direct attempt) is unchanged by this session —
+  still the headline open item. The "public API instead of RPC" avenue is
+  now also checked and came up empty from this sandbox, same exhausted
+  status as the "alternative RPC endpoint" avenue (sessions 27-28) — unless
+  a session running from a different network/region can re-check
+  `rpc.magicblock.app`, this avenue looks closed too.
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data (3 trading mints) — unchanged this
+  session.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- All five TASK.md steps remain functionally complete.

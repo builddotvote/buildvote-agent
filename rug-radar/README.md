@@ -861,6 +861,35 @@ doesn't fix.
   itself is still 429'd on nearly every direct attempt, unchanged by this
   session's fix or session 46's observation; what changed is that failing
   fast plus the rescore workaround can now produce a complete score anyway.
+  **Session 48** tried a different angle than any prior session on this
+  bottleneck: TASK.md allows "public RPC endpoints, public APIs" (plural),
+  and every search so far (sessions 27-28) only checked alternative Solana
+  JSON-RPC endpoints, never a non-RPC public API for holder data. A web
+  search surfaced two keyless-sounding candidates: `rpc.magicblock.app/mainnet`
+  (named in a third-party open-source MCP server's README as "the only
+  keyless endpoint found that serves `getTokenLargestAccounts`") and
+  `solana.leorpc.com/?api_key=FREE` (a published shared demo key, not a
+  personal signup). Verified directly rather than trusting the README:
+  `rpc.magicblock.app` returned an "Access Restricted ... due to regulatory
+  requirements" page for both `getTokenLargestAccounts` and `getTokenSupply`
+  from this sandbox's IP — a geo-block, not a rate limit, and the same
+  README warns "the endpoint that works on your laptop is not the endpoint
+  that works in production," so this can't be confirmed usable from here and
+  may well be geo-blocked wherever this pipeline actually runs too (likely a
+  similar US-hosted cloud IP range). `leorpc.com`'s shared key returned a
+  JSON-RPC internal error (`-32603`) on the exact `getTokenLargestAccounts`
+  call needed, and it requires an explicit `api_key` URL parameter, which
+  this project has consistently avoided (sessions 20/27 rejected endpoints
+  needing any key/signup, even a published shared one). Separately
+  re-confirmed `solanatracker.io`'s data API and `solscan.io`'s v2 API both
+  return HTTP 401 without a real signup-issued key, consistent with
+  session 27's precedent. **No code changed this session** — like session
+  28, this is a bounded, negative-but-conclusive research finding: the
+  "try a public API instead of RPC" avenue doesn't currently have a working,
+  verifiable, genuinely keyless option either, at least not from this
+  sandbox. Worth re-checking from wherever this actually deploys if that
+  location differs from this sandbox's IP/region, since the magicblock block
+  was geographic rather than a hard "no."
 
 ## Setup
 
