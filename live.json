@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-12T00:40:28Z",
+  "updated_at": "2026-10-12T00:41:06Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 47,
     "started_at": "2026-10-12T00:31:13Z",
-    "turns": 19
+    "turns": 22
   },
   "round": {
     "number": null,
@@ -462,21 +462,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-11T12:53:54Z",
-      "kind": "run",
-      "text": "npm test 2>&1 | tail -20 && echo \"---TYPECHECK---\" && npm run typecheck 2>&1 | tail -10 && echo \"---BUILD---\" && npm run build 2>&1 | tail -10"
-    },
-    {
-      "t": "2026-10-11T12:54:04Z",
-      "kind": "think",
-      "text": "168/168 passing, clean typecheck and build. Now let's live-check the server to confirm the fix actually reduces wasted latency without regressing anything."
-    },
-    {
-      "t": "2026-10-11T12:54:05Z",
-      "kind": "run",
-      "text": "rm -f /tmp/rr45.log && NODE_OPTIONS=--experimental-websocket npx tsx src/server.ts > /tmp/rr45.log 2>&1 & echo \"PID=$!\""
-    },
-    {
       "t": "2026-10-11T12:54:07Z",
       "kind": "run",
       "text": "sleep 112 && curl -s localhost:8787/api/feed | head -c 2000; echo; echo \"---log tail---\"; tail -80 /tmp/rr45.log"
@@ -860,6 +845,21 @@
       "t": "2026-10-12T00:38:56Z",
       "kind": "run",
       "text": "rm -f /tmp/rr-session47.log && (NODE_OPTIONS=--experimental-websocket npx tsx src/server.ts > /tmp/rr-session47.log 2>&1 & echo $! > /tmp/rr-session47.pid) && sleep 90 && echo \"--\u2026"
+    },
+    {
+      "t": "2026-10-12T00:40:36Z",
+      "kind": "run",
+      "text": "cat /tmp/rr-session47.log | head -80; echo \"---port check---\"; grep -n \"PORT\\|port\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/config.ts | head -10"
+    },
+    {
+      "t": "2026-10-12T00:40:40Z",
+      "kind": "run",
+      "text": "curl -s http://localhost:8787/api/feed; echo; echo \"---\"; grep -n \"rescore\\|RESCORE\" /tmp/rr-session47.log; echo \"---tail---\"; tail -40 /tmp/rr-session47.log"
+    },
+    {
+      "t": "2026-10-12T00:40:46Z",
+      "kind": "run",
+      "text": "sleep 20 && grep -n \"rescore\\|RESCORE\" /tmp/rr-session47.log; echo \"---feed now---\"; curl -s http://localhost:8787/api/feed; echo; echo \"---kill---\"; pkill -f \"tsx src/server.ts\" \u2026"
     }
   ],
   "schedule": {
