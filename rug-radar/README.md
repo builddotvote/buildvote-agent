@@ -155,8 +155,13 @@ for the mint yet, or the bonding curve account can't be read.
 
 `src/server.ts` wires the *when*: on a successful initial score, it calls
 `watcher.trackMint(launch.mint, launch.bondingCurve)` and schedules a
-one-shot re-score `RESCORE_DELAY_MS` (20s, an untuned starting point) later.
-That re-score calls `rescoreHolderConcentrationFromIndex`, and if it returns
+one-shot re-score `RESCORE_DELAY_MS` later (45s — session 47 measured this
+live: across two 150s windows tracking 62 mints total, only 3 ever saw a
+trade at all, with first-trade delays of 15.4s, 16.0s, and 54.4s; the old
+20s value would have missed the 54.4s case, 1 of 3 observed rather than a
+rare tail, while the ~95% of mints that never trade in-window are
+unaffected by the delay's length either way). That re-score calls
+`rescoreHolderConcentrationFromIndex`, and if it returns
 a signal, replaces the `holder-concentration` entry in the launch's signals
 and recombines the score via `src/feed.ts`'s new `update()` (replaces an
 entry in place by mint; `get()` added alongside it for the lookup). Either

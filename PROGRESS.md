@@ -2779,3 +2779,67 @@ file. Verified against the actual code in Session 46 below.)*
 - `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
   priority.
 - All five TASK.md steps remain functionally complete.
+
+## Session 47 — 2026-10-12
+
+### Done
+- Re-verified the repo first (`npm install`, 168/168 tests, clean
+  typecheck/build), then picked up the one item flagged as still open in
+  every session since 34: `RESCORE_DELAY_MS` (20s) was an "untuned starting
+  point," never measured against how fast real launches accumulate trades.
+- Wrote a throwaway probe (`tmp-probe-rescore-timing.ts`, deleted after use)
+  that tracks *every* launch the websocket watcher finds directly (bypassing
+  `ScoringGate`, same "isolate the component" approach as sessions 19/35/36)
+  and records the delay between `trackMint()` and each mint's first observed
+  trade. Ran it twice, 150s each, public mainnet-beta, no keys, no `.env`.
+- **Result (62 mints tracked total across both runs): only 3 ever saw a
+  trade at all** — confirms session 36's "1 of ~50" finding wasn't a fluke;
+  most freshly-launched mints simply don't trade in any observed window,
+  regardless of how long it is. Of the 3 that did trade, first-trade delays
+  were 15.4s, 16.0s, and 54.4s — the old 20s delay would have caught the
+  first two but completely missed the third (1 of 3 observed, not a rare
+  tail).
+- Raised `RESCORE_DELAY_MS` from 20s to 45s in `src/server.ts` to cover the
+  54.4s case, reasoning that holding a free per-mint websocket subscription
+  open longer costs nothing for the ~95% of mints that never trade in-window
+  regardless — there's no tradeoff being made against a scarcer resource
+  here, unlike the `signatureLimit`/pacing changes in sessions 40-42. No test
+  hardcoded the old value; `npm run typecheck`/`npm test` stayed clean
+  (168/168, unchanged count — a default-value change, same pattern as
+  sessions 40/41's `signatureLimit` tunings).
+- Live-reverified with the new 45s value: a ~110s synchronous foreground
+  boot (same pattern as every session since 26) booted cleanly, one launch
+  landed in `/api/feed`, no crashes or new errors from the longer delay. Did
+  not happen to observe a successful rescore log line in this run — expected
+  given the ~95% "never trades" base rate measured above, not a new bug (a
+  silent `if (!signal) return` in `scheduleHolderRescore` is the documented
+  behavior when `BalanceIndex` has nothing for that mint yet).
+- Updated `rug-radar/README.md`'s `rescore.ts`/`server.ts` wiring paragraph
+  with the measurement and the new value, replacing the stale "untuned"
+  note.
+- Deleted `tmp-probe-rescore-timing.ts` and the live-check's temp log file
+  after use (same cleanup habit as every prior session's scratch probes);
+  confirmed no leftover server process via `ps aux`.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 168/168 passing (unchanged — a default-value change, no new
+  test surface), all offline, ~3.2s.
+- Live-measured the real `trackMint`/`onTrade` pipeline against public
+  mainnet-beta (two 150s probes before the change, one ~110s server boot
+  after) — see "Done" above for all results.
+- `git status`/`ps aux` after cleanup show only the intended
+  `server.ts`/README/PROGRESS changes — no stray files, no leftover process.
+
+### Next
+- `RESCORE_DELAY_MS` is now evidence-based rather than an arbitrary starting
+  point, but still a single measurement session's worth of data (3 trading
+  mints total) — worth revisiting if a future session gets a larger sample
+  (e.g. once more launches get past `ScoringGate`, raising how many mints
+  actually get tracked at all).
+- The scoring endpoint's rate-limit ceiling (`getTokenLargestAccounts` still
+  429s on nearly every direct attempt, per sessions 45-46) is unchanged by
+  this session — still the headline open item.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- All five TASK.md steps remain functionally complete.

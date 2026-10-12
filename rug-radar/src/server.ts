@@ -130,9 +130,15 @@ const watcher = new LaunchWatcher(wsUrl, watcherDiscoveryRpc, {
 
 // How long to let a mint's own trade subscription (trackMint) collect buys/
 // sells before re-scoring holder-concentration from BalanceIndex and giving
-// up the subscription — a starting point, not yet tuned against how fast
-// real launches accumulate trades (see README).
-const RESCORE_DELAY_MS = 20_000;
+// up the subscription. Session 47 measured this directly: across two live
+// 150s windows (62 mints tracked total), only 3 ever saw a trade at all —
+// most mints simply never trade in-window, so the delay's length doesn't
+// change their outcome either way. Of the 3 that did trade, first-trade
+// delays were 15.4s, 16.0s, and 54.4s — the old 20s value would have missed
+// the 54.4s case entirely (1 of 3 observed, not a rare tail). Raised to 45s
+// to cover it, since holding the free per-mint websocket subscription open
+// longer costs nothing for the ~95% of mints that stay quiet regardless.
+const RESCORE_DELAY_MS = 45_000;
 
 // Tracks the mint's own bonding-curve trades (see wsDiscovery.ts's
 // trackMint), waits RESCORE_DELAY_MS for BalanceIndex to accumulate some,
