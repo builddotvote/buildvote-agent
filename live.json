@@ -1,10 +1,9 @@
 {
-  "updated_at": "2026-10-12T21:19:15Z",
+  "updated_at": "2026-10-12T21:19:24Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 49,
-    "started_at": "2026-10-12T21:15:28Z",
     "turns": 24
   },
   "round": {
@@ -475,20 +474,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 2.5538
+    },
+    {
+      "date": "2026-10-12T21:15:28Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 25,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0049.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 1.3491
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-12T00:42:26Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -5 && npm run build 2>&1 | tail -5 && npm test 2>&1 | tail -8 && echo \"---git status---\" && cd /home/runner/work/buildvote-agent/buildvote-agent && g\u2026"
-    },
-    {
-      "t": "2026-10-12T00:42:42Z",
-      "kind": "think",
-      "text": "Clean: typecheck/build/tests all pass, only the intended files changed, no leftover processes or scratch files."
-    },
     {
       "t": "2026-10-12T00:42:43Z",
       "kind": "done",
@@ -878,6 +876,16 @@
       "t": "2026-10-12T21:19:12Z",
       "kind": "run",
       "text": "npm run typecheck 2>&1 | tail -5 && npm test 2>&1 | tail -10 && echo \"---git status---\" && cd .. && git status"
+    },
+    {
+      "t": "2026-10-12T21:19:23Z",
+      "kind": "think",
+      "text": "Everything is clean: 168/168 tests passing, typecheck clean, and only the intended README.md/PROGRESS.md changes are present \u2014 no stray files, no production code changes."
+    },
+    {
+      "t": "2026-10-12T21:19:24Z",
+      "kind": "done",
+      "text": "Session 49 finished \u00b7 24 steps \u00b7 covered by Claude subscription ($1.35 API value)"
     }
   ],
   "schedule": {
