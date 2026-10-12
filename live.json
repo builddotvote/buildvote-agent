@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-12T10:46:40Z",
+  "updated_at": "2026-10-12T10:47:06Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 48,
     "started_at": "2026-10-12T10:44:22Z",
-    "turns": 15
+    "turns": 16
   },
   "round": {
     "number": null,
@@ -471,11 +471,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-11T19:37:36Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
-    {
       "t": "2026-10-11T19:37:38Z",
       "kind": "think",
       "text": "Now updating PROGRESS.md with backfilled Session 45 entry plus Session 46's work."
@@ -869,6 +864,11 @@
       "t": "2026-10-12T10:46:40Z",
       "kind": "run",
       "text": "echo \"--- magicblock getTokenLargestAccounts (USDC mint) ---\" curl -s -m 15 -X POST \"https://rpc.magicblock.app/mainnet\" \\   -H \"Content-Type: application/json\" \\   -d '{\"jsonrpc\"\u2026"
+    },
+    {
+      "t": "2026-10-12T10:46:56Z",
+      "kind": "run",
+      "text": "echo \"--- leorpc (shared demo key 'FREE', getTokenLargestAccounts) ---\" curl -s -m 15 -X POST \"https://solana.leorpc.com/?api_key=FREE\" \\   -H \"Content-Type: application/json\" \\  \u2026"
     }
   ],
   "schedule": {
