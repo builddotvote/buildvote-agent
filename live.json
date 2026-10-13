@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-13T19:18:28Z",
+  "updated_at": "2026-10-13T19:19:01Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 52,
     "started_at": "2026-10-13T19:14:39Z",
-    "turns": 23
+    "turns": 32
   },
   "round": {
     "number": null,
@@ -507,66 +507,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-13T10:33:36Z",
-      "kind": "think",
-      "text": "This confirms a real, costly bug: `pollOnce` never checks `feed.has(launch.mint)` before re-scoring a launch, even though the README documents that dedup as existing precisely to \u2026"
-    },
-    {
-      "t": "2026-10-13T10:33:40Z",
-      "kind": "edit",
-      "text": "rug-radar/src/poller.ts"
-    },
-    {
-      "t": "2026-10-13T10:33:42Z",
-      "kind": "think",
-      "text": "Now let's add a regression test, following the existing pattern in `poller.test.ts`."
-    },
-    {
-      "t": "2026-10-13T10:33:47Z",
-      "kind": "edit",
-      "text": "rug-radar/src/poller.test.ts"
-    },
-    {
-      "t": "2026-10-13T10:33:52Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -30"
-    },
-    {
-      "t": "2026-10-13T10:33:55Z",
-      "kind": "think",
-      "text": "Typecheck clean. Now run the tests."
-    },
-    {
-      "t": "2026-10-13T10:33:56Z",
-      "kind": "run",
-      "text": "npm test 2>&1 | tail -50"
-    },
-    {
-      "t": "2026-10-13T10:34:03Z",
-      "kind": "think",
-      "text": "170/170 passing. Let me verify this is a genuine regression test by temporarily reverting the fix."
-    },
-    {
-      "t": "2026-10-13T10:34:06Z",
-      "kind": "run",
-      "text": "cd src && cp poller.ts /tmp/poller.ts.fixed && python3 - <<'EOF' import re with open('poller.ts') as f:     content = f.read() content = content.replace( '''    // The watcher run\u2026"
-    },
-    {
-      "t": "2026-10-13T10:34:09Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm test 2>&1 | grep -A3 \"already in the feed\" ; npm test 2>&1 | tail -8"
-    },
-    {
-      "t": "2026-10-13T10:34:18Z",
-      "kind": "think",
-      "text": "Confirmed as a real regression test (fails without the fix, 1 call instead of 0). Now restore the fix."
-    },
-    {
-      "t": "2026-10-13T10:34:20Z",
-      "kind": "run",
-      "text": "cp /tmp/poller.ts.fixed /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/poller.ts && npm test 2>&1 | tail -8 && npm run typecheck 2>&1 | tail -10 && npm run build \u2026"
-    },
-    {
       "t": "2026-10-13T10:34:29Z",
       "kind": "think",
       "text": "All clean: 170/170 tests, typecheck, and build. Now let's live-verify the fix doesn't break the real pipeline, synchronously in the foreground per this project's established rule."
@@ -905,6 +845,66 @@
       "t": "2026-10-13T19:16:52Z",
       "kind": "run",
       "text": "timeout 100 npm start > /tmp/server_run1.log 2>&1 & echo \"started PID $!\"; sleep 95; echo \"---done waiting---\""
+    },
+    {
+      "t": "2026-10-13T19:18:31Z",
+      "kind": "run",
+      "text": "wc -l /tmp/server_run1.log; echo \"---head---\"; head -20 /tmp/server_run1.log; echo \"---tail---\"; tail -40 /tmp/server_run1.log"
+    },
+    {
+      "t": "2026-10-13T19:18:34Z",
+      "kind": "run",
+      "text": "jobs -l; ps aux | grep -E \"tsx|node\" | grep -v grep"
+    },
+    {
+      "t": "2026-10-13T19:18:37Z",
+      "kind": "think",
+      "text": "Server booted cleanly, timed out after 100s, and left no process running. No crash, no regression \u2014 same pattern as prior sessions (heavy 429 pressure means the specific zero-sign\u2026"
+    },
+    {
+      "t": "2026-10-13T19:18:38Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git status --short"
+    },
+    {
+      "t": "2026-10-13T19:18:40Z",
+      "kind": "think",
+      "text": "Clean diff, no leftover scratch files. Now let me update the README and PROGRESS.md."
+    },
+    {
+      "t": "2026-10-13T19:18:41Z",
+      "kind": "run",
+      "text": "grep -n \"scheduleHolderRescore\\|rescore\\|Rescore\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md | head -30"
+    },
+    {
+      "t": "2026-10-13T19:18:43Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-13T19:18:47Z",
+      "kind": "run",
+      "text": "grep -n \"every signal failed\\|Session 50\\|Session 51\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-13T19:18:50Z",
+      "kind": "run",
+      "text": "grep -n \"dropping launch\\|zero signals\\|double-scoring\\|pollOnce.*has\\|feed.has\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-13T19:18:52Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-13T19:18:54Z",
+      "kind": "think",
+      "text": "I'll add a session-52 paragraph right after session 51's note at line 315."
+    },
+    {
+      "t": "2026-10-13T19:19:01Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
     }
   ],
   "schedule": {
