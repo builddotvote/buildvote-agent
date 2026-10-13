@@ -114,6 +114,33 @@ test("a full scoring gate drops the launch instead of scoring it", async () => {
   assert.deepEqual(feed.list(), []);
 });
 
+test("a launch already in the feed (e.g. scored by the watcher) is skipped, not re-scored", async () => {
+  const signatures: SignatureInfo[] = [
+    { signature: "sigCreate", slot: 2, err: null, memo: null, blockTime: 1700000100 },
+  ];
+  const feed = new LiveFeed();
+  const state = { sinceBlockTime: 1700000000 };
+  const gate = new ScoringGate(1);
+  let scoringCalls = 0;
+  const rpc = fakeRpc(signatures);
+  const countingRpc = {
+    ...rpc,
+    async getAccountInfo(...args: Parameters<typeof rpc.getAccountInfo>) {
+      scoringCalls++;
+      return rpc.getAccountInfo(...args);
+    },
+  };
+  feed.add({ mint: MINT, score: 10, signals: [{ name: "liquidity", score: 10, reasons: ["seeded"] }] });
+
+  await pollOnce(fakeRpc(signatures), countingRpc, feed, state, undefined, gate);
+
+  assert.equal(scoringCalls, 0);
+  assert.equal(feed.list().length, 1);
+  assert.equal(feed.list()[0].score, 10);
+  // The gate slot was never touched, so it's still free for a real new launch.
+  assert.equal(gate.tryAcquire(), true);
+});
+
 test("a scoring gate with room releases its slot after scoring", async () => {
   const signatures: SignatureInfo[] = [
     { signature: "sigCreate", slot: 2, err: null, memo: null, blockTime: 1700000100 },

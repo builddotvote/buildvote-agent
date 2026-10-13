@@ -304,6 +304,16 @@ launch with zero signals instead of adding it — a total data-fetch failure
 should disappear from the live page, not show up as the lowest, most
 reassuring score it can display.
 
+The same "scoring RPC is scarce" concern applies to `src/poller.ts`'s
+backstop path specifically (session 51): it runs concurrently with the
+websocket watcher, and its `findNewLaunches` cursor is a time watermark, not
+a feed check — so without an explicit `feed.has(launch.mint)` skip, any
+launch the watcher already scored within the poller's own lookback window
+got fully re-scored (all four signals' RPC calls) only to have `feed.add()`
+silently drop the resulting duplicate. `pollOnce` now checks `feed.has()`
+before even acquiring a `ScoringGate` slot, matching what `server.ts`'s
+watcher callback already did.
+
 ## Live feed
 
 Two discovery paths feed the same pipeline:

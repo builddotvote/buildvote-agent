@@ -3051,3 +3051,75 @@ file. Verified against the actual code in Session 46 below.)*
 - `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
   priority, unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 51 — 2026-10-13
+
+### Done
+- Re-verified the repo first (`npm install`, 169/169 tests, clean
+  typecheck/build, no leftover scratch files) — matched session 50's
+  write-up exactly.
+- Rather than re-trying one of the three already-exhausted rate-limit
+  avenues (alternative RPC endpoints, non-RPC public APIs, `getProgramAccounts`
+  — sessions 27-28/48/49), read `poller.ts`/`feed.ts`/`server.ts` together and
+  found a real bug the README had been documenting as already fixed: the
+  README claimed a launch landing via both the websocket watcher and the
+  backstop poller "only scores once" (dedup via `feed.has()`/`add()`), but
+  `poller.ts`'s `pollOnce` never actually called `feed.has()` before scoring
+  — only `server.ts`'s watcher callback did. The poller's own discovery
+  cursor (`findNewLaunches`'s time watermark) has no notion of "already
+  scored," so any launch the watcher scored within the poller's own 15s
+  lookback window got **fully re-scored** (all four signals' RPC calls
+  against the deployer, bonding curve, and holder data) before `feed.add()`
+  silently dropped the resulting duplicate at the very end. Given 30+
+  sessions of documented effort conserving the scoring RPC's scarce request
+  budget, burning it on calls whose result was always going to be discarded
+  is a real, concrete waste, not a cosmetic one.
+- Fixed in `src/poller.ts`: `pollOnce` now checks `feed.has(launch.mint)` and
+  `continue`s before even acquiring a `ScoringGate` slot, mirroring
+  `server.ts`'s existing watcher-side check. `src/poller.test.ts` — added a
+  regression test (a launch pre-seeded into the feed, then polled again with
+  a counting wrapper around `getAccountInfo`): asserts zero scoring RPC calls
+  happen and the gate slot stays free. Verified it's a real regression test,
+  not just plausible-looking (same discipline as session 50): reverted the
+  `poller.ts` fix via a saved copy, confirmed the new test fails (1 call
+  instead of 0), then restored the fix and confirmed all 170 tests pass.
+- Live-checked synchronously in the foreground (three runs, ~90-130s each,
+  public mainnet-beta, no keys, no `.env`, same pattern as every session
+  since 26): server boots cleanly each time, `/api/feed` keeps responding,
+  no crash, no new errors from the change. None of the three runs happened
+  to land a launch in the feed at all in-window (heavy 429/gate-pressure, the
+  same pre-existing pattern documented since session 20) — so the specific
+  double-scoring overlap this fix targets wasn't directly observed firing
+  live this session; the offline regression test (confirmed to fail without
+  the fix) is the primary evidence, same evidentiary pattern as session 50's
+  zero-signals fix.
+- Updated `rug-radar/README.md`'s "Score"/"Live feed" section boundary with a
+  paragraph describing the bug and the fix.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 170/170 passing (1 new, in `poller.test.ts`), all offline,
+  ~3.2s.
+- Live-booted the real server synchronously three times (public
+  mainnet-beta, no keys, no `.env`, ~90-130s each): boots cleanly, `/api/feed`
+  responds throughout, no crash, no regression from the fix.
+- `git status`/`ps aux` after cleanup show only the intended
+  `poller.ts`/`poller.test.ts`/README/PROGRESS changes — no stray files, no
+  leftover server process.
+
+### Next
+- This session's fix hasn't been observed firing live (only offline-tested)
+  — worth watching for a case where `pollOnce` actually skips a launch the
+  watcher already scored, to confirm the overlap condition really occurs at
+  the documented 15s poll interval, not just in the constructed test case.
+- The scoring endpoint's rate-limit ceiling is unchanged — three independent
+  avenues around it are exhausted (sessions 27-28, 48, 49); what's untried is
+  accepting the balance-index rescore as the permanent mitigation and
+  focusing elsewhere, or re-checking from a different deployment
+  network/region if one becomes available.
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data (3 trading mints) — unchanged this
+  session.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- All five TASK.md steps remain functionally complete.

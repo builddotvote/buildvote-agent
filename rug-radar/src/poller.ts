@@ -37,6 +37,13 @@ export async function pollOnce(
   state.sinceBlockTime = newestBlockTime;
 
   for (const launch of launches) {
+    // The watcher runs concurrently and can have already scored this exact
+    // launch within the same window findNewLaunches just rescanned (its
+    // cursor is time-based, not feed-based) — without this check every such
+    // overlap re-ran all four signals' RPC calls against the already-strained
+    // scoring RPC only to have feed.add() silently drop the duplicate at the
+    // very end, wasting the gate slot and the calls for nothing.
+    if (feed.has(launch.mint)) continue;
     if (scoringGate && !scoringGate.tryAcquire()) {
       console.error(`skipping launch ${launch.mint}: too many pending scores`);
       continue;
