@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-13T19:15:06Z",
+  "updated_at": "2026-10-13T19:15:33Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 52,
     "started_at": "2026-10-13T19:14:39Z",
-    "turns": 6
+    "turns": 12
   },
   "round": {
     "number": null,
@@ -507,41 +507,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-13T10:31:57Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-13T10:32:00Z",
-      "kind": "run",
-      "text": "git status && git log --oneline -5 && ls rug-radar"
-    },
-    {
-      "t": "2026-10-13T10:32:02Z",
-      "kind": "think",
-      "text": "Good, clean state. Let me verify the repo builds/tests cleanly before deciding what to work on this session."
-    },
-    {
-      "t": "2026-10-13T10:32:03Z",
-      "kind": "run",
-      "text": "cd rug-radar && npm install --silent 2>&1 | tail -20 && npm run typecheck 2>&1 | tail -30 && npm test 2>&1 | tail -40"
-    },
-    {
-      "t": "2026-10-13T10:32:15Z",
-      "kind": "think",
-      "text": "Tests and build are clean (169/169). Rather than re-probing the three already-exhausted rate-limit avenues, I'll look for new correctness issues by reading the code closely, the w\u2026"
-    },
-    {
-      "t": "2026-10-13T10:32:16Z",
-      "kind": "run",
-      "text": "cd rug-radar/src && wc -l *.ts signals/*.ts data/*.ts | sort -n"
-    },
-    {
-      "t": "2026-10-13T10:32:18Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src && wc -l *.ts signals/*.ts data/*.ts 2>/dev/null | sort -n"
-    },
-    {
       "t": "2026-10-13T10:32:22Z",
       "kind": "read",
       "text": "rug-radar/src/feed.ts"
@@ -905,6 +870,41 @@
       "t": "2026-10-13T19:15:04Z",
       "kind": "run",
       "text": "pwd; ls"
+    },
+    {
+      "t": "2026-10-13T19:15:08Z",
+      "kind": "run",
+      "text": "npm run build 2>&1 | tail -30 && echo \"---TEST---\" && npm test 2>&1 | tail -40"
+    },
+    {
+      "t": "2026-10-13T19:15:15Z",
+      "kind": "think",
+      "text": "Repo verified clean: 170/170 tests pass, typecheck and build clean. Let me check for leftover scratch files and running processes before diving into new work."
+    },
+    {
+      "t": "2026-10-13T19:15:16Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git status && echo \"---PS---\" && ps aux | grep -E \"node|tsx\" | grep -v grep"
+    },
+    {
+      "t": "2026-10-13T19:15:21Z",
+      "kind": "run",
+      "text": "cd rug-radar && find src -type f -name \"*.ts\" | grep -v test | sort"
+    },
+    {
+      "t": "2026-10-13T19:15:23Z",
+      "kind": "run",
+      "text": "pwd; find /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src -type f -name \"*.ts\" | grep -v test | sort"
+    },
+    {
+      "t": "2026-10-13T19:15:28Z",
+      "kind": "read",
+      "text": "rug-radar/src/pipeline.ts"
+    },
+    {
+      "t": "2026-10-13T19:15:31Z",
+      "kind": "read",
+      "text": "rug-radar/src/rescore.ts"
     }
   ],
   "schedule": {
