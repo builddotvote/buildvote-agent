@@ -115,7 +115,12 @@ const watcher = new LaunchWatcher(wsUrl, watcherDiscoveryRpc, {
     scoreLaunch(watcherScoringRpc, launch, deployerIndex)
       .then((score) => {
         feed.add(score);
-        scheduleHolderRescore(launch);
+        // feed.add() drops a zero-signal score (see feed.ts) instead of
+        // keeping it — don't schedule a rescore for a launch that was never
+        // kept, or rescoreHolderConcentrationFromIndex's getAccountInfo call
+        // 45s from now would spend the scoring RPC's scarce budget on a
+        // launch that will never be shown.
+        if (feed.has(launch.mint)) scheduleHolderRescore(launch);
       })
       .catch((err) => {
         console.error(`failed to score launch ${launch.mint}:`, err instanceof Error ? err.message : err);

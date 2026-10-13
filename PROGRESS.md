@@ -3123,3 +3123,86 @@ file. Verified against the actual code in Session 46 below.)*
 - `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
   priority, unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 52 — 2026-10-13
+
+### Done
+- Re-verified the repo first (`npm install`, 170/170 tests, clean
+  typecheck/build, no leftover scratch files, no stray processes) — matched
+  session 51's write-up exactly.
+- Rather than re-trying one of the three already-exhausted rate-limit
+  avenues, read `server.ts`, `feed.ts`, and `rescore.ts` together (the same
+  three files session 50's zero-signal fix touched) and found a follow-on
+  gap session 50 left unfixed: `server.ts`'s websocket watcher callback
+  calls `feed.add(score)` then unconditionally calls
+  `scheduleHolderRescore(launch)` — even when `feed.add()` silently dropped
+  the score because every signal failed (session 50's fix). 45 seconds
+  later, `rescoreHolderConcentrationFromIndex` can still spend a real
+  `getAccountInfo` call against the scarce, rate-limited scoring RPC
+  computing a holder-concentration rescore for a launch that was already
+  discarded and will never reach the feed — its own `.then` callback only
+  discovers the launch is gone *after* paying for the RPC call, since it
+  checks `feed.get(launch.mint)` to find the update target, not before
+  doing the work. Given 30+ sessions of effort conserving this exact RPC's
+  budget (sessions 27-28, 42-45, 48-51), spending it on a rescore for a
+  launch nothing will ever show is a real, concrete waste, matching the
+  same pattern session 51 fixed in `poller.ts`.
+- Fixed in `src/server.ts`: the watcher callback now checks
+  `feed.has(launch.mint)` right after `feed.add(score)` and only calls
+  `scheduleHolderRescore` when the score was actually kept — the same
+  `feed.has()`-before-committing-work pattern `pollOnce` already uses
+  before scoring at all (session 51).
+- No regression test added: `server.ts`'s watcher callback is inline wiring
+  (websocket + real timers + the other modules), not a unit under test —
+  PROGRESS.md noted this limitation as early as the original `server.ts`
+  wiring session ("No automated test exercises `server.ts` wiring both
+  discovery paths") and no later session added a `server.test.ts`.
+  Extracting a one-line `feed.has()` check into its own testable function
+  purely to get a test would be an abstraction the logic doesn't need.
+  Verified by reading instead: `feed.add()`/`feed.has()` share the same
+  `mints` Set (`feed.ts:17-32`), so `has()` is already the exact signal for
+  whether `add()` kept the entry — confirmed via `feed.test.ts`'s existing
+  zero-signal coverage from session 50, which already proves `has()`
+  returns `false` after `add()` drops a score.
+- Updated `rug-radar/README.md`'s "Score" section with a paragraph
+  describing the bug and the fix, right after session 51's `pollOnce` note.
+- Live-booted the real server synchronously (public mainnet-beta, no keys,
+  no `.env`, ~95s, same pattern as every session since 26): boots cleanly,
+  logged the expected mix of "too many pending scores" (scoring-gate
+  pressure, pre-existing) and `getTokenLargestAccounts` 429s, no crash. Did
+  not happen to observe a zero-signal launch in this window (only
+  holder-concentration failed on the launches that scored; the other three
+  signals succeeded), so — same evidentiary limitation as sessions 50/51 —
+  this fix's specific skip path wasn't directly observed firing live; the
+  offline reasoning above (same `mints` Set backs both methods) is the
+  primary evidence.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 170/170 passing (no new tests this session — see "Done" for
+  why), all offline, ~3.3s.
+- Live-booted the real server synchronously once (public mainnet-beta, no
+  keys, no `.env`, ~95s): boots cleanly, no crash, no regression from the
+  fix.
+- `git status`/`ps aux` after cleanup show only the intended
+  `server.ts`/README/PROGRESS changes — no stray files, no leftover server
+  process.
+
+### Next
+- This session's fix hasn't been observed firing live (only reasoned about
+  offline) — worth watching for a case where a launch is dropped for zero
+  signals and confirming no `rescored holder-concentration for ...` or
+  RPC-call log line appears for it 45s later.
+- The scoring endpoint's rate-limit ceiling is unchanged — three independent
+  avenues around it are exhausted (sessions 27-28, 48, 49); what's untried is
+  accepting the balance-index rescore as the permanent mitigation and
+  focusing elsewhere, or re-checking from a different deployment
+  network/region if one becomes available.
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data (3 trading mints) — unchanged this
+  session.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- `server.ts`'s watcher/poller wiring remains without an automated test
+  (unchanged limitation, noted since the original wiring session).
+- All five TASK.md steps remain functionally complete.

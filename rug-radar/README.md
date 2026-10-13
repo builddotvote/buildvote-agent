@@ -314,6 +314,19 @@ silently drop the resulting duplicate. `pollOnce` now checks `feed.has()`
 before even acquiring a `ScoringGate` slot, matching what `server.ts`'s
 watcher callback already did.
 
+Session 50's zero-signal drop left one more waste site unfixed (session 52):
+`server.ts`'s watcher callback called `scheduleHolderRescore(launch)`
+unconditionally after `feed.add(score)`, even when `add()` dropped the
+score. 45s later `rescoreHolderConcentrationFromIndex` (see "Live feed"
+below) could still spend a real `getAccountInfo` call against the scoring
+RPC computing a holder-concentration rescore for a launch that was already
+discarded and would never reach the feed — the rescore's own `.then`
+callback only discovers this *after* paying for the call, since it checks
+`feed.get(launch.mint)` for the update target, not before doing the work.
+Fixed by checking `feed.has(launch.mint)` right after `feed.add(score)` and
+only calling `scheduleHolderRescore` when the score was actually kept, the
+same pattern `pollOnce` already uses before scoring at all.
+
 ## Live feed
 
 Two discovery paths feed the same pipeline:
