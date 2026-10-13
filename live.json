@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-13T02:35:35Z",
+  "updated_at": "2026-10-13T02:36:01Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 50,
     "started_at": "2026-10-13T02:35:07Z",
-    "turns": 7
+    "turns": 12
   },
   "round": {
     "number": null,
@@ -489,41 +489,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-12T10:45:26Z",
-      "kind": "think",
-      "text": "I've read through TASK.md and the full session history in PROGRESS.md (47 sessions). All five TASK.md steps are functionally complete; recent sessions have been hardening the live\u2026"
-    },
-    {
-      "t": "2026-10-12T10:45:27Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && git status --short && echo \"---\" && ls tmp-* 2>/dev/null; echo \"---install---\" && npm install --silent 2>&1 | tai\u2026"
-    },
-    {
-      "t": "2026-10-12T10:45:31Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -20 && echo \"---TEST---\" && npm test 2>&1 | tail -30 && echo \"---BUILD---\" && npm run build 2>&1 | tail -10"
-    },
-    {
-      "t": "2026-10-12T10:45:52Z",
-      "kind": "think",
-      "text": "No leftover scratch files, repo matches the documented Session 47 state exactly (168/168 tests, clean typecheck/build). Given the long string of sessions (40-46) hitting diminishi\u2026"
-    },
-    {
-      "t": "2026-10-12T10:45:52Z",
-      "kind": "tool",
-      "text": "ToolSearch"
-    },
-    {
-      "t": "2026-10-12T10:45:57Z",
-      "kind": "search",
-      "text": "free public API Solana token top holders no API key 2026"
-    },
-    {
-      "t": "2026-10-12T10:46:17Z",
-      "kind": "search",
-      "text": "https://www.solanatracker.io/data-api"
-    },
-    {
       "t": "2026-10-12T10:46:29Z",
       "kind": "run",
       "text": "echo \"--- solanatracker, no key ---\"; curl -s -m 10 -o /dev/null -w \"HTTP %{http_code}\\n\" \"https://data.solanatracker.io/tokens/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/holder\u2026"
@@ -887,6 +852,41 @@
       "t": "2026-10-13T02:35:26Z",
       "kind": "read",
       "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-13T02:35:42Z",
+      "kind": "think",
+      "text": "All five TASK.md steps have been functionally complete since session 5, and sessions 20-49 have been hardening the scoring pipeline against the public RPC's rate limit. Session 49\u2026"
+    },
+    {
+      "t": "2026-10-13T02:35:42Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && ls -la && npm install --no-audit --no-fund 2>&1 | tail -5"
+    },
+    {
+      "t": "2026-10-13T02:35:46Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -20"
+    },
+    {
+      "t": "2026-10-13T02:35:53Z",
+      "kind": "think",
+      "text": "168/168 passing, typecheck clean, matches Session 49's write-up exactly \u2014 no undocumented drift. Let me look at what's actually in the public feed page and server, since no sessio\u2026"
+    },
+    {
+      "t": "2026-10-13T02:35:54Z",
+      "kind": "run",
+      "text": "ls public src src/signals src/data && wc -l public/index.html src/server.ts"
+    },
+    {
+      "t": "2026-10-13T02:35:56Z",
+      "kind": "read",
+      "text": "rug-radar/public/index.html"
+    },
+    {
+      "t": "2026-10-13T02:36:01Z",
+      "kind": "run",
+      "text": "grep -rn \"reasons\" src/signals/*.ts | grep -v test"
     }
   ],
   "schedule": {
