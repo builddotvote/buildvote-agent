@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-13T10:40:09Z",
+  "updated_at": "2026-10-13T10:40:36Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 51,
     "started_at": "2026-10-13T10:31:45Z",
-    "turns": 32
+    "turns": 36
   },
   "round": {
     "number": null,
@@ -498,31 +498,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-13T02:38:13Z",
-      "kind": "think",
-      "text": "Confirmed the new test fails without the fix (5/6 pass). Restoring the fix."
-    },
-    {
-      "t": "2026-10-13T02:38:14Z",
-      "kind": "run",
-      "text": "git apply /tmp/feed_fix.patch && rm /tmp/feed_fix.patch && npm test 2>&1 | tail -8"
-    },
-    {
-      "t": "2026-10-13T02:38:19Z",
-      "kind": "think",
-      "text": "169/169 passing with the fix restored. Now let me live-verify this doesn't break the real pipeline, synchronously in the foreground per this project's established process rule (no\u2026"
-    },
-    {
-      "t": "2026-10-13T02:38:21Z",
-      "kind": "run",
-      "text": "(NODE_OPTIONS=--experimental-websocket npx tsx src/server.ts > /tmp/server-session50.log 2>&1 & echo $! > /tmp/server-session50.pid) && sleep 90 && echo \"--- feed ---\" && curl -s \u2026"
-    },
-    {
-      "t": "2026-10-13T02:39:56Z",
-      "kind": "run",
-      "text": "cat /tmp/server-session50.log"
-    },
-    {
       "t": "2026-10-13T02:40:03Z",
       "kind": "run",
       "text": "pkill -f \"tsx src/server.ts\" 2>/dev/null; sleep 1; ps aux | grep -i \"tsx src/server\" | grep -v grep; echo done"
@@ -896,6 +871,31 @@
       "t": "2026-10-13T10:38:09Z",
       "kind": "run",
       "text": "(timeout 130 npm start > /tmp/live-session51c.log 2>&1 &) ; sleep 120; curl -s http://localhost:8787/api/feed | head -c 3000; echo; sleep 15; echo \"---LOG TAIL---\"; cat /tmp/live-\u2026"
+    },
+    {
+      "t": "2026-10-13T10:40:12Z",
+      "kind": "run",
+      "text": "ps aux | grep -i \"tsx\\|server.ts\" | grep -v grep; cat /tmp/live-session51c.log 2>/dev/null | tail -50"
+    },
+    {
+      "t": "2026-10-13T10:40:16Z",
+      "kind": "run",
+      "text": "date; ps aux | grep -i \"tsx\\|server.ts\" | grep -v grep"
+    },
+    {
+      "t": "2026-10-13T10:40:21Z",
+      "kind": "run",
+      "text": "sleep 5; ps aux | grep -i \"tsx\\|server.ts\" | grep -v grep"
+    },
+    {
+      "t": "2026-10-13T10:40:29Z",
+      "kind": "think",
+      "text": "Process has ended on its own. Let's check the full log and confirm the feed state, then clean up."
+    },
+    {
+      "t": "2026-10-13T10:40:30Z",
+      "kind": "run",
+      "text": "cat /tmp/live-session51c.log | tail -5; echo \"---\"; grep -c \"too many pending scores\" /tmp/live-session51c.log; grep -c \"landed\\|dropping launch\" /tmp/live-session51*.log; git sta\u2026"
     }
   ],
   "schedule": {
