@@ -2970,3 +2970,84 @@ file. Verified against the actual code in Session 46 below.)*
 - `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
   priority, unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 50 — 2026-10-13
+
+### Done
+- Re-verified the repo first (`npm install`, 168/168 tests, clean
+  typecheck/build, no leftover scratch files) — matched session 49's
+  write-up exactly. Session 49 closed out the third of three independent
+  avenues around the scoring endpoint's rate-limit ceiling (alternative RPC
+  endpoints, non-RPC public APIs, `getProgramAccounts`) and suggested either
+  accepting the balance-index rescore as the permanent mitigation or moving
+  focus elsewhere — rather than re-trying an exhausted avenue, looked for a
+  genuinely new, concrete issue instead.
+- Found a real correctness bug by reading `scorer.ts`/`feed.ts`/`pipeline.ts`
+  together rather than any live probe: `combineSignals()` already handles
+  zero signals explicitly (`{ score: 0, signals: [] }`, `scorer.ts:18-20`),
+  but nothing downstream treated that specially — `src/feed.ts`'s `add()`
+  took any `LaunchScore` unconditionally. Given how extensively sessions
+  20-49 documented the scoring RPC failing most calls for most launches,
+  "every one of a launch's four signals fails to fetch" is a realistic
+  outcome, not a hypothetical — and when it happens, the live page would
+  have shown that launch as a green "0 — low risk" with no reasons,
+  indistinguishable from a genuinely verified-safe token. For a page whose
+  purpose is warning holders about rug risk, a silent total-failure
+  rendering as the single most reassuring possible score is a real,
+  user-facing trust bug, not a cosmetic one.
+- Fixed in `src/feed.ts`: `add()` now drops (and logs) a `LaunchScore` with
+  zero signals instead of adding it, so a total data-fetch failure
+  disappears from the feed rather than appearing as a false "low risk"
+  signal. Single chokepoint fix — both discovery paths (`server.ts`'s
+  watcher callback and `poller.ts`'s `pollOnce`) funnel through this one
+  `add()` call, so no duplicate logic needed at either call site.
+  `src/feed.test.ts` — updated the existing `score()` test helper to include
+  a real signal (it had been using the exact zero-signal shape as its
+  generic placeholder, which would have silently broken every existing test
+  under the new behavior) and added a dedicated regression test. Verified
+  it's a real regression test, not just plausible-looking: reverted the
+  `feed.ts` fix via a saved patch, confirmed the new test fails (5/6), then
+  reapplied the fix and confirmed all 6 pass.
+- Live-checked synchronously in the foreground (two ~90-110s runs, public
+  mainnet-beta, no keys, no `.env`, same pattern as every session since 26 —
+  explicitly not backgrounding + `ScheduleWakeup`, the mistake sessions
+  24/25/45 made): the fix didn't interfere with the normal case — one run
+  landed 3 launches in `/api/feed`, each with 3 real signals (deployer-history,
+  bundled-buys, liquidity; holder-concentration dropped individually by its
+  own 429, the pre-existing documented behavior, not by this session's
+  change). Did not happen to observe the zero-signals drop path firing live
+  in this window (would need a launch where even `getAccountInfo`/
+  `getTransaction` fail entirely, not just the indexed token methods) — the
+  offline regression test is the primary evidence for this fix, same as
+  how most of this codebase's edge-case handling is verified when the
+  triggering condition is rare/hard to force live on demand.
+- Updated `rug-radar/README.md`'s "Score" section with a paragraph
+  describing the bug and the fix.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 169/169 passing (1 new, in `feed.test.ts`), all offline, ~2.1s.
+- Live-booted the real server synchronously twice (public mainnet-beta, no
+  keys, no `.env`, ~90-110s each): boots cleanly, `/api/feed` responds with
+  real multi-signal launches, no crash, no regression from the fix.
+- `git status`/`ps aux` after cleanup show only the intended
+  `feed.ts`/`feed.test.ts`/README/PROGRESS changes — no stray files, no
+  leftover server process.
+
+### Next
+- The zero-signals drop path (this session's fix) hasn't been observed
+  firing live, only offline-tested — worth watching for the
+  `"dropping launch ... every signal failed"` log line in a future
+  session's live check to confirm it fires on real total-failure cases, not
+  just the constructed test case.
+- The scoring endpoint's rate-limit ceiling is unchanged — three
+  independent avenues around it are exhausted (sessions 27-28, 48, 49);
+  what's untried is accepting the balance-index rescore as the permanent
+  mitigation and focusing elsewhere, or re-checking from a different
+  deployment network/region if one becomes available.
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data (3 trading mints) — unchanged this
+  session.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- All five TASK.md steps remain functionally complete.

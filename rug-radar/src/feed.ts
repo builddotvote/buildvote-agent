@@ -18,7 +18,16 @@ export class LiveFeed {
     return this.mints.has(mint);
   }
 
+  // A launch with zero signals means every signal's fetch failed (e.g. the
+  // scoring RPC rate-limited every call for it), not that it was verified
+  // low-risk — combineSignals() can't tell "no data" apart from "score 0"
+  // on its own, so that distinction has to be made here before it reaches
+  // holders as a misleadingly clean "0" on the live page.
   add(score: LaunchScore): void {
+    if (score.signals.length === 0) {
+      console.error(`dropping launch ${score.mint}: every signal failed, nothing to show`);
+      return;
+    }
     if (this.mints.has(score.mint)) return;
     this.mints.add(score.mint);
     this.launches.unshift(score);

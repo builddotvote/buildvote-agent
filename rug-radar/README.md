@@ -296,6 +296,14 @@ the weight of wallet-behavior signals like bundled buys; any signal not
 listed defaults to a weight of 1, so the combiner doesn't need updating
 every time a new signal lands.
 
+If every signal's fetch fails for a launch (e.g. the scoring RPC
+rate-limits every call for it — see "Known limitations" below), `combineSignals`
+returns `{ score: 0, signals: [] }`. That's indistinguishable from "verified
+low risk" once rendered, so `src/feed.ts`'s `add()` (session 50) drops a
+launch with zero signals instead of adding it — a total data-fetch failure
+should disappear from the live page, not show up as the lowest, most
+reassuring score it can display.
+
 ## Live feed
 
 Two discovery paths feed the same pipeline:

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { LiveFeed } from "./feed.js";
 
 function score(mint: string) {
-  return { mint, score: 0, signals: [] };
+  return { mint, score: 0, signals: [{ name: "liquidity", score: 0, reasons: ["deep real liquidity"] }] };
 }
 
 test("list() returns newest-added first", () => {
@@ -42,4 +42,11 @@ test("update() is a no-op when the mint isn't in the feed", () => {
   feed.add(score("A"));
   feed.update(score("missing"));
   assert.deepEqual(feed.list().map((s) => s.mint), ["A"]);
+});
+
+test("add() drops a launch with zero signals instead of showing a misleading score 0", () => {
+  const feed = new LiveFeed();
+  feed.add({ mint: "A", score: 0, signals: [] });
+  assert.deepEqual(feed.list(), []);
+  assert.equal(feed.has("A"), false);
 });
