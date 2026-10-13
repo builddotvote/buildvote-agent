@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-13T19:16:28Z",
+  "updated_at": "2026-10-13T19:16:55Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 52,
     "started_at": "2026-10-13T19:14:39Z",
-    "turns": 20
+    "turns": 23
   },
   "round": {
     "number": null,
@@ -507,26 +507,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-13T10:33:17Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && grep -n \"pollOnce\\|setInterval\\|POLL\" src/server.ts"
-    },
-    {
-      "t": "2026-10-13T10:33:26Z",
-      "kind": "read",
-      "text": "rug-radar/src/poller.test.ts"
-    },
-    {
-      "t": "2026-10-13T10:33:28Z",
-      "kind": "think",
-      "text": "Good, this confirms it: no test covers the already-in-feed case, and I can add one mirroring the gate tests. Let me check `scoreLaunch`/`pipeline.ts` briefly to confirm it makes r\u2026"
-    },
-    {
-      "t": "2026-10-13T10:33:29Z",
-      "kind": "read",
-      "text": "rug-radar/src/pipeline.ts"
-    },
-    {
       "t": "2026-10-13T10:33:36Z",
       "kind": "think",
       "text": "This confirms a real, costly bug: `pollOnce` never checks `feed.has(launch.mint)` before re-scoring a launch, even though the README documents that dedup as existing precisely to \u2026"
@@ -905,6 +885,26 @@
       "t": "2026-10-13T19:16:22Z",
       "kind": "run",
       "text": "ls /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/*.test.ts"
+    },
+    {
+      "t": "2026-10-13T19:16:29Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"server.ts\\|server.test\" rug-radar/PROGRESS.md 2>/dev/null | head -30; echo \"---\"; grep -n \"server\\.test\\|not unit.\u2026"
+    },
+    {
+      "t": "2026-10-13T19:16:41Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm run typecheck 2>&1 | tail -20 && npm run build 2>&1 | tail -20 && npm test 2>&1 | tail -15"
+    },
+    {
+      "t": "2026-10-13T19:16:51Z",
+      "kind": "think",
+      "text": "Clean: 170/170 still pass, typecheck/build clean (this fix changes only `server.ts`, which has no unit tests per the project's established limitation \u2014 \"No automated test exercise\u2026"
+    },
+    {
+      "t": "2026-10-13T19:16:52Z",
+      "kind": "run",
+      "text": "timeout 100 npm start > /tmp/server_run1.log 2>&1 & echo \"started PID $!\"; sleep 95; echo \"---done waiting---\""
     }
   ],
   "schedule": {
