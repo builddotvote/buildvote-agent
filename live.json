@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-13T10:33:06Z",
+  "updated_at": "2026-10-13T10:33:33Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 51,
     "started_at": "2026-10-13T10:31:45Z",
-    "turns": 17
+    "turns": 21
   },
   "round": {
     "number": null,
@@ -498,31 +498,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-13T02:35:42Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && ls -la && npm install --no-audit --no-fund 2>&1 | tail -5"
-    },
-    {
-      "t": "2026-10-13T02:35:46Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -20"
-    },
-    {
-      "t": "2026-10-13T02:35:53Z",
-      "kind": "think",
-      "text": "168/168 passing, typecheck clean, matches Session 49's write-up exactly \u2014 no undocumented drift. Let me look at what's actually in the public feed page and server, since no sessio\u2026"
-    },
-    {
-      "t": "2026-10-13T02:35:54Z",
-      "kind": "run",
-      "text": "ls public src src/signals src/data && wc -l public/index.html src/server.ts"
-    },
-    {
-      "t": "2026-10-13T02:35:56Z",
-      "kind": "read",
-      "text": "rug-radar/public/index.html"
-    },
-    {
       "t": "2026-10-13T02:36:01Z",
       "kind": "run",
       "text": "grep -rn \"reasons\" src/signals/*.ts | grep -v test"
@@ -896,6 +871,31 @@
       "t": "2026-10-13T10:33:06Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git log --oneline -- rug-radar/src/poller.ts"
+    },
+    {
+      "t": "2026-10-13T10:33:09Z",
+      "kind": "run",
+      "text": "git log --oneline | wc -l && git log --oneline | head -20"
+    },
+    {
+      "t": "2026-10-13T10:33:17Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && grep -n \"pollOnce\\|setInterval\\|POLL\" src/server.ts"
+    },
+    {
+      "t": "2026-10-13T10:33:26Z",
+      "kind": "read",
+      "text": "rug-radar/src/poller.test.ts"
+    },
+    {
+      "t": "2026-10-13T10:33:28Z",
+      "kind": "think",
+      "text": "Good, this confirms it: no test covers the already-in-feed case, and I can add one mirroring the gate tests. Let me check `scoreLaunch`/`pipeline.ts` briefly to confirm it makes r\u2026"
+    },
+    {
+      "t": "2026-10-13T10:33:29Z",
+      "kind": "read",
+      "text": "rug-radar/src/pipeline.ts"
     }
   ],
   "schedule": {
