@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-14T00:21:15Z",
+  "updated_at": "2026-10-14T00:21:42Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 53,
     "started_at": "2026-10-14T00:16:51Z",
-    "turns": 24
+    "turns": 28
   },
   "round": {
     "number": null,
@@ -516,31 +516,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-13T19:15:23Z",
-      "kind": "run",
-      "text": "pwd; find /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src -type f -name \"*.ts\" | grep -v test | sort"
-    },
-    {
-      "t": "2026-10-13T19:15:28Z",
-      "kind": "read",
-      "text": "rug-radar/src/pipeline.ts"
-    },
-    {
-      "t": "2026-10-13T19:15:31Z",
-      "kind": "read",
-      "text": "rug-radar/src/rescore.ts"
-    },
-    {
-      "t": "2026-10-13T19:15:35Z",
-      "kind": "read",
-      "text": "rug-radar/src/feed.ts"
-    },
-    {
-      "t": "2026-10-13T19:15:37Z",
-      "kind": "run",
-      "text": "grep -n \"rescore\\|update(\\|RESCORE\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/server.ts"
-    },
-    {
       "t": "2026-10-13T19:15:40Z",
       "kind": "read",
       "text": "rug-radar/src/server.ts"
@@ -914,6 +889,31 @@
       "t": "2026-10-14T00:21:15Z",
       "kind": "think",
       "text": "Now let's update PROGRESS.md with the session 53 entry."
+    },
+    {
+      "t": "2026-10-14T00:21:32Z",
+      "kind": "edit",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-14T00:21:34Z",
+      "kind": "think",
+      "text": "Let's do a final sanity check of everything before wrapping up."
+    },
+    {
+      "t": "2026-10-14T00:21:34Z",
+      "kind": "run",
+      "text": "cd rug-radar && npm test 2>&1 | tail -10 && npm run typecheck 2>&1 | tail -5 && npm run build 2>&1 | tail -5 && echo \"---GIT---\" && cd .. && git status"
+    },
+    {
+      "t": "2026-10-14T00:21:37Z",
+      "kind": "run",
+      "text": "pwd"
+    },
+    {
+      "t": "2026-10-14T00:21:39Z",
+      "kind": "run",
+      "text": "npm test 2>&1 | tail -10 && npm run typecheck 2>&1 | tail -5 && npm run build 2>&1 | tail -5 && echo \"---GIT---\" && cd .. && git status"
     }
   ],
   "schedule": {
