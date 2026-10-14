@@ -327,6 +327,20 @@ Fixed by checking `feed.has(launch.mint)` right after `feed.add(score)` and
 only calling `scheduleHolderRescore` when the score was actually kept, the
 same pattern `pollOnce` already uses before scoring at all.
 
+Session 52's fix only covered the case where the score never made it into
+the feed in the first place. One more waste site existed one layer deeper
+(session 53): `src/feed.ts`'s `LiveFeed` is bounded (`maxSize`, default 50),
+evicting the oldest entry — from both `launches` and the `mints` dedup set —
+whenever a new one pushes it past the cap. `scheduleHolderRescore`'s 45s
+timer (see "Live feed" below) called `rescoreHolderConcentrationFromIndex`
+unconditionally, which spends a real `getAccountInfo` call against the
+scoring RPC before its own `.then` callback checks `feed.get(launch.mint)`
+for the update target. A launch that aged out of the feed via eviction
+during the 45s wait — plausible during a burst of newer launches — paid for
+that RPC call for an update nothing would ever show. Fixed by checking
+`feed.has(launch.mint)` before calling `rescoreHolderConcentrationFromIndex`,
+not just before using its result.
+
 ## Live feed
 
 Two discovery paths feed the same pipeline:

@@ -157,6 +157,16 @@ function scheduleHolderRescore(launch: DiscoveredLaunch): void {
   if (launch.bundledBuy) balanceIndex.recordTrade(launch.bundledBuy);
   watcher.trackMint(launch.mint, launch.bondingCurve);
   setTimeout(() => {
+    // The feed is bounded (LiveFeed's maxSize, see feed.ts) and this fires
+    // 45s after the launch was added — a burst of newer launches can have
+    // aged this one out of the feed by now. Check before, not just in the
+    // .then() below: rescoreHolderConcentrationFromIndex spends a real
+    // getAccountInfo call against the scarce scoring RPC, and that call
+    // happens regardless of whether anything will use its result.
+    if (!feed.has(launch.mint)) {
+      watcher.untrackMint(launch.mint);
+      return;
+    }
     rescoreHolderConcentrationFromIndex(watcherScoringRpc, launch, balanceIndex)
       .then((signal) => {
         if (!signal) return;

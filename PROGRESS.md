@@ -3206,3 +3206,81 @@ file. Verified against the actual code in Session 46 below.)*
 - `server.ts`'s watcher/poller wiring remains without an automated test
   (unchanged limitation, noted since the original wiring session).
 - All five TASK.md steps remain functionally complete.
+
+## Session 53 — 2026-10-14
+
+### Done
+- Re-verified the repo first (`npm install`, 170/170 tests, clean
+  typecheck/build, no leftover scratch files, no stray processes) — matched
+  session 52's write-up exactly.
+- Read `server.ts`, `feed.ts`, and `rescore.ts` together again and found a
+  waste site one layer deeper than session 52's fix. Session 52 made
+  `server.ts` only call `scheduleHolderRescore` when `feed.add(score)`
+  actually kept the launch. But `scheduleHolderRescore`'s 45s-delayed
+  callback still called `rescoreHolderConcentrationFromIndex` (which spends
+  a real `getAccountInfo` call against the scarce scoring RPC)
+  unconditionally — it only checked `feed.get(launch.mint)` for the update
+  target inside the `.then()`, *after* paying for the call. `feed.ts`'s
+  `LiveFeed` is bounded (`maxSize`, default 50) and evicts the oldest entry
+  from both `launches` and the `mints` dedup set whenever a new one pushes
+  it past the cap (confirmed via `feed.test.ts`'s existing "caps at
+  maxSize" coverage). So a launch that ages out of the feed during the 45s
+  wait — plausible during a burst of newer launches — still paid for the
+  rescore's RPC call for an update nothing would ever show, the same
+  category of waste sessions 50-52 have been closing one site at a time.
+- Fixed in `src/server.ts`: `scheduleHolderRescore`'s `setTimeout` callback
+  now checks `feed.has(launch.mint)` first and returns early (still calling
+  `watcher.untrackMint`) before calling
+  `rescoreHolderConcentrationFromIndex`, instead of only checking after the
+  call via `feed.get()`.
+- No regression test added, same reasoning as session 52: this is inline
+  timer/wiring logic in `server.ts`, not an exported unit, and no
+  `server.test.ts` exists for this wiring (a documented limitation since
+  the original wiring session). Extracting a one-line check into its own
+  function purely to get a test would be an abstraction the logic doesn't
+  need. Verified by reading instead: `feed.test.ts`'s "caps at maxSize,
+  dropping the oldest entries" test already proves eviction removes the
+  mint from the same `mints` Set `has()` reads, confirming the check is
+  correct without needing a new test.
+- Updated `rug-radar/README.md`'s "Score" section with a paragraph
+  describing the bug and the fix, right after session 52's note.
+- Live-booted the real server synchronously (public mainnet-beta, no keys,
+  no `.env`, ~100s, same pattern as every session since 26): boots cleanly,
+  logged the expected mix of "too many pending scores" (scoring-gate
+  pressure, pre-existing) and `getTokenLargestAccounts` 429s, no crash,
+  shut down cleanly at the timeout. Did not observe the specific eviction
+  path firing in this short window (would need 50+ launches within 45s to
+  trigger) — same evidentiary limitation as sessions 50-52: the offline
+  reasoning above (same `mints` Set backs both `add()`'s eviction and
+  `has()`) is the primary evidence.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 170/170 passing (no new tests this session — see "Done" for
+  why), all offline, ~3.5s.
+- Live-booted the real server synchronously once (public mainnet-beta, no
+  keys, no `.env`, ~100s): boots cleanly, no crash, clean shutdown, no
+  regression from the fix.
+- `git status`/`ps aux` after cleanup show only the intended
+  `server.ts`/README/PROGRESS changes — no stray files, no leftover server
+  process.
+
+### Next
+- This session's fix hasn't been observed firing live (only reasoned about
+  offline) — worth watching for a case where a launch is evicted from the
+  feed (50+ launches landing within a 45s window) and confirming no
+  `rescored holder-concentration for ...` log line or scoring-RPC call
+  appears for it.
+- The scoring endpoint's rate-limit ceiling is unchanged — three independent
+  avenues around it are exhausted (sessions 27-28, 48, 49); what's untried is
+  accepting the balance-index rescore as the permanent mitigation and
+  focusing elsewhere, or re-checking from a different deployment
+  network/region if one becomes available.
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data (3 trading mints) — unchanged this
+  session.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- `server.ts`'s watcher/poller wiring remains without an automated test
+  (unchanged limitation, noted since the original wiring session).
+- All five TASK.md steps remain functionally complete.
