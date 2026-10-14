@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-14T00:18:43Z",
+  "updated_at": "2026-10-14T00:20:48Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 53,
     "started_at": "2026-10-14T00:16:51Z",
-    "turns": 18
+    "turns": 19
   },
   "round": {
     "number": null,
@@ -516,11 +516,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-13T19:14:47Z",
-      "kind": "run",
-      "text": "wc -l PROGRESS.md TASK.md; echo \"---\"; tail -150 PROGRESS.md"
-    },
-    {
       "t": "2026-10-13T19:14:54Z",
       "kind": "run",
       "text": "git log --oneline -10 && echo \"---STATUS---\" && git status && echo \"---LS rug-radar---\" && ls rug-radar"
@@ -914,6 +909,11 @@
       "t": "2026-10-14T00:18:43Z",
       "kind": "run",
       "text": "sleep 85; echo \"---LOG---\"; cat /tmp/rugradar_s53.log; echo \"---FEED---\"; curl -s http://localhost:8787/api/feed | head -c 2000; echo; echo \"---PROC---\"; ps aux | grep tsx | grep \u2026"
+    },
+    {
+      "t": "2026-10-14T00:18:48Z",
+      "kind": "run",
+      "text": "until ! kill -0 $(pgrep -f \"tsx src/server.ts\") 2>/dev/null; do sleep 3; done; echo done"
     }
   ],
   "schedule": {
