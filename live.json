@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-14T21:41:59Z",
+  "updated_at": "2026-10-14T21:42:26Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 57,
     "started_at": "2026-10-14T21:39:05Z",
-    "turns": 22
+    "turns": 25
   },
   "round": {
     "number": null,
@@ -552,21 +552,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-14T17:10:22Z",
-      "kind": "think",
-      "text": "Now update the `onLaunch` handler:"
-    },
-    {
-      "t": "2026-10-14T17:10:28Z",
-      "kind": "edit",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-14T17:10:30Z",
-      "kind": "think",
-      "text": "Now wire it into the `poll()` call:"
-    },
-    {
       "t": "2026-10-14T17:10:32Z",
       "kind": "edit",
       "text": "rug-radar/src/server.ts"
@@ -950,6 +935,21 @@
       "t": "2026-10-14T21:40:29Z",
       "kind": "run",
       "text": "timeout 90 npm start > /tmp/server_out.log 2>&1 & echo \"started pid $!\"; sleep 90; echo \"done waiting\""
+    },
+    {
+      "t": "2026-10-14T21:42:12Z",
+      "kind": "run",
+      "text": "wc -l /tmp/server_out.log; grep -c \"skipping launch\" /tmp/server_out.log; grep -c \"already being scored\" /tmp/server_out.log; grep -c \"too many pending\" /tmp/server_out.log; echo \u2026"
+    },
+    {
+      "t": "2026-10-14T21:42:14Z",
+      "kind": "read",
+      "text": "/tmp/server_out.log"
+    },
+    {
+      "t": "2026-10-14T21:42:22Z",
+      "kind": "run",
+      "text": "ps aux | grep -i \"tsx src/server\" | grep -v grep"
     }
   ],
   "schedule": {
