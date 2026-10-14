@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-14T05:01:17Z",
+  "updated_at": "2026-10-14T05:01:47Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 54,
     "started_at": "2026-10-14T04:58:33Z",
-    "turns": 21
+    "turns": 25
   },
   "round": {
     "number": null,
@@ -525,36 +525,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-13T19:19:07Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-13T19:19:30Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-13T19:19:33Z",
-      "kind": "think",
-      "text": "That exact block repeats across prior sessions. I need to anchor on the very last occurrence using more context (it's at the end of the file, offset 3115-3125)."
-    },
-    {
-      "t": "2026-10-13T19:19:34Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-13T19:19:35Z",
-      "kind": "think",
-      "text": "I'll use the preceding unique line as anchor context."
-    },
-    {
-      "t": "2026-10-13T19:19:57Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
-    {
       "t": "2026-10-13T19:19:59Z",
       "kind": "think",
       "text": "Now a final verification pass to confirm everything is clean before ending the session."
@@ -923,6 +893,36 @@
       "t": "2026-10-14T05:01:17Z",
       "kind": "edit",
       "text": "rug-radar/src/poller.ts"
+    },
+    {
+      "t": "2026-10-14T05:01:23Z",
+      "kind": "edit",
+      "text": "rug-radar/src/poller.ts"
+    },
+    {
+      "t": "2026-10-14T05:01:27Z",
+      "kind": "edit",
+      "text": "rug-radar/src/poller.ts"
+    },
+    {
+      "t": "2026-10-14T05:01:29Z",
+      "kind": "think",
+      "text": "Now wire this into `server.ts`, passing `scheduleHolderRescore` as the callback for the backstop path too."
+    },
+    {
+      "t": "2026-10-14T05:01:32Z",
+      "kind": "edit",
+      "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-14T05:01:35Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -15"
+    },
+    {
+      "t": "2026-10-14T05:01:47Z",
+      "kind": "think",
+      "text": "Clean. Now let me add tests for the new `onScored` callback behavior in `poller.test.ts`."
     }
   ],
   "schedule": {
