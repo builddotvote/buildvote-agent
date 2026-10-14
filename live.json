@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-14T11:48:26Z",
+  "updated_at": "2026-10-14T11:48:52Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 55,
     "started_at": "2026-10-14T11:48:26Z",
-    "turns": 0
+    "turns": 5
   },
   "round": {
     "number": null,
@@ -534,41 +534,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-14T00:18:30Z",
-      "kind": "run",
-      "text": "(timeout 100 npm start > /tmp/rugradar_s53.log 2>&1 &) ; sleep 5; curl -s http://localhost:3000/api/feed | head -c 300; echo; echo \"---waiting---\""
-    },
-    {
-      "t": "2026-10-14T00:18:38Z",
-      "kind": "run",
-      "text": "cat /tmp/rugradar_s53.log; echo \"---\"; grep -i \"listening on\" /tmp/rugradar_s53.log || true"
-    },
-    {
-      "t": "2026-10-14T00:18:40Z",
-      "kind": "think",
-      "text": "It's on port 8787, not 3000. Let's poll the correct port and let it run its course."
-    },
-    {
-      "t": "2026-10-14T00:18:40Z",
-      "kind": "run",
-      "text": "curl -s http://localhost:8787/api/feed | head -c 500; echo"
-    },
-    {
-      "t": "2026-10-14T00:18:43Z",
-      "kind": "run",
-      "text": "sleep 85; echo \"---LOG---\"; cat /tmp/rugradar_s53.log; echo \"---FEED---\"; curl -s http://localhost:8787/api/feed | head -c 2000; echo; echo \"---PROC---\"; ps aux | grep tsx | grep \u2026"
-    },
-    {
-      "t": "2026-10-14T00:18:48Z",
-      "kind": "run",
-      "text": "until ! kill -0 $(pgrep -f \"tsx src/server.ts\") 2>/dev/null; do sleep 3; done; echo done"
-    },
-    {
-      "t": "2026-10-14T00:20:52Z",
-      "kind": "run",
-      "text": "ps aux | grep tsx | grep -v grep; echo \"---LOG---\"; cat /tmp/rugradar_s53.log; echo \"---FEED---\"; curl -s --max-time 2 http://localhost:8787/api/feed 2>&1 | head -c 2000; echo"
-    },
-    {
       "t": "2026-10-14T00:20:58Z",
       "kind": "think",
       "text": "Server ran and shut down cleanly after the 100s timeout \u2014 same log pattern as previous sessions (429s on `getTokenLargestAccounts`, scoring-gate pressure), no crash. Let's confirm\u2026"
@@ -932,6 +897,41 @@
       "t": "2026-10-14T11:48:26Z",
       "kind": "start",
       "text": "Session 55 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-14T11:48:30Z",
+      "kind": "think",
+      "text": "I'll start by reading TASK.md and PROGRESS.md to see what's expected this session."
+    },
+    {
+      "t": "2026-10-14T11:48:30Z",
+      "kind": "read",
+      "text": "TASK.md"
+    },
+    {
+      "t": "2026-10-14T11:48:31Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-14T11:48:35Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-14T11:48:39Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-14T11:48:50Z",
+      "kind": "think",
+      "text": "I'll start by verifying the current repo state, following the established session pattern."
+    },
+    {
+      "t": "2026-10-14T11:48:51Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && ls && git status"
     }
   ],
   "schedule": {
