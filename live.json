@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-14T21:39:05Z",
+  "updated_at": "2026-10-14T21:39:32Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 57,
     "started_at": "2026-10-14T21:39:05Z",
-    "turns": 0
+    "turns": 7
   },
   "round": {
     "number": null,
@@ -552,41 +552,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-14T11:55:33Z",
-      "kind": "think",
-      "text": "Everything is clean: 175/175 tests passing, no leftover processes, and only the intended files modified. Per CLAUDE.md, I won't commit \u2014 the runner handles that."
-    },
-    {
-      "t": "2026-10-14T11:55:34Z",
-      "kind": "done",
-      "text": "Session 55 finished \u00b7 45 steps \u00b7 covered by Claude subscription ($2.79 API value)"
-    },
-    {
-      "t": "2026-10-14T17:08:02Z",
-      "kind": "start",
-      "text": "Session 56 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-14T17:08:06Z",
-      "kind": "run",
-      "text": "cat PROGRESS.md 2>/dev/null; echo \"---TASK---\"; cat TASK.md 2>/dev/null"
-    },
-    {
-      "t": "2026-10-14T17:08:10Z",
-      "kind": "run",
-      "text": "wc -l PROGRESS.md TASK.md; echo \"---\"; tail -150 PROGRESS.md"
-    },
-    {
-      "t": "2026-10-14T17:08:13Z",
-      "kind": "read",
-      "text": "TASK.md"
-    },
-    {
-      "t": "2026-10-14T17:08:16Z",
-      "kind": "run",
-      "text": "cd rug-radar && ls -la src src/data src/signals 2>/dev/null && echo \"---package---\" && cat package.json"
-    },
-    {
       "t": "2026-10-14T17:08:20Z",
       "kind": "run",
       "text": "cd rug-radar && npm install --silent 2>&1 | tail -5 && npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -20"
@@ -950,6 +915,41 @@
       "t": "2026-10-14T21:39:05Z",
       "kind": "start",
       "text": "Session 57 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-14T21:39:10Z",
+      "kind": "run",
+      "text": "cat TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat PROGRESS.md 2>/dev/null; echo \"---LS---\"; ls -la"
+    },
+    {
+      "t": "2026-10-14T21:39:14Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-14T21:39:14Z",
+      "kind": "run",
+      "text": "find rug-radar -type f -not -path \"*/node_modules/*\" | sort"
+    },
+    {
+      "t": "2026-10-14T21:39:17Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-14T21:39:19Z",
+      "kind": "run",
+      "text": "wc -l PROGRESS.md"
+    },
+    {
+      "t": "2026-10-14T21:39:21Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-14T21:39:27Z",
+      "kind": "run",
+      "text": "cd rug-radar && npm install --silent 2>&1 | tail -20 && echo \"---TEST---\" && npm test 2>&1 | tail -30"
     }
   ],
   "schedule": {
