@@ -155,3 +155,62 @@ test("a scoring gate with room releases its slot after scoring", async () => {
   // Slot released after use: a second cycle with a new launch still scores.
   assert.equal(gate.tryAcquire(), true);
 });
+
+test("onScored fires with the launch once it's actually kept in the feed", async () => {
+  const signatures: SignatureInfo[] = [
+    { signature: "sigCreate", slot: 2, err: null, memo: null, blockTime: 1700000100 },
+  ];
+  const feed = new LiveFeed();
+  const state = { sinceBlockTime: 1700000000 };
+  const scored: string[] = [];
+
+  await pollOnce(fakeRpc(signatures), fakeRpc(signatures), feed, state, undefined, undefined, (launch) =>
+    scored.push(launch.mint),
+  );
+
+  assert.deepEqual(scored, [MINT]);
+});
+
+test("onScored does not fire for a launch feed.add() dropped (zero signals)", async () => {
+  const signatures: SignatureInfo[] = [
+    { signature: "sigCreate", slot: 2, err: null, memo: null, blockTime: 1700000100 },
+  ];
+  const feed = new LiveFeed();
+  const state = { sinceBlockTime: 1700000000 };
+  // Every call the four signals' data-fetchers depend on (besides the
+  // discovery scan/resolve, which uses the separate discoveryRpc below and
+  // must keep succeeding to find the launch at all) fails — so every signal
+  // fails to fetch and scoreLaunch returns zero signals, same as a real
+  // all-429 launch (see feed.ts's "add() drops a zero-signal launch" test).
+  const allFailingScoringRpc = {
+    async getSignaturesForAddress(): Promise<never> {
+      throw new Error("429");
+    },
+    async getTokenSupply(): Promise<never> {
+      throw new Error("429");
+    },
+    async getTokenLargestAccounts(): Promise<never> {
+      throw new Error("429");
+    },
+    async getAccountInfo(): Promise<never> {
+      throw new Error("429");
+    },
+    async getTransaction(): Promise<never> {
+      throw new Error("429");
+    },
+  };
+  let scoredCalls = 0;
+
+  await pollOnce(
+    fakeRpc(signatures),
+    allFailingScoringRpc,
+    feed,
+    state,
+    undefined,
+    undefined,
+    () => scoredCalls++,
+  );
+
+  assert.deepEqual(feed.list(), []);
+  assert.equal(scoredCalls, 0);
+});

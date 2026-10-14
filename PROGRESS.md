@@ -3284,3 +3284,85 @@ file. Verified against the actual code in Session 46 below.)*
 - `server.ts`'s watcher/poller wiring remains without an automated test
   (unchanged limitation, noted since the original wiring session).
 - All five TASK.md steps remain functionally complete.
+
+## Session 54 — 2026-10-14
+
+### Done
+- Re-verified the repo first (`npm install`, 170/170 tests, clean
+  typecheck/build, no leftover scratch files, no stray processes) — matched
+  session 53's write-up exactly.
+- Rather than hunting for a fourth layer of the same "unconditional RPC call
+  before checking feed membership" bug sessions 51-53 closed (read through
+  `discovery.ts`, `wsDiscovery.ts`, `pipeline.ts`, `balanceIndex.ts`,
+  `data/bundledBuys.ts`, `data/deployerHistory.ts` looking for one — found
+  none left of that specific shape), found a different, real gap in the same
+  area: `scheduleHolderRescore` (the holder-concentration rescore from
+  `BalanceIndex`, sessions 33/47) was only ever wired into
+  `src/wsDiscovery.ts`'s primary `onLaunch` path in `server.ts`. A launch the
+  backstop poller discovers (websocket down, or a reconnect gap) got its
+  initial score added to the feed but never the later rescore — no comment
+  or PROGRESS/README note suggested this was a deliberate choice, just an
+  omission from when the rescore was first wired (session 33) before the
+  poller existed as a parallel scoring path.
+- Fixed: `src/poller.ts`'s `pollOnce` gained an optional `onScored` callback
+  param, fired once per launch a poll cycle actually keeps in the feed
+  (checked via `feed.has(launch.mint)` right after `feed.add()`, same gating
+  session 52 added to the watcher path — so a zero-signal launch the poller
+  drops doesn't get a pointless rescore scheduled either). `src/server.ts`'s
+  `poll()` now passes `scheduleHolderRescore` as that callback, the same
+  function the watcher path already used — no changes to
+  `scheduleHolderRescore` itself, since it only needs a `DiscoveredLaunch`
+  and already works independently of which path found it (`watcher.trackMint`
+  is a logsSubscribe on the mint's own bonding curve, not tied to how the
+  launch was discovered).
+- 2 new tests in `poller.test.ts`: `onScored` fires with the launch once kept
+  in the feed; `onScored` does not fire when `feed.add()` drops a zero-signal
+  launch (built by making every RPC call the four signals' data-fetchers
+  depend on throw, except the separate discoveryRpc used to find the launch
+  itself — mirrors the real all-429 case `feed.test.ts` already covers for
+  `add()` alone).
+- Updated `rug-radar/README.md`'s "Score" section with a paragraph describing
+  the gap and the fix, right after session 53's note.
+- Live-booted the real server synchronously (public mainnet-beta, no keys,
+  no `.env`, ~90s, same pattern as every session since 26): boots cleanly,
+  discovery found launches via the websocket primary path throughout (no
+  `poll failed` errors, no crash), scoring gate capped cleanly, the usual mix
+  of `getTokenLargestAccounts`/`getTransaction` 429s. The websocket stayed up
+  the whole window, so the backstop poller's `onScored` path specifically
+  wasn't exercised live this run — same evidentiary limitation as
+  sessions 50-53's narrow fixes; the offline reasoning + new tests above are
+  the primary evidence.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 172/172 passing (2 new, both in `poller.test.ts`), all offline,
+  ~3.3s.
+- Live-booted the real server synchronously once (public mainnet-beta, no
+  keys, no `.env`, ~90s): boots cleanly, no crash, no regression from the
+  fix.
+- `git status`/`ps aux` after cleanup show only the intended
+  `poller.ts`/`poller.test.ts`/`server.ts`/README/PROGRESS changes — no
+  stray files, no leftover server process.
+
+### Next
+- This session's fix hasn't been observed firing live via the backstop path
+  specifically (the websocket watcher stayed primary throughout the live
+  check) — worth watching for a case where the poller (not the watcher)
+  discovers a launch and confirming a `rescored holder-concentration for ...`
+  log line eventually follows it, the same way the watcher path already does.
+- The scoring endpoint's rate-limit ceiling is unchanged — three independent
+  avenues around it are exhausted (sessions 27-28, 48, 49); what's untried is
+  accepting the balance-index rescore as the permanent mitigation and
+  focusing elsewhere, or re-checking from a different deployment
+  network/region if one becomes available.
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data (3 trading mints) — unchanged this
+  session.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- `server.ts`'s watcher/poller wiring remains without an automated test
+  (unchanged limitation, noted since the original wiring session) — this
+  session's `onScored` callback is the one piece of that wiring now covered
+  by `poller.test.ts`, since it lives in `poller.ts` rather than inline in
+  `server.ts`.
+- All five TASK.md steps remain functionally complete.

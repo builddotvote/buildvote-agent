@@ -341,6 +341,21 @@ that RPC call for an update nothing would ever show. Fixed by checking
 `feed.has(launch.mint)` before calling `rescoreHolderConcentrationFromIndex`,
 not just before using its result.
 
+Sessions 51-53 fixed waste sites in the holder-concentration rescore; session
+54 found the rescore itself was simply missing for one of the two discovery
+paths. `scheduleHolderRescore` was only ever called from `src/wsDiscovery.ts`'s
+primary `onLaunch` handler in `src/server.ts` — a launch the backstop poller
+discovered (the websocket was down, or this is a reconnect gap) got its
+initial score but never the later rescore from `BalanceIndex`, with no
+record of this being a deliberate choice. Fixed by giving `pollOnce`
+(`src/poller.ts`) an optional `onScored` callback, fired once per launch a
+poll cycle actually kept in the feed (mirroring the same `feed.has()` check
+session 52 added to the watcher path, so a zero-signal launch the poller
+drops doesn't trigger a rescore either); `server.ts` passes
+`scheduleHolderRescore` as that callback, the same function the watcher path
+already used. Both discovery paths now get holder-concentration rescores on
+equal footing.
+
 ## Live feed
 
 Two discovery paths feed the same pipeline:

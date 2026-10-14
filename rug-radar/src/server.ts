@@ -193,9 +193,16 @@ function scheduleHolderRescore(launch: DiscoveredLaunch): void {
 const POLL_INTERVAL_MS = 15_000;
 
 function poll(): void {
-  pollOnce(pollDiscoveryRpc, pollScoringRpc, feed, pollState, deployerIndex, scoringGate).catch((err) => {
-    console.error("poll failed:", err instanceof Error ? err.message : err);
-  });
+  // onScored: without this, a launch the backstop poller finds (the
+  // websocket was down, or this is a reconnect gap) never got the
+  // holder-concentration rescore below — only launches the primary
+  // websocket path discovers did, since scheduleHolderRescore lived solely
+  // in the watcher's onLaunch handler until now.
+  pollOnce(pollDiscoveryRpc, pollScoringRpc, feed, pollState, deployerIndex, scoringGate, scheduleHolderRescore).catch(
+    (err) => {
+      console.error("poll failed:", err instanceof Error ? err.message : err);
+    },
+  );
 }
 
 const server = createServer(async (req, res) => {

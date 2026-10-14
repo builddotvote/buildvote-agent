@@ -9,6 +9,7 @@ import type { LiveFeed } from "./feed.js";
 import type { SolanaRpcClient } from "./rpc.js";
 import type { DeployerIndex } from "./deployerIndex.js";
 import type { ScoringGate } from "./scoringGate.js";
+import type { DiscoveredLaunch } from "./discovery.js";
 
 export interface PollState {
   sinceBlockTime: number | null;
@@ -32,6 +33,14 @@ export async function pollOnce(
   // launches can be scoring at once against the same rate-limited scoring
   // RPC — see scoringGate.ts for why dropping beats queuing here.
   scoringGate?: ScoringGate,
+  // Optional: fires once per launch this cycle actually kept in the feed
+  // (not one feed.add() silently dropped for having zero signals — see
+  // feed.ts). The websocket watcher's onLaunch handler uses the same signal
+  // in server.ts to schedule a holder-concentration rescore from
+  // BalanceIndex; without this, a launch the backstop poller finds (the
+  // websocket was down, or this is a reconnect gap) never got that rescore
+  // at all, unlike every launch the primary path discovers.
+  onScored?: (launch: DiscoveredLaunch) => void,
 ): Promise<void> {
   const { launches, newestBlockTime } = await findNewLaunches(discoveryRpc, state.sinceBlockTime);
   state.sinceBlockTime = newestBlockTime;
@@ -50,6 +59,7 @@ export async function pollOnce(
     }
     try {
       feed.add(await scoreLaunch(scoringRpc, launch, deployerIndex));
+      if (feed.has(launch.mint)) onScored?.(launch);
     } catch (err) {
       console.error(`failed to score launch ${launch.mint}:`, err instanceof Error ? err.message : err);
     } finally {
