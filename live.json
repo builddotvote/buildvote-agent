@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-14T21:42:26Z",
+  "updated_at": "2026-10-14T21:44:22Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 57,
     "started_at": "2026-10-14T21:39:05Z",
-    "turns": 25
+    "turns": 26
   },
   "round": {
     "number": null,
@@ -552,11 +552,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-14T17:10:32Z",
-      "kind": "edit",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
       "t": "2026-10-14T17:10:35Z",
       "kind": "run",
       "text": "grep -n \"pollOnce(\" src/poller.test.ts"
@@ -950,6 +945,11 @@
       "t": "2026-10-14T21:42:22Z",
       "kind": "run",
       "text": "ps aux | grep -i \"tsx src/server\" | grep -v grep"
+    },
+    {
+      "t": "2026-10-14T21:42:30Z",
+      "kind": "run",
+      "text": "(timeout 110 npm start > /tmp/server_out2.log 2>&1 &) ; sleep 112; echo done"
     }
   ],
   "schedule": {
