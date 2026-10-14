@@ -11,6 +11,14 @@ export interface FetchBundledBuysOptions {
   // wallet's true first-ever transaction could be older than this limit —
   // in that case the funding source is reported as unknown rather than wrong.
   signatureLimit?: number;
+  // The dev's own bundled buy, already decoded from the create transaction
+  // (see discovery.ts's DiscoveredLaunch.bundledBuy) at no extra RPC cost.
+  // When set, its signature is excluded from the bonding-curve scan below
+  // and it's added to the result directly instead — without this, the scan
+  // re-discovers the exact same signature (the create tx also touches the
+  // bonding curve account) and pays a second getTransaction call just to
+  // re-derive a buyer address this process already knows for free.
+  knownBundledBuy?: { buyer: string; signature: string };
 }
 
 const DEFAULT_WINDOW_SECONDS = 300;
@@ -35,9 +43,11 @@ export async function fetchBundledBuysInput(
 ): Promise<EarlyBuy[]> {
   const windowSeconds = options.windowSeconds ?? DEFAULT_WINDOW_SECONDS;
   const signatureLimit = options.signatureLimit ?? DEFAULT_SIGNATURE_LIMIT;
+  const knownBundledBuy = options.knownBundledBuy;
 
   const signatures = await rpc.getSignaturesForAddress(bondingCurveAddress, signatureLimit);
   const early = signatures.filter((sig) => {
+    if (knownBundledBuy && sig.signature === knownBundledBuy.signature) return false;
     if (sig.blockTime === null) return false;
     const delta = sig.blockTime - launchTimestampSec;
     return delta >= 0 && delta <= windowSeconds;
@@ -58,6 +68,9 @@ export async function fetchBundledBuysInput(
     }),
   );
   const found = resolved.filter((r): r is NonNullable<typeof r> => r !== null);
+  if (knownBundledBuy) {
+    found.push({ buyer: knownBundledBuy.buyer, secondsAfterLaunch: 0 });
+  }
 
   // Look up each distinct buyer's funding source once, also concurrently,
   // instead of per-occurrence — same dedup intent as the old fundingCache,

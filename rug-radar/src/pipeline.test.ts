@@ -119,6 +119,42 @@ test("shares the bonding curve fetch between liquidity and holder-concentration,
   assert.ok(holderConcentration);
 });
 
+test("passes a known bundled buy through to bundled-buys without re-fetching the create transaction", async () => {
+  const launchWithBundledBuy: DiscoveredLaunch = {
+    ...LAUNCH,
+    bundledBuy: {
+      kind: "buy",
+      mint: LAUNCH.mint,
+      bondingCurve: LAUNCH.bondingCurve,
+      user: "DevBuyer1111111111111111111111111111111111",
+      amount: 1_000_000n,
+    },
+  };
+  const rpc = {
+    ...baseFakeRpc(),
+    async getSignaturesForAddress(address: string) {
+      // The create tx also touches the bonding curve, same as any other
+      // early signature would — getTransaction on it should never be called.
+      if (address === LAUNCH.bondingCurve) {
+        return [{ signature: LAUNCH.signature, slot: 1, err: null, memo: null, blockTime: LAUNCH.createdAt }];
+      }
+      return [];
+    },
+    async getTransaction(signature: string) {
+      if (signature === LAUNCH.signature) {
+        throw new Error("should not re-fetch the create transaction for its own bundled buy");
+      }
+      return null;
+    },
+  };
+
+  const score = await scoreLaunch(rpc, launchWithBundledBuy);
+  const bundledBuys = score.signals.find((s) => s.name === "bundled-buys");
+
+  assert.ok(bundledBuys);
+  assert.ok(bundledBuys.reasons.some((r) => r.includes("1 early buyer")));
+});
+
 test("drops a signal that fails to fetch instead of failing the whole launch", async () => {
   const rpc = {
     ...baseFakeRpc(),

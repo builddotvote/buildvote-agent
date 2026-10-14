@@ -186,3 +186,57 @@ test("caches the funding-source lookup when the same buyer appears twice", async
   assert.equal(result.length, 2);
   assert.equal(fundingLookups, 1);
 });
+
+test("uses the known bundled buy directly instead of re-fetching its transaction", async () => {
+  let createTxFetches = 0;
+  const rpc = {
+    getSignaturesForAddress: async (address: string) => {
+      // The create tx also touches the bonding curve, so it shows up here
+      // same as any other early signature would.
+      if (address === CURVE) return [sig("create-sig", 1000)];
+      if (address === "devBuyer") return [sig("funding-sig", 900)];
+      return [];
+    },
+    getTransaction: async (signature: string) => {
+      if (signature === "create-sig") {
+        createTxFetches++;
+        return buyTx("devBuyer", "0", "1000");
+      }
+      if (signature === "funding-sig") return fundingTx("devBuyer", "funder1", 2_000_000_000);
+      return null;
+    },
+  };
+
+  const result = await fetchBundledBuysInput(rpc, MINT, CURVE, 1000, {
+    windowSeconds: 300,
+    knownBundledBuy: { buyer: "devBuyer", signature: "create-sig" },
+  });
+
+  assert.equal(createTxFetches, 0);
+  assert.equal(result.length, 1);
+  assert.equal(result[0].buyer, "devBuyer");
+  assert.equal(result[0].fundedBy, "funder1");
+  assert.equal(result[0].secondsAfterLaunch, 0);
+});
+
+test("still finds other early buyers alongside a known bundled buy", async () => {
+  const rpc = {
+    getSignaturesForAddress: async (address: string) => {
+      if (address === CURVE) return [sig("create-sig", 1000), sig("buy-sig", 1050)];
+      return [];
+    },
+    getTransaction: async (signature: string) => {
+      if (signature === "buy-sig") return buyTx("buyerB", "0", "1000");
+      return null;
+    },
+  };
+
+  const result = await fetchBundledBuysInput(rpc, MINT, CURVE, 1000, {
+    windowSeconds: 300,
+    knownBundledBuy: { buyer: "devBuyer", signature: "create-sig" },
+  });
+
+  assert.equal(result.length, 2);
+  assert.ok(result.some((r) => r.buyer === "devBuyer" && r.secondsAfterLaunch === 0));
+  assert.ok(result.some((r) => r.buyer === "buyerB"));
+});

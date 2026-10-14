@@ -60,6 +60,11 @@ export async function scoreLaunch(
         launch.mint,
         launch.bondingCurve,
         launch.createdAt,
+        {
+          knownBundledBuy: launch.bundledBuy
+            ? { buyer: launch.bundledBuy.user, signature: launch.signature }
+            : undefined,
+        },
       );
       return scoreBundledBuys({ earlyBuys });
     }),

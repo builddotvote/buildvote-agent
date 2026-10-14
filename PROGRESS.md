@@ -3366,3 +3366,90 @@ file. Verified against the actual code in Session 46 below.)*
   by `poller.test.ts`, since it lives in `poller.ts` rather than inline in
   `server.ts`.
 - All five TASK.md steps remain functionally complete.
+
+## Session 55 — 2026-10-14
+
+### Done
+- Re-verified the repo first (`npm install`, 172/172 tests, clean
+  typecheck/build, no leftover scratch files, no stray processes) — matched
+  session 54's write-up exactly.
+- Read `discovery.ts`, `pipeline.ts`, and `data/bundledBuys.ts` together
+  looking for another redundant-RPC-call site (the class of bug sessions
+  51-53 closed, though session 54 confirmed none of that exact shape was
+  left in the files it checked) and found a different one just upstream:
+  `discovery.ts` already decodes the dev's bundled buy out of the create
+  transaction it fetched during discovery (`DiscoveredLaunch.bundledBuy`,
+  built session 33 to seed `BalanceIndex` for free), but
+  `pipeline.ts`'s bundled-buys signal never used it — `fetchBundledBuysInput`
+  calls its own `getSignaturesForAddress(bondingCurveAddress, ...)` scan,
+  which (since the create transaction also touches the bonding curve
+  account) reliably re-discovers that exact same signature and pays a
+  second `getTransaction` call just to re-derive a buyer address already
+  known. Given session 44's own finding that `getTransaction` is the
+  single most severely throttled call on the scoring endpoint, and session
+  30's finding that a bundled dev buy is common real traffic (not a rare
+  case), this is a concrete, recurring waste on the scarcest resource this
+  codebase has spent 30+ sessions trying to conserve.
+- Fixed:
+  - `src/data/bundledBuys.ts` — `fetchBundledBuysInput` gained an optional
+    `knownBundledBuy: { buyer, signature }`. When set, that signature is
+    excluded from the bonding-curve scan before resolving transactions, and
+    the known buyer is pushed into the result directly (`secondsAfterLaunch:
+    0`) instead of being re-fetched. 2 new offline tests in
+    `bundledBuys.test.ts` (the known signature's `getTransaction` is never
+    called; a known bundled buy and a separately-scanned early buyer both
+    show up in the result).
+  - `src/pipeline.ts` — passes `{ buyer: launch.bundledBuy.user, signature:
+    launch.signature }` through when `launch.bundledBuy` is set. 1 new test
+    in `pipeline.test.ts` (a `getTransaction` mock that throws if called for
+    the create signature, confirming the pipeline-level wiring actually
+    prevents the redundant call, not just the unit in isolation).
+  - Verified all 3 new tests are real regression tests, not just
+    plausible-looking (same discipline as sessions 50-51): stashed the
+    `pipeline.ts`/`bundledBuys.ts` fix, confirmed the new tests fail without
+    it, restored the fix, confirmed all 175 pass again.
+- Live-checked synchronously in the foreground (public mainnet-beta, no
+  keys, no `.env`, ~95s, same pattern as every session since 26): server
+  booted cleanly, discovery found many launches, the scoring gate capped
+  cleanly ("too many pending scores" skips logged), the usual
+  `getTokenLargestAccounts` 429s, no crash. One launch landed in
+  `/api/feed` (deployer-history + liquidity; bundled-buys scored 0 "no
+  early buy data available" and holder-concentration dropped on a 429) —
+  that particular launch had no bundled dev buy to exercise this session's
+  specific fix against, so (same evidentiary limitation as sessions 50-54's
+  narrow fixes) the skip itself wasn't directly observed firing live; the
+  offline regression tests (confirmed to fail without the fix) are the
+  primary evidence.
+- Updated `rug-radar/README.md`: "Score" section gained a paragraph after
+  session 54's note describing the bug and fix; "Signals" section's
+  "Bundled buys" entry now mentions the known-bundled-buy passthrough.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 175/175 passing (3 new: 2 in `bundledBuys.test.ts`, 1 in
+  `pipeline.test.ts`), all offline, ~2.4s.
+- Live-booted the real server synchronously once (public mainnet-beta, no
+  keys, no `.env`, ~95s): boots cleanly, `/api/feed` responded with a real
+  launch, no crash, no regression from the fix.
+- `git status`/`ps aux` after cleanup show only the intended
+  `bundledBuys.ts`/`bundledBuys.test.ts`/`pipeline.ts`/`pipeline.test.ts`/
+  README/PROGRESS changes — no stray files, no leftover server process.
+
+### Next
+- This session's fix hasn't been observed firing live (only offline
+  regression-tested, confirmed to fail without the fix) — worth watching
+  for a launch with a bundled dev buy in a future live check and confirming
+  no redundant `getTransaction` call for its create signature.
+- The scoring endpoint's rate-limit ceiling is unchanged — three independent
+  avenues around it are exhausted (sessions 27-28, 48, 49); what's untried is
+  accepting the balance-index rescore as the permanent mitigation and
+  focusing elsewhere, or re-checking from a different deployment
+  network/region if one becomes available.
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data (3 trading mints) — unchanged this
+  session.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- `server.ts`'s watcher/poller wiring remains without an automated test
+  (unchanged limitation, noted since the original wiring session).
+- All five TASK.md steps remain functionally complete.

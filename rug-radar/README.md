@@ -256,7 +256,9 @@ question open since session 34.
    just the single oldest signature). The signature-limit default is 20, not
    50 (lowered session 41, see "Known limitations" for the measured RPC-call
    cost that drove this — same shape as deployer-history's session 40 cut,
-   without an index covering the lost recall).
+   without an index covering the lost recall). The dev's own bundled buy, if
+   any, is passed in from `DiscoveredLaunch.bundledBuy` instead of being
+   re-discovered by the scan — see "Score" below (session 55).
 3. **Holder concentration** — top 10 holder share, excluding the bonding
    curve and known program accounts. **Built:** `src/signals/holderConcentration.ts`
    (pure scoring function) + `src/data/holderConcentration.ts` (gathers the
@@ -355,6 +357,27 @@ drops doesn't trigger a rescore either); `server.ts` passes
 `scheduleHolderRescore` as that callback, the same function the watcher path
 already used. Both discovery paths now get holder-concentration rescores on
 equal footing.
+
+Session 55 found one more call this process already has the answer to
+without a network round-trip: `src/discovery.ts` decodes the dev's bundled
+buy (if any) straight out of the create transaction it already fetched
+(`DiscoveredLaunch.bundledBuy` — see "Live feed" below for where this is
+also used to seed `BalanceIndex`), but `src/pipeline.ts`'s bundled-buys
+signal still called `src/data/bundledBuys.ts`'s `fetchBundledBuysInput`
+blind to it — which re-discovers the exact same signature via its own
+`getSignaturesForAddress(bondingCurveAddress, ...)` scan (the create
+transaction also touches the bonding curve account) and pays a second
+`getTransaction` call just to re-derive a buyer address already known for
+free. Fixed: `fetchBundledBuysInput` takes an optional `knownBundledBuy:
+{ buyer, signature }`; when set, that signature is excluded from the scan
+and the known buyer is added to the result directly instead of being
+re-fetched. `pipeline.ts` passes `launch.bundledBuy`/`launch.signature`
+through. Saves one `getTransaction` call — against the endpoint's
+specifically most-throttled method (session 44) — per launch that has a
+bundled dev buy, which per session 30's own captured fixture is common
+real traffic, not a rare case. 3 new tests (2 in `bundledBuys.test.ts`, 1
+in `pipeline.test.ts`); verified as real regression tests by reverting the
+fix and confirming they fail, same discipline as sessions 50-51.
 
 ## Live feed
 
