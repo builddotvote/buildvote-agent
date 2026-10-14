@@ -399,6 +399,15 @@ cheaper check first). 4 new tests in `scoringInFlight.test.ts` plus 2 in
 regression tests by reverting the `pollOnce` check and confirming the new
 skip test fails, same discipline as sessions 50-51/55.
 
+Session 56's `ScoringInFlight` skip was silent — unlike `ScoringGate`'s
+"too many pending scores" line, nothing was logged when it fired, so there
+was no way to confirm live whether the cross-path race it closes actually
+happens in practice. Session 57 added a `console.error` at both skip sites
+(`server.ts`'s watcher callback, `poller.ts`'s `pollOnce`): `"skipping
+launch <mint>: already being scored by another discovery path"`. Purely
+additive logging, no behavior change, no new tests needed (the skip path
+itself is already covered by `scoringInFlight.test.ts`/`poller.test.ts`).
+
 ## Live feed
 
 Two discovery paths feed the same pipeline:

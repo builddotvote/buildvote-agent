@@ -3555,3 +3555,66 @@ file. Verified against the actual code in Session 46 below.)*
   this session added coverage for the `scoringInFlight` wiring specifically
   via `poller.test.ts`, the same way session 54 did for `onScored`.
 - All five TASK.md steps remain functionally complete.
+
+## Session 57 — 2026-10-14
+
+### Done
+- Re-verified the repo first (`npm install`, 181/181 tests, clean
+  typecheck/build, no leftover scratch files, no stray processes) — matched
+  session 56's write-up exactly.
+- Picked up session 56's top "Next" item: the `ScoringInFlight` skip it added
+  was silent, so there was no way to confirm live whether the cross-path race
+  it closes (watcher and poller both starting to score the same mint before
+  either finishes) actually fires in practice — unlike `ScoringGate`'s own
+  skip, which already logs `"too many pending scores"`.
+- Fixed: added a `console.error` at both `scoringInFlight.tryAcquire` skip
+  sites — `src/server.ts`'s watcher `onLaunch` callback and
+  `src/poller.ts`'s `pollOnce` loop — logging `"skipping launch <mint>:
+  already being scored by another discovery path"`. Purely additive
+  logging, no behavior change, no new tests (the skip path itself is already
+  covered by `scoringInFlight.test.ts`'s and `poller.test.ts`'s session-56
+  tests).
+- Updated `rug-radar/README.md`'s "Score" section with a short paragraph
+  after session 56's note describing the gap and this session's fix.
+- Live-checked three times in the foreground (public mainnet-beta, no keys,
+  no `.env`; ~90s, ~110s, and ~150s): all three booted cleanly, no crash,
+  `/api/feed` responded. Traffic was noticeably lighter than session 56's
+  runs (0-3 scoring attempts logged per run vs. "many launches" previously),
+  so no scoring happened concurrently on both discovery paths in any of the
+  three windows — the new log line never fired. Same evidentiary limitation
+  as every narrow fix since session 50: the offline regression tests from
+  session 56 (confirmed to fail without the underlying fix) remain the
+  primary evidence; this session only adds the ability to confirm it live
+  *next* time the race actually occurs during a live check.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 181/181 passing (no new tests — logging only), all offline,
+  ~3.4s.
+- Live-booted the real server synchronously three times (public
+  mainnet-beta, no keys, no `.env`, ~90s/~110s/~150s): boots cleanly,
+  `/api/feed` responded each time, no crash, no regression.
+- `git status`/`ps aux` after cleanup show only the intended
+  `poller.ts`/`server.ts`/README/PROGRESS changes — no stray files, no
+  leftover server process (confirmed the background `timeout ... npm start`
+  process from the longest run had exited before checking).
+
+### Next
+- The `scoringInFlight` cross-path race still hasn't been observed firing
+  live (the log line added this session makes it possible to confirm next
+  time traffic is heavy enough during a live check) — worth checking for the
+  new `"already being scored by another discovery path"` line in a future
+  session's live-boot output.
+- The scoring endpoint's rate-limit ceiling is unchanged — three independent
+  avenues around it are exhausted (sessions 27-28, 48, 49); what's untried is
+  accepting the balance-index rescore as the permanent mitigation and
+  focusing elsewhere, or re-checking from a different deployment
+  network/region if one becomes available.
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data (3 trading mints) — unchanged this
+  session.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- `server.ts`'s watcher/poller wiring remains without an automated test
+  (unchanged limitation, noted since the original wiring session).
+- All five TASK.md steps remain functionally complete.

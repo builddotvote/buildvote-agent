@@ -59,7 +59,10 @@ export async function pollOnce(
     // scoring RPC only to have feed.add() silently drop the duplicate at the
     // very end, wasting the gate slot and the calls for nothing.
     if (feed.has(launch.mint)) continue;
-    if (scoringInFlight && !scoringInFlight.tryAcquire(launch.mint)) continue;
+    if (scoringInFlight && !scoringInFlight.tryAcquire(launch.mint)) {
+      console.error(`skipping launch ${launch.mint}: already being scored by another discovery path`);
+      continue;
+    }
     if (scoringGate && !scoringGate.tryAcquire()) {
       console.error(`skipping launch ${launch.mint}: too many pending scores`);
       scoringInFlight?.release(launch.mint);

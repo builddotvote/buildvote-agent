@@ -116,7 +116,10 @@ const wsUrl = config.wsUrl ?? deriveWsUrl(config.discoveryRpcUrl);
 const watcher = new LaunchWatcher(wsUrl, watcherDiscoveryRpc, {
   onLaunch: (launch) => {
     if (feed.has(launch.mint)) return;
-    if (!scoringInFlight.tryAcquire(launch.mint)) return;
+    if (!scoringInFlight.tryAcquire(launch.mint)) {
+      console.error(`skipping launch ${launch.mint}: already being scored by another discovery path`);
+      return;
+    }
     if (!scoringGate.tryAcquire()) {
       console.error(`skipping launch ${launch.mint}: too many pending scores`);
       scoringInFlight.release(launch.mint);
