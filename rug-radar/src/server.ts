@@ -10,6 +10,7 @@ import { scoreLaunch } from "./pipeline.js";
 import { LaunchWatcher, deriveWsUrl } from "./wsDiscovery.js";
 import { DeployerIndex } from "./deployerIndex.js";
 import { ScoringGate } from "./scoringGate.js";
+import { ScoringInFlight } from "./scoringInFlight.js";
 import { BalanceIndex } from "./balanceIndex.js";
 import { rescoreHolderConcentrationFromIndex } from "./rescore.js";
 import { combineSignals } from "./scorer.js";
@@ -31,6 +32,13 @@ const deployerIndex = new DeployerIndex();
 // never drain within a 100s window. A launch beyond the cap is dropped, not
 // queued — see scoringGate.ts.
 const scoringGate = new ScoringGate(3);
+// Shared across both discovery paths: closes the gap `feed.has()` alone
+// leaves open — a launch the other path has already started scoring, but
+// not yet added to the feed, is claimed here before either path's first RPC
+// call for it, instead of both paths redundantly running all four signals
+// and only discovering the duplicate at feed.add() time. See
+// scoringInFlight.ts.
+const scoringInFlight = new ScoringInFlight();
 // Per-mint observed balances, fed by the websocket watcher's per-mint trade
 // subscriptions (see trackMint/onTrade below) — see balanceIndex.ts and
 // rescore.ts for why: an alternative to the rate-limited
@@ -108,8 +116,10 @@ const wsUrl = config.wsUrl ?? deriveWsUrl(config.discoveryRpcUrl);
 const watcher = new LaunchWatcher(wsUrl, watcherDiscoveryRpc, {
   onLaunch: (launch) => {
     if (feed.has(launch.mint)) return;
+    if (!scoringInFlight.tryAcquire(launch.mint)) return;
     if (!scoringGate.tryAcquire()) {
       console.error(`skipping launch ${launch.mint}: too many pending scores`);
+      scoringInFlight.release(launch.mint);
       return;
     }
     scoreLaunch(watcherScoringRpc, launch, deployerIndex)
@@ -125,7 +135,10 @@ const watcher = new LaunchWatcher(wsUrl, watcherDiscoveryRpc, {
       .catch((err) => {
         console.error(`failed to score launch ${launch.mint}:`, err instanceof Error ? err.message : err);
       })
-      .finally(() => scoringGate.release());
+      .finally(() => {
+        scoringGate.release();
+        scoringInFlight.release(launch.mint);
+      });
   },
   onTrade: (trade) => balanceIndex.recordTrade(trade),
   onError: (err) => {
@@ -198,11 +211,18 @@ function poll(): void {
   // holder-concentration rescore below — only launches the primary
   // websocket path discovers did, since scheduleHolderRescore lived solely
   // in the watcher's onLaunch handler until now.
-  pollOnce(pollDiscoveryRpc, pollScoringRpc, feed, pollState, deployerIndex, scoringGate, scheduleHolderRescore).catch(
-    (err) => {
-      console.error("poll failed:", err instanceof Error ? err.message : err);
-    },
-  );
+  pollOnce(
+    pollDiscoveryRpc,
+    pollScoringRpc,
+    feed,
+    pollState,
+    deployerIndex,
+    scoringGate,
+    scoringInFlight,
+    scheduleHolderRescore,
+  ).catch((err) => {
+    console.error("poll failed:", err instanceof Error ? err.message : err);
+  });
 }
 
 const server = createServer(async (req, res) => {

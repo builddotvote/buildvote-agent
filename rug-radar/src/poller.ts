@@ -9,6 +9,7 @@ import type { LiveFeed } from "./feed.js";
 import type { SolanaRpcClient } from "./rpc.js";
 import type { DeployerIndex } from "./deployerIndex.js";
 import type { ScoringGate } from "./scoringGate.js";
+import type { ScoringInFlight } from "./scoringInFlight.js";
 import type { DiscoveredLaunch } from "./discovery.js";
 
 export interface PollState {
@@ -33,6 +34,11 @@ export async function pollOnce(
   // launches can be scoring at once against the same rate-limited scoring
   // RPC — see scoringGate.ts for why dropping beats queuing here.
   scoringGate?: ScoringGate,
+  // Optional: shared with the websocket watcher's own scoring calls (see
+  // server.ts) so a launch the watcher has already started scoring, but not
+  // yet added to the feed, isn't also picked up and re-scored here — see
+  // scoringInFlight.ts for why feed.has() alone can't catch this case.
+  scoringInFlight?: ScoringInFlight,
   // Optional: fires once per launch this cycle actually kept in the feed
   // (not one feed.add() silently dropped for having zero signals — see
   // feed.ts). The websocket watcher's onLaunch handler uses the same signal
@@ -53,8 +59,10 @@ export async function pollOnce(
     // scoring RPC only to have feed.add() silently drop the duplicate at the
     // very end, wasting the gate slot and the calls for nothing.
     if (feed.has(launch.mint)) continue;
+    if (scoringInFlight && !scoringInFlight.tryAcquire(launch.mint)) continue;
     if (scoringGate && !scoringGate.tryAcquire()) {
       console.error(`skipping launch ${launch.mint}: too many pending scores`);
+      scoringInFlight?.release(launch.mint);
       continue;
     }
     try {
@@ -64,6 +72,7 @@ export async function pollOnce(
       console.error(`failed to score launch ${launch.mint}:`, err instanceof Error ? err.message : err);
     } finally {
       scoringGate?.release();
+      scoringInFlight?.release(launch.mint);
     }
   }
 }

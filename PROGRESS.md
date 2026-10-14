@@ -3453,3 +3453,105 @@ file. Verified against the actual code in Session 46 below.)*
 - `server.ts`'s watcher/poller wiring remains without an automated test
   (unchanged limitation, noted since the original wiring session).
 - All five TASK.md steps remain functionally complete.
+
+## Session 56 — 2026-10-14
+
+### Done
+- Re-verified the repo first (`npm install`, 175/175 tests, clean
+  typecheck/build, no leftover scratch files, no stray processes) — matched
+  session 55's write-up exactly.
+- Read `server.ts` and `poller.ts` together looking for another instance of
+  the scarce-RPC-waste class sessions 50-55 kept finding, and found the
+  session 51 fix was incomplete: `poller.ts`'s `pollOnce` checks
+  `feed.has(launch.mint)` before scoring to skip a launch the watcher
+  *already finished* scoring, but `feed.add()` only runs once scoring
+  completes — so if the watcher has *started* scoring a launch and not yet
+  added it to the feed when the poller's own scan (independently, on its
+  own 15s timer) finds the same launch, `feed.has()` is still false for
+  both, and nothing stopped the poller from also running all four signals'
+  RPC calls against the identical mint. The exact race session 51's own
+  code comment describes avoiding ("the watcher runs concurrently...")
+  only covers the already-finished case; the still-in-flight case was
+  never closed, and the same gap exists symmetrically for the watcher
+  against an in-flight poller score.
+- Fixed:
+  - New `src/scoringInFlight.ts` — `ScoringInFlight`, a small `Set<string>`
+    of mints currently being scored, with the same `tryAcquire()`/
+    `release()` shape as the existing `ScoringGate` (`tryAcquire(mint)`
+    returns `false` if another in-flight score already claimed that mint).
+    4 new offline tests in `scoringInFlight.test.ts`.
+  - `src/server.ts` — constructs one shared `ScoringInFlight` instance
+    alongside `scoringGate`/`deployerIndex`/`balanceIndex`. The watcher's
+    `onLaunch` handler now claims the mint (`scoringInFlight.tryAcquire`)
+    right after the existing `feed.has()` check and before
+    `scoringGate.tryAcquire()` (so a dedup skip never costs a gate slot),
+    releasing it in the same `finally` that already releases the gate.
+  - `src/poller.ts` — `pollOnce` gained an optional `scoringInFlight` param,
+    checked in the same position (after `feed.has()`, before
+    `scoringGate.tryAcquire()`); releases it from its own `finally`. Passed
+    through from `server.ts`'s `poll()` call, which now passes it as the
+    7th positional arg (before `onScored`, the existing 7th arg) — updated
+    the two existing `pollOnce` calls in `poller.test.ts` that relied on
+    positional args to add the extra `undefined` so they still exercise
+    `onScored`, not accidentally pass their callback as `scoringInFlight`.
+  - 2 new tests in `poller.test.ts`: a mint pre-claimed in `ScoringInFlight`
+    (simulating the watcher mid-score) is skipped by the poller with zero
+    scoring RPC calls and the gate slot untouched; a mint claimed and then
+    released is scorable again on a later poll (confirms the poller's own
+    release in `finally` doesn't leave a mint stuck claimed forever).
+  - Verified the two new tests are real regression tests, not just
+    plausible-looking (same discipline as sessions 50-51/55): temporarily
+    removed the `scoringInFlight` check from `pollOnce`'s loop body (kept
+    the param so the file still compiled), confirmed the new skip test
+    failed (1 scoring call instead of 0), restored the check, confirmed all
+    181 tests pass again.
+  - Updated `rug-radar/README.md`'s "Score" section with a paragraph after
+    session 55's note describing the gap in session 51's fix and this
+    session's fix for it.
+- Live-checked synchronously in the foreground (two runs, ~70-95s each,
+  public mainnet-beta, no keys, no `.env`, same pattern as every session
+  since 26): both booted cleanly, discovery found many launches each run,
+  the scoring gate capped cleanly ("too many pending scores" skips logged,
+  no crash), the usual `getTokenLargestAccounts` 429s. One run's
+  `/api/feed` (probed mid-run via `curl`) returned a real 3-signal launch.
+  Heavy gate-pressure meant neither run happened to surface the specific
+  watcher/poller simultaneous-in-flight overlap this fix targets — same
+  evidentiary limitation as sessions 50-55's narrow fixes; the offline
+  regression test (confirmed to fail without the fix) is the primary
+  evidence.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 181/181 passing (6 new: 4 in `scoringInFlight.test.ts`, 2 in
+  `poller.test.ts`), all offline, ~3.5s.
+- Live-booted the real server synchronously twice (public mainnet-beta, no
+  keys, no `.env`, ~70-95s each): boots cleanly, `/api/feed` responded with
+  a real multi-signal launch on one run, no crash, no regression from the
+  fix.
+- `git status`/`ps aux` after cleanup show only the intended
+  `scoringInFlight.ts`/`scoringInFlight.test.ts`/`poller.ts`/
+  `poller.test.ts`/`server.ts`/README/PROGRESS changes — no stray files, no
+  leftover server process.
+
+### Next
+- This session's fix hasn't been observed firing live (only offline
+  regression-tested, confirmed to fail without the fix) — worth watching
+  for a log line indicating a launch was claimed by one discovery path
+  while still in-flight for the other (no dedicated log line exists yet for
+  this specific skip, unlike `scoringGate`'s "too many pending scores" —
+  worth adding one if this needs to be confirmed live in a future session).
+- The scoring endpoint's rate-limit ceiling is unchanged — three independent
+  avenues around it are exhausted (sessions 27-28, 48, 49); what's untried is
+  accepting the balance-index rescore as the permanent mitigation and
+  focusing elsewhere, or re-checking from a different deployment
+  network/region if one becomes available.
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data (3 trading mints) — unchanged this
+  session.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- `server.ts`'s watcher/poller wiring remains without an automated test
+  (unchanged limitation, noted since the original wiring session) — though
+  this session added coverage for the `scoringInFlight` wiring specifically
+  via `poller.test.ts`, the same way session 54 did for `onScored`.
+- All five TASK.md steps remain functionally complete.

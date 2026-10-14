@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { pollOnce } from "./poller.js";
 import { LiveFeed } from "./feed.js";
 import { ScoringGate } from "./scoringGate.js";
+import { ScoringInFlight } from "./scoringInFlight.js";
 import { PUMP_FUN_PROGRAM_ID } from "./pumpfun.js";
 import { base58Encode } from "./base58.js";
 import type { ParsedTransaction, SignatureInfo } from "./rpc.js";
@@ -156,6 +157,52 @@ test("a scoring gate with room releases its slot after scoring", async () => {
   assert.equal(gate.tryAcquire(), true);
 });
 
+test("a launch already claimed by the watcher's in-flight score is skipped, not re-scored", async () => {
+  const signatures: SignatureInfo[] = [
+    { signature: "sigCreate", slot: 2, err: null, memo: null, blockTime: 1700000100 },
+  ];
+  const feed = new LiveFeed();
+  const state = { sinceBlockTime: 1700000000 };
+  const gate = new ScoringGate(1);
+  const inFlight = new ScoringInFlight();
+  // Simulates the watcher having already claimed this mint and still being
+  // mid-score (not yet in the feed) when the poller's own scan finds it too.
+  inFlight.tryAcquire(MINT);
+  let scoringCalls = 0;
+  const rpc = fakeRpc(signatures);
+  const countingRpc = {
+    ...rpc,
+    async getAccountInfo(...args: Parameters<typeof rpc.getAccountInfo>) {
+      scoringCalls++;
+      return rpc.getAccountInfo(...args);
+    },
+  };
+
+  await pollOnce(fakeRpc(signatures), countingRpc, feed, state, undefined, gate, inFlight);
+
+  assert.equal(scoringCalls, 0);
+  assert.deepEqual(feed.list(), []);
+  // The gate slot was never touched, since the in-flight check short-circuits first.
+  assert.equal(gate.tryAcquire(), true);
+});
+
+test("a mint released from in-flight by another path can be scored on a later poll", async () => {
+  const signatures: SignatureInfo[] = [
+    { signature: "sigCreate", slot: 2, err: null, memo: null, blockTime: 1700000100 },
+  ];
+  const feed = new LiveFeed();
+  const state = { sinceBlockTime: 1700000000 };
+  const inFlight = new ScoringInFlight();
+  inFlight.tryAcquire(MINT);
+  inFlight.release(MINT);
+
+  await pollOnce(fakeRpc(signatures), fakeRpc(signatures), feed, state, undefined, undefined, inFlight);
+
+  assert.equal(feed.list().length, 1);
+  // The poller releases its own claim after scoring, so the mint isn't left stuck.
+  assert.equal(inFlight.tryAcquire(MINT), true);
+});
+
 test("onScored fires with the launch once it's actually kept in the feed", async () => {
   const signatures: SignatureInfo[] = [
     { signature: "sigCreate", slot: 2, err: null, memo: null, blockTime: 1700000100 },
@@ -164,7 +211,7 @@ test("onScored fires with the launch once it's actually kept in the feed", async
   const state = { sinceBlockTime: 1700000000 };
   const scored: string[] = [];
 
-  await pollOnce(fakeRpc(signatures), fakeRpc(signatures), feed, state, undefined, undefined, (launch) =>
+  await pollOnce(fakeRpc(signatures), fakeRpc(signatures), feed, state, undefined, undefined, undefined, (launch) =>
     scored.push(launch.mint),
   );
 
@@ -206,6 +253,7 @@ test("onScored does not fire for a launch feed.add() dropped (zero signals)", as
     allFailingScoringRpc,
     feed,
     state,
+    undefined,
     undefined,
     undefined,
     () => scoredCalls++,

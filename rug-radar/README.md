@@ -379,6 +379,26 @@ real traffic, not a rare case. 3 new tests (2 in `bundledBuys.test.ts`, 1
 in `pipeline.test.ts`); verified as real regression tests by reverting the
 fix and confirming they fail, same discipline as sessions 50-51.
 
+Session 51's `feed.has()` check (above) only catches a launch the *other*
+discovery path has already *finished* scoring — `feed.add()` runs once
+scoring completes, so it can't see a launch the other path has already
+started scoring and not yet added. In that window both the watcher and the
+poller could still run all four signals' RPC calls against the same mint,
+same waste `feed.has()` was meant to close, just one step earlier. Session
+56 closed that gap with `src/scoringInFlight.ts`'s `ScoringInFlight`: a
+set of mints currently being scored, shared between `server.ts`'s watcher
+callback and `poller.ts`'s `pollOnce` the same way `ScoringGate` already is.
+Either path claims a mint via `tryAcquire(mint)` before its first RPC call
+for it and releases it in a `finally` once scoring settles; the other path's
+`tryAcquire` returns `false` for a mint already claimed, so it skips
+straight past without touching the scoring RPC at all. Checked before
+`ScoringGate` (so a dedup skip never costs a gate slot) and after
+`feed.has()` (so an already-finished launch still short-circuits on the
+cheaper check first). 4 new tests in `scoringInFlight.test.ts` plus 2 in
+`poller.test.ts` covering the cross-path skip and release; verified as real
+regression tests by reverting the `pollOnce` check and confirming the new
+skip test fails, same discipline as sessions 50-51/55.
+
 ## Live feed
 
 Two discovery paths feed the same pipeline:
