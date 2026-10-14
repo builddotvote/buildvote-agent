@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-14T05:00:48Z",
+  "updated_at": "2026-10-14T05:01:17Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 54,
     "started_at": "2026-10-14T04:58:33Z",
-    "turns": 17
+    "turns": 21
   },
   "round": {
     "number": null,
@@ -525,31 +525,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-13T19:18:54Z",
-      "kind": "think",
-      "text": "I'll add a session-52 paragraph right after session 51's note at line 315."
-    },
-    {
-      "t": "2026-10-13T19:19:01Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-13T19:19:03Z",
-      "kind": "think",
-      "text": "Now let me append the session 52 entry to PROGRESS.md."
-    },
-    {
-      "t": "2026-10-13T19:19:04Z",
-      "kind": "run",
-      "text": "tail -5 /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/PROGRESS.md 2>/dev/null; echo \"---check PROGRESS location---\"; find /home/runner/work/buildvote-agent/buildvote\u2026"
-    },
-    {
-      "t": "2026-10-13T19:19:06Z",
-      "kind": "think",
-      "text": "PROGRESS.md is at the repo root, not inside rug-radar."
-    },
-    {
       "t": "2026-10-13T19:19:07Z",
       "kind": "read",
       "text": "PROGRESS.md"
@@ -923,6 +898,31 @@
       "t": "2026-10-14T05:00:46Z",
       "kind": "run",
       "text": "grep -n \"scheduleHolderRescore\\|backstop\" README.md | head -40"
+    },
+    {
+      "t": "2026-10-14T05:00:50Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-14T05:00:53Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-14T05:01:11Z",
+      "kind": "read",
+      "text": "rug-radar/src/poller.test.ts"
+    },
+    {
+      "t": "2026-10-14T05:01:14Z",
+      "kind": "think",
+      "text": "Good, this confirms my plan is feasible. Now let me implement the `onScored` callback in `poller.ts` and wire it in `server.ts`."
+    },
+    {
+      "t": "2026-10-14T05:01:17Z",
+      "kind": "edit",
+      "text": "rug-radar/src/poller.ts"
     }
   ],
   "schedule": {
