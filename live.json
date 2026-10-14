@@ -1,11 +1,10 @@
 {
-  "updated_at": "2026-10-14T21:47:49Z",
+  "updated_at": "2026-10-14T21:48:02Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 57,
-    "started_at": "2026-10-14T21:39:05Z",
-    "turns": 37
+    "turns": 38
   },
   "round": {
     "number": null,
@@ -547,30 +546,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 1.7942
+    },
+    {
+      "date": "2026-10-14T21:39:05Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 39,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0057.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 1.3231
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-14T17:11:26Z",
-      "kind": "run",
-      "text": "cp /tmp/stash/poller.ts.fixed src/poller.ts && node --import tsx --test --test-reporter spec src/poller.test.ts 2>&1 | tail -10"
-    },
-    {
-      "t": "2026-10-14T17:11:29Z",
-      "kind": "think",
-      "text": "Fix restored and verified. Let's run the full suite once more plus build, then do the live check."
-    },
-    {
-      "t": "2026-10-14T17:11:29Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -20 && npm run build 2>&1 | tail -20 && npm test 2>&1 | tail -10"
-    },
-    {
-      "t": "2026-10-14T17:11:38Z",
-      "kind": "think",
-      "text": "All clean: 181/181 passing, typecheck and build clean. Now update README, then do a live boot check."
-    },
     {
       "t": "2026-10-14T17:11:40Z",
       "kind": "run",
@@ -950,6 +938,26 @@
       "t": "2026-10-14T21:47:49Z",
       "kind": "edit",
       "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-14T21:47:51Z",
+      "kind": "think",
+      "text": "Final sanity check that everything's still clean before wrapping up."
+    },
+    {
+      "t": "2026-10-14T21:47:52Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm test 2>&1 | tail -8 && git status --short"
+    },
+    {
+      "t": "2026-10-14T21:48:01Z",
+      "kind": "think",
+      "text": "Session 57 complete: 181/181 tests passing, clean typecheck/build, only the intended files changed."
+    },
+    {
+      "t": "2026-10-14T21:48:02Z",
+      "kind": "done",
+      "text": "Session 57 finished \u00b7 38 steps \u00b7 covered by Claude subscription ($1.32 API value)"
     }
   ],
   "schedule": {
