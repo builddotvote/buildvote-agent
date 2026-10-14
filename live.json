@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-14T00:20:48Z",
+  "updated_at": "2026-10-14T00:21:15Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 53,
     "started_at": "2026-10-14T00:16:51Z",
-    "turns": 19
+    "turns": 24
   },
   "round": {
     "number": null,
@@ -516,51 +516,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-13T19:14:54Z",
-      "kind": "run",
-      "text": "git log --oneline -10 && echo \"---STATUS---\" && git status && echo \"---LS rug-radar---\" && ls rug-radar"
-    },
-    {
-      "t": "2026-10-13T19:14:56Z",
-      "kind": "think",
-      "text": "Session 51 is already committed. I'm starting a new session (52). Let me verify the repo state first."
-    },
-    {
-      "t": "2026-10-13T19:14:57Z",
-      "kind": "run",
-      "text": "cd rug-radar && npm install --silent 2>&1 | tail -20 && echo \"---TYPECHECK---\" && npm run typecheck 2>&1 | tail -30"
-    },
-    {
-      "t": "2026-10-13T19:15:02Z",
-      "kind": "run",
-      "text": "cd rug-radar && npm run build 2>&1 | tail -30 && echo \"---TEST---\" && npm test 2>&1 | tail -40"
-    },
-    {
-      "t": "2026-10-13T19:15:04Z",
-      "kind": "run",
-      "text": "pwd; ls"
-    },
-    {
-      "t": "2026-10-13T19:15:08Z",
-      "kind": "run",
-      "text": "npm run build 2>&1 | tail -30 && echo \"---TEST---\" && npm test 2>&1 | tail -40"
-    },
-    {
-      "t": "2026-10-13T19:15:15Z",
-      "kind": "think",
-      "text": "Repo verified clean: 170/170 tests pass, typecheck and build clean. Let me check for leftover scratch files and running processes before diving into new work."
-    },
-    {
-      "t": "2026-10-13T19:15:16Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git status && echo \"---PS---\" && ps aux | grep -E \"node|tsx\" | grep -v grep"
-    },
-    {
-      "t": "2026-10-13T19:15:21Z",
-      "kind": "run",
-      "text": "cd rug-radar && find src -type f -name \"*.ts\" | grep -v test | sort"
-    },
-    {
       "t": "2026-10-13T19:15:23Z",
       "kind": "run",
       "text": "pwd; find /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src -type f -name \"*.ts\" | grep -v test | sort"
@@ -914,6 +869,51 @@
       "t": "2026-10-14T00:18:48Z",
       "kind": "run",
       "text": "until ! kill -0 $(pgrep -f \"tsx src/server.ts\") 2>/dev/null; do sleep 3; done; echo done"
+    },
+    {
+      "t": "2026-10-14T00:20:52Z",
+      "kind": "run",
+      "text": "ps aux | grep tsx | grep -v grep; echo \"---LOG---\"; cat /tmp/rugradar_s53.log; echo \"---FEED---\"; curl -s --max-time 2 http://localhost:8787/api/feed 2>&1 | head -c 2000; echo"
+    },
+    {
+      "t": "2026-10-14T00:20:58Z",
+      "kind": "think",
+      "text": "Server ran and shut down cleanly after the 100s timeout \u2014 same log pattern as previous sessions (429s on `getTokenLargestAccounts`, scoring-gate pressure), no crash. Let's confirm\u2026"
+    },
+    {
+      "t": "2026-10-14T00:20:59Z",
+      "kind": "run",
+      "text": "ps aux | grep -E \"tsx|node\" | grep -v grep; echo \"---GIT---\"; cd /home/runner/work/buildvote-agent/buildvote-agent && git status"
+    },
+    {
+      "t": "2026-10-14T00:21:01Z",
+      "kind": "think",
+      "text": "No stray processes, only the intended `server.ts` change. Now let's update the README and PROGRESS.md."
+    },
+    {
+      "t": "2026-10-14T00:21:02Z",
+      "kind": "run",
+      "text": "cd rug-radar && grep -n \"pollOnce\\|session 51\\|session 52\\|scheduleHolderRescore\\|rescored holder-concentration\" README.md"
+    },
+    {
+      "t": "2026-10-14T00:21:05Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-14T00:21:07Z",
+      "kind": "think",
+      "text": "I'll add a session-53 paragraph right after the session 52 note."
+    },
+    {
+      "t": "2026-10-14T00:21:13Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-14T00:21:15Z",
+      "kind": "think",
+      "text": "Now let's update PROGRESS.md with the session 53 entry."
     }
   ],
   "schedule": {
