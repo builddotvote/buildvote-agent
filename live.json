@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-14T11:48:52Z",
+  "updated_at": "2026-10-14T11:49:19Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 55,
     "started_at": "2026-10-14T11:48:26Z",
-    "turns": 5
+    "turns": 10
   },
   "round": {
     "number": null,
@@ -534,36 +534,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-14T00:20:58Z",
-      "kind": "think",
-      "text": "Server ran and shut down cleanly after the 100s timeout \u2014 same log pattern as previous sessions (429s on `getTokenLargestAccounts`, scoring-gate pressure), no crash. Let's confirm\u2026"
-    },
-    {
-      "t": "2026-10-14T00:20:59Z",
-      "kind": "run",
-      "text": "ps aux | grep -E \"tsx|node\" | grep -v grep; echo \"---GIT---\"; cd /home/runner/work/buildvote-agent/buildvote-agent && git status"
-    },
-    {
-      "t": "2026-10-14T00:21:01Z",
-      "kind": "think",
-      "text": "No stray processes, only the intended `server.ts` change. Now let's update the README and PROGRESS.md."
-    },
-    {
-      "t": "2026-10-14T00:21:02Z",
-      "kind": "run",
-      "text": "cd rug-radar && grep -n \"pollOnce\\|session 51\\|session 52\\|scheduleHolderRescore\\|rescored holder-concentration\" README.md"
-    },
-    {
-      "t": "2026-10-14T00:21:05Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-14T00:21:07Z",
-      "kind": "think",
-      "text": "I'll add a session-53 paragraph right after the session 52 note."
-    },
-    {
       "t": "2026-10-14T00:21:13Z",
       "kind": "edit",
       "text": "rug-radar/README.md"
@@ -932,6 +902,36 @@
       "t": "2026-10-14T11:48:51Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && ls && git status"
+    },
+    {
+      "t": "2026-10-14T11:48:55Z",
+      "kind": "run",
+      "text": "npm install --silent 2>&1 | tail -20 && echo \"---TYPECHECK---\" && npm run typecheck 2>&1 | tail -30 && echo \"---BUILD---\" && npm run build 2>&1 | tail -30 && echo \"---TEST---\" && \u2026"
+    },
+    {
+      "t": "2026-10-14T11:49:05Z",
+      "kind": "think",
+      "text": "172/172 passing, clean typecheck/build \u2014 matches session 54's write-up exactly. Now let me decide what to work on. Session 54 left the \"onScored via backstop poller\" fix unobserve\u2026"
+    },
+    {
+      "t": "2026-10-14T11:49:06Z",
+      "kind": "run",
+      "text": "wc -l src/*.ts | sort -n"
+    },
+    {
+      "t": "2026-10-14T11:49:09Z",
+      "kind": "read",
+      "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-14T11:49:15Z",
+      "kind": "read",
+      "text": "rug-radar/src/poller.ts"
+    },
+    {
+      "t": "2026-10-14T11:49:19Z",
+      "kind": "run",
+      "text": "grep -n \"bundledBuy\" src/*.ts"
     }
   ],
   "schedule": {
