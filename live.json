@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-14T21:47:12Z",
+  "updated_at": "2026-10-14T21:47:49Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 57,
     "started_at": "2026-10-14T21:39:05Z",
-    "turns": 31
+    "turns": 37
   },
   "round": {
     "number": null,
@@ -552,51 +552,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-14T17:11:04Z",
-      "kind": "think",
-      "text": "Now let's run the test suite, typecheck, and build."
-    },
-    {
-      "t": "2026-10-14T17:11:04Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -30"
-    },
-    {
-      "t": "2026-10-14T17:11:08Z",
-      "kind": "run",
-      "text": "npm test 2>&1 | tail -40"
-    },
-    {
-      "t": "2026-10-14T17:11:14Z",
-      "kind": "think",
-      "text": "181/181 passing. Now let's verify the new tests actually fail without the fix (real regression tests, matching this project's established discipline)."
-    },
-    {
-      "t": "2026-10-14T17:11:15Z",
-      "kind": "run",
-      "text": "mkdir -p /tmp/stash && cp src/poller.ts /tmp/stash/poller.ts.fixed && cp src/server.ts /tmp/stash/server.ts.fixed"
-    },
-    {
-      "t": "2026-10-14T17:11:20Z",
-      "kind": "run",
-      "text": "python3 - <<'EOF' import re with open('src/poller.ts') as f:     content = f.read() # Temporarily disable the in-flight check's effect while keeping signature valid content = cont\u2026"
-    },
-    {
-      "t": "2026-10-14T17:11:22Z",
-      "kind": "think",
-      "text": "That's exactly the intended temporary change for the fail-without-fix check."
-    },
-    {
-      "t": "2026-10-14T17:11:23Z",
-      "kind": "run",
-      "text": "node --import tsx --test --test-reporter spec src/poller.test.ts 2>&1 | tail -40"
-    },
-    {
-      "t": "2026-10-14T17:11:26Z",
-      "kind": "think",
-      "text": "The new regression test correctly fails without the fix. Restoring it."
-    },
-    {
       "t": "2026-10-14T17:11:26Z",
       "kind": "run",
       "text": "cp /tmp/stash/poller.ts.fixed src/poller.ts && node --import tsx --test --test-reporter spec src/poller.test.ts 2>&1 | tail -10"
@@ -950,6 +905,51 @@
       "t": "2026-10-14T21:46:47Z",
       "kind": "run",
       "text": "while ps -p 12430 > /dev/null 2>&1; do sleep 5; done; echo \"process exited\""
+    },
+    {
+      "t": "2026-10-14T21:47:14Z",
+      "kind": "run",
+      "text": "cat /tmp/server_out3.log; echo \"---counts---\"; grep -c \"skipping launch\" /tmp/server_out3.log; grep -c \"already being scored\" /tmp/server_out3.log; grep -c \"too many pending\" /tmp\u2026"
+    },
+    {
+      "t": "2026-10-14T21:47:21Z",
+      "kind": "run",
+      "text": "ps aux | grep -i \"tsx\\|node_modules/.bin\\|npm start\" | grep -v grep; echo \"---git status---\"; cd /home/runner/work/buildvote-agent/buildvote-agent && git status --short"
+    },
+    {
+      "t": "2026-10-14T21:47:23Z",
+      "kind": "think",
+      "text": "Clean \u2014 no stray processes, and git status shows only the intended edits. Now let's update the README and PROGRESS.md to document this session's work."
+    },
+    {
+      "t": "2026-10-14T21:47:24Z",
+      "kind": "run",
+      "text": "grep -n \"scoringInFlight\\|session 56\\|already being scored\\|too many pending\\|Score\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md | head -40"
+    },
+    {
+      "t": "2026-10-14T21:47:27Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-14T21:47:28Z",
+      "kind": "think",
+      "text": "Now I'll append a paragraph documenting session 57's observability fix, right after session 56's note."
+    },
+    {
+      "t": "2026-10-14T21:47:33Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-14T21:47:34Z",
+      "kind": "think",
+      "text": "Now let's add the Session 57 entry to PROGRESS.md."
+    },
+    {
+      "t": "2026-10-14T21:47:49Z",
+      "kind": "edit",
+      "text": "PROGRESS.md"
     }
   ],
   "schedule": {
