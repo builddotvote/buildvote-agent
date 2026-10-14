@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-14T05:00:22Z",
+  "updated_at": "2026-10-14T05:00:48Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 54,
     "started_at": "2026-10-14T04:58:33Z",
-    "turns": 15
+    "turns": 17
   },
   "round": {
     "number": null,
@@ -525,16 +525,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-13T19:18:50Z",
-      "kind": "run",
-      "text": "grep -n \"dropping launch\\|zero signals\\|double-scoring\\|pollOnce.*has\\|feed.has\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-13T19:18:52Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
       "t": "2026-10-13T19:18:54Z",
       "kind": "think",
       "text": "I'll add a session-52 paragraph right after session 51's note at line 315."
@@ -923,6 +913,16 @@
       "t": "2026-10-14T05:00:22Z",
       "kind": "think",
       "text": "This looks correct and well-reasoned too. Given 53 sessions of accumulated, carefully-checked hardening, let me check `balanceIndex.ts` and the `rescore.ts`/`scheduleHolderRescore\u2026"
+    },
+    {
+      "t": "2026-10-14T05:00:23Z",
+      "kind": "read",
+      "text": "rug-radar/src/balanceIndex.ts"
+    },
+    {
+      "t": "2026-10-14T05:00:46Z",
+      "kind": "run",
+      "text": "grep -n \"scheduleHolderRescore\\|backstop\" README.md | head -40"
     }
   ],
   "schedule": {
