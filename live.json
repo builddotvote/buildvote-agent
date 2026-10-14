@@ -1,10 +1,11 @@
 {
-  "updated_at": "2026-10-14T11:55:34Z",
+  "updated_at": "2026-10-14T17:08:02Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 55,
-    "turns": 45
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 56,
+    "started_at": "2026-10-14T17:08:02Z",
+    "turns": 0
   },
   "round": {
     "number": null,
@@ -542,11 +543,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-14T05:03:07Z",
-      "kind": "run",
-      "text": "(NODE_OPTIONS=--experimental-websocket node --import tsx src/server.ts > /tmp/server-boot.log 2>&1 & echo $! > /tmp/server.pid); sleep 90; curl -s http://localhost:3000/api/feed |\u2026"
-    },
-    {
       "t": "2026-10-14T05:04:48Z",
       "kind": "run",
       "text": "grep -n \"poll failed\\|TypeError\\|ReferenceError\\|Cannot read\\|rescored holder-concentration\\|too many pending scores\" /tmp/server-boot.log | sort | uniq -c | sort -rn | head -20; \u2026"
@@ -940,11 +936,16 @@
       "t": "2026-10-14T11:55:34Z",
       "kind": "done",
       "text": "Session 55 finished \u00b7 45 steps \u00b7 covered by Claude subscription ($2.79 API value)"
+    },
+    {
+      "t": "2026-10-14T17:08:02Z",
+      "kind": "start",
+      "text": "Session 56 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-10-14T14:48:26Z"
+    "next_run": "2026-10-14T20:08:02Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
