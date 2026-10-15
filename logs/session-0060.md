@@ -1,0 +1,87 @@
+# Session 60: Rug radar: live launch scoring
+
+- Started: 2026-10-15T16:58:13Z
+- Ended: 2026-10-15T17:10:37Z
+- Steps: 61
+- Model turns: 61
+- Billing: Claude subscription (API value $2.8278, not billed)
+- Outcome: step limit reached
+
+## Steps
+
+- `run` cat TASK.md 2>/dev/null; echo "---PROGRESS---"; cat PROGRESS.md 2>/dev/null
+- `read` PROGRESS.md
+- `read` TASK.md
+- `read` PROGRESS.md
+- `run` wc -l /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md
+- `read` PROGRESS.md
+- `run` git log --oneline -20 && echo "---" && git show --stat HEAD
+- `read` logs/session-0059.md
+- `run` cd rug-radar && ls -la tmp-probe-rescore-delay.ts 2>&1; echo "---"; cat tmp-probe-rescore-delay.ts
+- `run` ps aux | grep -E "node|tsx" | grep -v grep; echo "---git status---"; cd /home/runner/work/buildvote-agent/buildvote-agent && git status --porcelain=v1 -uall
+- `think` No stray processes, and `git status` is clean (the scratch file was already committed in session 59's commit). I'll verify the repo builds/tests cleanly, then re-run the probe session 59 started.
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --silent 2>&1 | tail -20 && npm run typecheck 2>&1 | tail -30
+- `run` npm test 2>&1 | tail -20
+- `think` 187/187 passing, clean typecheck. Now re-running the live probe session 59 started (second data point for `RESCORE_DELAY_MS`), which takes ~150s.
+- `run` NODE_OPTIONS=--experimental-websocket timeout 170 npx tsx tmp-probe-rescore-delay.ts 2>&1 | tail -80
+- `think` Zero launches tracked in 150s — unlike prior sessions that found "many launches" in similar windows. Let me check if the watcher actually connected.
+- `run` grep -n "discoveryRpcUrl\|wsUrl\|SOLANA_RPC_URL\|SOLANA_WS_URL" src/config.ts
+- `read` rug-radar/src/config.ts
+- `run` curl -s -m 10 -X POST https://solana-rpc.publicnode.com -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"getHealth"}'; echo; echo "exit: $?"
+- `run` NODE_OPTIONS=--experimental-websocket node -e ' const ws = new WebSocket("wss://solana-rpc.publicnode.com"); ws.onopen = () => { console.log("OPEN"); ws.send(JSON.stringify({jsonrpc:"2.0",id:1,method:"logsSubscribe",params:[{mentions:["6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"]},{commitment:"processed"}]})); }; ws.onmessage = (e) => { console.log("MSG", e.data.toString().slice(0,200)); }; ws.o…
+- `run` NODE_OPTIONS=--experimental-websocket node -e ' const ws = new WebSocket("wss://solana-rpc.publicnode.com"); let count = 0; ws.onopen = () => { console.log("OPEN"); ws.send(JSON.stringify({jsonrpc:"2.0",id:1,method:"logsSubscribe",params:[{mentions:["6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"]},{commitment:"processed"}]})); }; ws.onmessage = (e) => { count++; if (count <= 3 || count % 20 === 0)…
+- `run` NODE_OPTIONS=--experimental-websocket node -e ' const ws = new WebSocket("wss://solana-rpc.publicnode.com"); let count = 0; ws.onopen = () => { console.log("OPEN"); ws.send(JSON.stringify({jsonrpc:"2.0",id:1,method:"logsSubscribe",params:["all",{commitment:"processed"}]})); }; ws.onmessage = (e) => { count++; if (count <= 2) console.log("MSG#"+count, e.data.toString().slice(0,200)); }; ws.onerror…
+- `run` curl -s -m 15 -X POST https://solana-rpc.publicnode.com -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"getSignaturesForAddress","params":["6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",{"limit":5}]}' | head -c 1500
+- `run` NODE_OPTIONS=--experimental-websocket node -e ' const ws = new WebSocket("wss://solana-rpc.publicnode.com"); let count = 0; ws.onopen = () => { console.log("OPEN", Date.now()); ws.send(JSON.stringify({jsonrpc:"2.0",id:1,method:"logsSubscribe",params:[{mentions:["6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"]},{commitment:"processed"}]})); }; ws.onmessage = (e) => { count++; const d = e.data.toStri…
+- `run` NODE_OPTIONS=--experimental-websocket node -e ' const ws = new WebSocket("wss://solana-rpc.publicnode.com"); let count = 0; ws.onopen = () => { console.log("OPEN"); ws.send(JSON.stringify({jsonrpc:"2.0",id:1,method:"logsSubscribe",params:[{mentions:["TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"]},{commitment:"processed"}]})); }; ws.onmessage = (e) => { count++; if (count <= 3) console.log("MSG#"+…
+- `run` grep -n "logsSubscribe\|mentions\|commitment" src/wsDiscovery.ts
+- `run` NODE_OPTIONS=--experimental-websocket node -e ' const ws = new WebSocket("wss://solana-rpc.publicnode.com"); let count = 0; ws.onopen = () => { console.log("OPEN"); ws.send(JSON.stringify({jsonrpc:"2.0",id:1,method:"logsSubscribe",params:[{mentions:["6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"]},{commitment:"confirmed"}]})); }; ws.onmessage = (e) => { count++; if (count <= 3) console.log("MSG#"+…
+- `run` sed -n '1,260ins' src/wsDiscovery.ts 2>/dev/null; wc -l src/wsDiscovery.ts
+- `read` rug-radar/src/wsDiscovery.ts
+- `run` grep -rn "Date.now\|now()" src/*.ts | grep -v test
+- `run` sed -n '1,120p' src/wsDiscovery.test.ts
+- `run` grep -n "sleep\|fakeSleep\|async function\|reconnect" src/wsDiscovery.test.ts | head -40
+- `read` rug-radar/src/wsDiscovery.test.ts
+- `think` Good, this confirms my plan to avoid reusing `this.sleep` for the watchdog (it's shared and asserted on in existing tests). Now implementing the idle watchdog with its own injectable timer/clock.
+- `edit` rug-radar/src/wsDiscovery.ts
+- `think` Now let's add the fields, start/stop logic, and activity tracking to the class.
+- `edit` rug-radar/src/wsDiscovery.ts
+- `edit` rug-radar/src/wsDiscovery.ts
+- `think` Now wire up `onopen`/`onclose` to start/stop the watchdog, and update `handleMessage` to record activity:
+- `edit` rug-radar/src/wsDiscovery.ts
+- `think` Now update `handleMessage` to record program-level activity:
+- `edit` rug-radar/src/wsDiscovery.ts
+- `run` sed -n '275,300p' src/wsDiscovery.ts
+- `run` grep -n "if (err) return" src/wsDiscovery.ts
+- `run` sed -n '320,345p' src/wsDiscovery.ts
+- `edit` rug-radar/src/wsDiscovery.ts
+- `think` Now let's check it typechecks.
+- `run` npm run typecheck 2>&1 | tail -40
+- `think` Clean. Now let's add tests for the watchdog behavior.
+- `run` grep -n "^test(" src/wsDiscovery.test.ts | tail -20
+- `read` rug-radar/src/wsDiscovery.test.ts
+- `read` rug-radar/src/wsDiscovery.test.ts
+- `edit` rug-radar/src/wsDiscovery.test.ts
+- `run` npm run typecheck 2>&1 | tail -60
+- `think` Typecheck is clean. Now let's run the full test suite.
+- `run` npm test 2>&1 | tail -60
+- `think` 191/191 passing. Now let's verify these are real regression tests by confirming they fail without the fix, per the project's established discipline.
+- `run` git stash && git log --oneline -1
+- `run` git stash pop
+- `think` Good, both files restored. Now let's verify the new tests actually fail without the fix by temporarily reverting just the production logic (keep the options/fields so it still compiles, but disable the actual idle check).
+- `run` cp src/wsDiscovery.ts /tmp/wsDiscovery.ts.bak
+- `edit` rug-radar/src/wsDiscovery.ts
+- `run` python3 -c " import re with open('src/wsDiscovery.ts') as f:     content = f.read() content = content.replace('if (idleFor >= timeout) {', 'if (false && idleFor >= timeout) {') with open('src/wsDiscovery.ts', 'w') as f:     f.write(content) " grep -n "false && idleFor" src/wsDiscovery.ts
+- `run` npx tsx --test src/wsDiscovery.test.ts 2>&1 | grep -E "✔|✖|idle|reconnect|fail"
+- `run` npx tsx --test src/wsDiscovery.test.ts 2>&1 | tail -40
+- `think` Both regression tests fail without the fix as expected, confirming they're real. Now restoring the fix.
+- `run` cp /tmp/wsDiscovery.ts.bak src/wsDiscovery.ts && npm test 2>&1 | tail -10
+- `think` All 191 pass with the fix restored. Now let's run typecheck/build once more, clean up the scratch probe file, and do a live smoke test.
+- `run` npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10
+- `run` grep -n "LaunchWatcher\|onError" src/server.ts
+- `read` rug-radar/src/server.ts
+- `think` `onError` already logs via `console.error`, so the new idle-reconnect error will surface automatically in server logs — no `server.ts` changes needed. Now let's clean up the leftover scratch file and do a live smoke test of the fix.
+- `run` rm -f tmp-probe-rescore-delay.ts && git status --porcelain
+- `run` NODE_OPTIONS=--experimental-websocket timeout 100 npm start > /tmp/server-smoke.log 2>&1 & echo "started with PID $!"
+- `run` sleep 95; echo "---LOG---"; cat /tmp/server-smoke.log
+- `run` until ! kill -0 20447 2>/dev/null; do sleep 2; done; echo "server process exited"; cat /tmp/server-smoke.log

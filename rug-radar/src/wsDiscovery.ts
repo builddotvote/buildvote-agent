@@ -92,11 +92,36 @@ export interface WatchLaunchesOptions {
   // multi-node cluster.
   resolveRetries?: number;
   resolveBaseDelayMs?: number;
+  // Guards against a failure mode confirmed live (session 60): a provider
+  // can ack the program-wide logsSubscribe and then silently never push a
+  // single notification again (observed against solana-rpc.publicnode.com —
+  // zero logsNotifications in 45s on pump.fun's own program, and zero in 15s
+  // on the much higher-traffic SPL Token program, which should be physically
+  // impossible under healthy conditions). The socket itself stays open and
+  // `onclose` never fires, so the existing reconnect-on-drop logic can't see
+  // this. If no program-level notification (including an errored one) lands
+  // within `programIdleTimeoutMs` of connecting or the last one, this forces
+  // the socket closed, which the existing onclose handler turns into a normal
+  // reconnect. Deliberately scoped to the program-wide subscription only, not
+  // per-mint trade subscriptions (trackMint) — a freshly-launched mint going
+  // tens of seconds without a trade is normal, not a sign anything is wrong.
+  programIdleTimeoutMs?: number;
+  idleCheckIntervalMs?: number;
+  now?: () => number;
+  setIntervalFn?: (fn: () => void, ms: number) => IntervalHandle;
+  clearIntervalFn?: (handle: IntervalHandle) => void;
 }
 
 const DEFAULT_RECONNECT_BASE_MS = 1000;
 const DEFAULT_RECONNECT_MAX_MS = 30_000;
 const DEFAULT_MAX_SEEN_SIGNATURES = 500;
+const DEFAULT_PROGRAM_IDLE_TIMEOUT_MS = 30_000;
+const DEFAULT_IDLE_CHECK_INTERVAL_MS = 10_000;
+
+// Opaque handle type so this module doesn't depend on Node's vs. the DOM's
+// setInterval return type — only identity (passed back to clearIntervalFn)
+// matters here, same reasoning as WebSocketLike avoiding the DOM lib type.
+type IntervalHandle = unknown;
 
 type PendingSubscribe =
   | { type: "program" }
@@ -110,12 +135,17 @@ export class LaunchWatcher {
   private readonly opts: WatchLaunchesOptions;
   private readonly wsFactory: WebSocketFactory;
   private readonly sleep: (ms: number) => Promise<void>;
+  private readonly now: () => number;
+  private readonly setIntervalFn: (fn: () => void, ms: number) => IntervalHandle;
+  private readonly clearIntervalFn: (handle: IntervalHandle) => void;
   private readonly seen = new Set<string>();
   private readonly seenOrder: string[] = [];
   private stopped = true;
   private connected = false;
   private attempt = 0;
   private ws: WebSocketLike | null = null;
+  private lastProgramActivityAt = 0;
+  private idleCheckHandle: IntervalHandle | null = null;
 
   // Mints the caller wants trade notifications for — the source of truth,
   // independent of connection state. Re-subscribed in full on every connect.
@@ -135,6 +165,9 @@ export class LaunchWatcher {
     this.opts = opts;
     this.wsFactory = opts.wsFactory ?? defaultWebSocketFactory;
     this.sleep = opts.sleep ?? defaultSleep;
+    this.now = opts.now ?? Date.now;
+    this.setIntervalFn = opts.setIntervalFn ?? ((fn, ms) => setInterval(fn, ms));
+    this.clearIntervalFn = opts.clearIntervalFn ?? ((handle) => clearInterval(handle as NodeJS.Timeout));
   }
 
   start(): void {
@@ -146,6 +179,7 @@ export class LaunchWatcher {
   stop(): void {
     this.stopped = true;
     this.connected = false;
+    this.stopIdleWatchdog();
     this.ws?.close();
     this.ws = null;
   }
@@ -205,15 +239,50 @@ export class LaunchWatcher {
       for (const [mint, info] of this.trackedMints) {
         this.sendSubscribe({ type: "mint", mint, bondingCurve: info.bondingCurve }, info.bondingCurve);
       }
+
+      this.lastProgramActivityAt = this.now();
+      this.startIdleWatchdog(ws);
     };
 
     ws.onmessage = (event) => this.handleMessage(event.data);
     ws.onerror = (err) => this.opts.onError?.(err);
     ws.onclose = () => {
       this.connected = false;
+      this.stopIdleWatchdog();
       if (this.stopped) return;
       this.scheduleReconnect();
     };
+  }
+
+  // Periodically checks that the program-wide subscription is still actually
+  // delivering notifications, not just still open — see the module comment
+  // on `programIdleTimeoutMs` for why this exists. Scoped to one connection
+  // via the `ws` closure: a stale watchdog from a superseded connection no-ops
+  // and stops rescheduling itself instead of acting on the new connection.
+  private startIdleWatchdog(ws: WebSocketLike): void {
+    this.stopIdleWatchdog();
+    const timeout = this.opts.programIdleTimeoutMs ?? DEFAULT_PROGRAM_IDLE_TIMEOUT_MS;
+    const interval = this.opts.idleCheckIntervalMs ?? DEFAULT_IDLE_CHECK_INTERVAL_MS;
+    this.idleCheckHandle = this.setIntervalFn(() => {
+      if (this.ws !== ws || this.stopped) {
+        this.stopIdleWatchdog();
+        return;
+      }
+      const idleFor = this.now() - this.lastProgramActivityAt;
+      if (idleFor >= timeout) {
+        this.opts.onError?.(
+          new Error(`no pump.fun program activity for ${idleFor}ms (timeout ${timeout}ms), forcing reconnect`),
+        );
+        ws.close();
+      }
+    }, interval);
+  }
+
+  private stopIdleWatchdog(): void {
+    if (this.idleCheckHandle !== null) {
+      this.clearIntervalFn(this.idleCheckHandle);
+      this.idleCheckHandle = null;
+    }
   }
 
   private sendSubscribe(pending: PendingSubscribe, mentionsAddress: string): void {
@@ -262,6 +331,15 @@ export class LaunchWatcher {
     if (!isLogsNotification(msg)) return;
     const { subscription, result } = msg.params;
     const { signature, err, logs } = result.value;
+
+    // Any notification tied to the program subscription proves it's still
+    // actually delivering, even one flagged with `err` (a failed transaction
+    // still mentioned the program) — recorded before the `err` early-return
+    // below so a chain that's genuinely quiet on *successful* creates but
+    // still pushing failed-tx notifications doesn't trip the idle watchdog.
+    if (subscription === this.programSubscriptionId) {
+      this.lastProgramActivityAt = this.now();
+    }
     if (err) return;
 
     // Keyed by (purpose, signature), not signature alone: a buy/sell

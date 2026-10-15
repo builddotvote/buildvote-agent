@@ -603,3 +603,148 @@ test("resubscribes tracked mints after a reconnect", async () => {
   assert.deepEqual(JSON.parse(sockets[1].sent[1]).params[0], { mentions: ["BondingCurve1"] });
   watcher.stop();
 });
+
+function fakeIntervalController() {
+  let callback: (() => void) | null = null;
+  let cleared = false;
+  return {
+    setIntervalFn: (fn: () => void): unknown => {
+      callback = fn;
+      return "handle";
+    },
+    clearIntervalFn: (): void => {
+      cleared = true;
+    },
+    fire: (): void => callback?.(),
+    get wasCleared(): boolean {
+      return cleared;
+    },
+  };
+}
+
+test("forces a reconnect when the program subscription goes idle past the timeout", () => {
+  const sockets: FakeWebSocket[] = [];
+  const errors: unknown[] = [];
+  let currentTime = 0;
+  const control = fakeIntervalController();
+  const watcher = new LaunchWatcher("wss://fake", fakeRpc(async () => null), {
+    onLaunch: () => {},
+    onError: (err) => errors.push(err),
+    sleep: async () => {},
+    now: () => currentTime,
+    programIdleTimeoutMs: 1000,
+    setIntervalFn: control.setIntervalFn,
+    clearIntervalFn: control.clearIntervalFn,
+    wsFactory: (url) => {
+      const ws = new FakeWebSocket();
+      sockets.push(ws);
+      return ws;
+    },
+  });
+
+  watcher.start();
+  sockets[0].emitOpen();
+  sockets[0].emitMessage(JSON.stringify(subscribeAckFor(sockets[0])));
+
+  currentTime = 1500; // past the 1000ms idle timeout with no program notification since open
+  control.fire();
+
+  assert.equal(sockets[0].closed, true, "idle watchdog should force the socket closed");
+  assert.equal(errors.length, 1);
+  assert.match(String((errors[0] as Error).message), /idle|reconnect/i);
+  watcher.stop();
+});
+
+test("does not force a reconnect when a program notification arrived within the idle timeout", () => {
+  const sockets: FakeWebSocket[] = [];
+  const errors: unknown[] = [];
+  let currentTime = 0;
+  const control = fakeIntervalController();
+  const watcher = new LaunchWatcher("wss://fake", fakeRpc(async () => null), {
+    onLaunch: () => {},
+    onError: (err) => errors.push(err),
+    sleep: async () => {},
+    now: () => currentTime,
+    programIdleTimeoutMs: 1000,
+    setIntervalFn: control.setIntervalFn,
+    clearIntervalFn: control.clearIntervalFn,
+    wsFactory: (url) => {
+      const ws = new FakeWebSocket();
+      sockets.push(ws);
+      return ws;
+    },
+  });
+
+  watcher.start();
+  sockets[0].emitOpen();
+  sockets[0].emitMessage(JSON.stringify(subscribeAckFor(sockets[0])));
+
+  currentTime = 900;
+  sockets[0].emitMessage(JSON.stringify(logsNotification("sig1", BUY_ONLY_LOGS))); // resets the clock
+
+  currentTime = 1800; // 900ms after the notification above, still under the 1000ms timeout
+  control.fire();
+
+  assert.equal(sockets[0].closed, false);
+  assert.equal(errors.length, 0);
+  watcher.stop();
+});
+
+test("a tracked mint's own trade notifications do not count as program activity", () => {
+  const sockets: FakeWebSocket[] = [];
+  const errors: unknown[] = [];
+  let currentTime = 0;
+  const control = fakeIntervalController();
+  const watcher = new LaunchWatcher("wss://fake", fakeRpc(async () => null), {
+    onLaunch: () => {},
+    onError: (err) => errors.push(err),
+    sleep: async () => {},
+    now: () => currentTime,
+    programIdleTimeoutMs: 1000,
+    setIntervalFn: control.setIntervalFn,
+    clearIntervalFn: control.clearIntervalFn,
+    wsFactory: (url) => {
+      const ws = new FakeWebSocket();
+      sockets.push(ws);
+      return ws;
+    },
+  });
+
+  watcher.start();
+  sockets[0].emitOpen();
+  sockets[0].emitMessage(JSON.stringify(subscribeAckFor(sockets[0], 0, 12345)));
+  watcher.trackMint("Mint1", "BondingCurve1");
+  sockets[0].emitMessage(JSON.stringify(subscribeAckFor(sockets[0], 1, 99999)));
+
+  currentTime = 500;
+  sockets[0].emitMessage(JSON.stringify(logsNotification("sig1", BUY_ONLY_LOGS, null, 99999))); // mint subscription, not the program one
+
+  currentTime = 1500; // past the 1000ms idle timeout since connecting, despite the mint-level traffic above
+  control.fire();
+
+  assert.equal(sockets[0].closed, true);
+  assert.equal(errors.length, 1);
+  watcher.stop();
+});
+
+test("clears the idle watchdog on stop()", () => {
+  const sockets: FakeWebSocket[] = [];
+  const control = fakeIntervalController();
+  const watcher = new LaunchWatcher("wss://fake", fakeRpc(async () => null), {
+    onLaunch: () => {},
+    sleep: async () => {},
+    setIntervalFn: control.setIntervalFn,
+    clearIntervalFn: control.clearIntervalFn,
+    wsFactory: (url) => {
+      const ws = new FakeWebSocket();
+      sockets.push(ws);
+      return ws;
+    },
+  });
+
+  watcher.start();
+  sockets[0].emitOpen();
+  watcher.stop();
+
+  assert.equal(control.wasCleared, true);
+});
