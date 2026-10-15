@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-15T17:06:35Z",
+  "updated_at": "2026-10-15T17:07:02Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 60,
     "started_at": "2026-10-15T16:58:13Z",
-    "turns": 27
+    "turns": 29
   },
   "round": {
     "number": null,
@@ -579,16 +579,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-15T04:40:30Z",
-      "kind": "run",
-      "text": "cd rug-radar && grep -n \"wiring remains without\\|without an automated test\\|wiring.*test\" README.md"
-    },
-    {
-      "t": "2026-10-15T04:40:33Z",
-      "kind": "run",
-      "text": "pwd; grep -n \"wiring remains\\|server.ts's watcher\\|without an automated\" README.md"
-    },
-    {
       "t": "2026-10-15T04:40:38Z",
       "kind": "read",
       "text": "rug-radar/README.md"
@@ -977,6 +967,16 @@
       "t": "2026-10-15T17:06:17Z",
       "kind": "run",
       "text": "grep -rn \"Date.now\\|now()\" src/*.ts | grep -v test"
+    },
+    {
+      "t": "2026-10-15T17:06:41Z",
+      "kind": "run",
+      "text": "sed -n '1,120p' src/wsDiscovery.test.ts"
+    },
+    {
+      "t": "2026-10-15T17:06:45Z",
+      "kind": "run",
+      "text": "grep -n \"sleep\\|fakeSleep\\|async function\\|reconnect\" src/wsDiscovery.test.ts | head -40"
     }
   ],
   "schedule": {
