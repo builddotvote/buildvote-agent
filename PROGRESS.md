@@ -3711,3 +3711,99 @@ file. Verified against the actual code in Session 46 below.)*
 - `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
   priority, unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 59 — 2026-10-15
+
+### Done
+- Re-verified the repo first (`npm install`, 191/191 tests, clean
+  typecheck/build, no leftover scratch files, no stray processes) — matched
+  session 58's write-up exactly.
+- Picked up session 58's top "Next" item: `server.ts`'s watcher/poller
+  wiring had automated coverage for the dedup/gate/score path
+  (`watcherOnLaunch.test.ts`, `poller.test.ts`), but `scheduleHolderRescore`
+  — the seed-bundled-buy/trackMint/wait/rescore-holder-concentration/
+  untrack logic, with its own branches (feed aged out, no trades observed,
+  curve unreadable, successful rescore) — was still an inline closure in
+  `server.ts` with no test of its own, the same gap the watcher's
+  `onLaunch` closure had before session 58's extraction.
+- Fixed (pure extraction, no behavior change):
+  - New `src/holderRescore.ts` — `scheduleHolderRescore(launch, deps)` with
+    the exact same seed/trackMint/setTimeout/feed.has-check/rescore/
+    feed.update/untrack logic the old inline closure had, taking its
+    dependencies (`feed`, `scoringRpc`, `balanceIndex`, `watcher`,
+    `delayMs`, and an optional `setTimeoutFn` for tests) as one options
+    object — the same injectable-timer pattern `poller.ts`'s `pollOnce`
+    already used for its own interval.
+  - `src/rescore.ts` — exported the previously-private `RescoreRpc` type so
+    the new module's deps type could reference it instead of redeclaring
+    it.
+  - `src/server.ts` — the old `scheduleHolderRescore` function body now
+    just forwards to the extracted one with the real `feed`,
+    `watcherScoringRpc`, `balanceIndex`, and `watcher`; removed the now-
+    unused `rescoreHolderConcentrationFromIndex` and `combineSignals`
+    imports.
+  - New `src/holderRescore.test.ts`, 6 tests: seeds the bundled buy into
+    `BalanceIndex` before calling `trackMint` (observed via the resulting
+    rescore actually having a holder to score, which it wouldn't without
+    the seed); resolves null and leaves the feed untouched when no trades
+    were observed; untracks without spending a scoring RPC call once the
+    launch has aged out of the feed (`feed.has` false); replaces the feed
+    entry's `holder-concentration` signal in place from observed trades
+    while leaving other signals untouched; a curve account that can't be
+    read resolves null and still untracks without touching the feed; and
+    that `delayMs` is passed through to the injected timeout unchanged.
+  - Verified the tests are real regression tests, not just plausible-
+    looking (same discipline as sessions 50-51/55-56/58): temporarily
+    removed the `if (launch.bundledBuy) balanceIndex.recordTrade(...)` seed
+    line from `holderRescore.ts`, confirmed the "seeds the bundled buy"
+    test failed (no holder-concentration signal appeared), restored the
+    line, confirmed all 197 tests pass again.
+- Live-checked once in the background (~60s, public mainnet-beta, no keys,
+  no `.env`): booted cleanly, `/api/feed` responded `{"launches":[]}`
+  (checked mid-run via `curl`), the only log line for the whole window was
+  an idle-timeout forced-reconnect notice from `wsDiscovery.ts` (pre-
+  existing `LaunchWatcher` behavior, unrelated to this session's change,
+  not an error), no crash, process exited cleanly when the 60s `timeout`
+  elapsed. Traffic was quiet (no launches discovered either path), so this
+  didn't specifically exercise `scheduleHolderRescore`'s branches live —
+  same evidentiary limitation as every narrow extraction session since 50;
+  the offline regression test (confirmed to fail without the bundled-buy
+  seed intact) is the primary evidence.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 197/197 passing (6 new, all in `holderRescore.test.ts`), all
+  offline, ~3.7s.
+- Live-booted the real server once in the background (public mainnet-beta,
+  no keys, no `.env`, 60s): boots cleanly, `/api/feed` responded, no crash,
+  no regression from the extraction.
+- `git status`/`ps aux` after cleanup show only the intended
+  `holderRescore.ts`/`holderRescore.test.ts`/`rescore.ts`/`server.ts`/
+  PROGRESS changes — no stray files, no leftover server process.
+
+### Next
+- `server.ts`'s watcher/poller wiring and the holder-rescore logic both now
+  have automated test coverage (`watcherOnLaunch.test.ts`, `poller.test.ts`,
+  `holderRescore.test.ts`) — the only remaining untested part of `server.ts`
+  is the literal module-level wiring itself (constructing the real RPC
+  clients, the HTTP server, and the `watcher.start()`/`poll()`/
+  `setInterval` calls), which is glue code wiring already-tested pieces
+  together rather than logic with its own branches; not attempted this
+  session for the same reason session 58 didn't attempt it.
+- README's "Score" section wasn't updated this session (unlike sessions
+  56-58) — the extraction didn't change any documented behavior, only where
+  the logic lives, so there was nothing user-visible to add a note about.
+- The `scoringInFlight` cross-path race still hasn't been observed firing
+  live (unchanged since session 57 — the log line exists, just never fired
+  during a quiet live-check window).
+- The scoring endpoint's rate-limit ceiling is unchanged — three independent
+  avenues around it are exhausted (sessions 27-28, 48, 49); what's untried is
+  accepting the balance-index rescore as the permanent mitigation and
+  focusing elsewhere, or re-checking from a different deployment
+  network/region if one becomes available.
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data (3 trading mints) — unchanged this
+  session.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- All five TASK.md steps remain functionally complete.

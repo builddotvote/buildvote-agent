@@ -12,8 +12,7 @@ import { ScoringGate } from "./scoringGate.js";
 import { ScoringInFlight } from "./scoringInFlight.js";
 import { handleDiscoveredLaunch } from "./watcherOnLaunch.js";
 import { BalanceIndex } from "./balanceIndex.js";
-import { rescoreHolderConcentrationFromIndex } from "./rescore.js";
-import { combineSignals } from "./scorer.js";
+import { scheduleHolderRescore as scheduleHolderRescoreFromIndex } from "./holderRescore.js";
 import type { DiscoveredLaunch } from "./discovery.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -155,41 +154,18 @@ const RESCORE_DELAY_MS = 45_000;
 // then re-scores just the holder-concentration signal from it and updates
 // the feed entry in place. Always untracks afterward so a long-running
 // process doesn't leak subscriptions for launches it's done watching.
+// holderRescore.ts (see there for the logic itself) takes the watcher,
+// feed, scoring RPC, balance index, and delay as dependencies so it's
+// unit-testable without a real timer — same reason pollOnce (poller.ts) and
+// handleDiscoveredLaunch (watcherOnLaunch.ts) are standalone functions.
 function scheduleHolderRescore(launch: DiscoveredLaunch): void {
-  // Seed the index with the dev's bundled buy (see discovery.ts) before
-  // subscribing for further trades — trackMint only sees activity from here
-  // on, so without this the mint's actual first holder is invisible to it.
-  if (launch.bundledBuy) balanceIndex.recordTrade(launch.bundledBuy);
-  watcher.trackMint(launch.mint, launch.bondingCurve);
-  setTimeout(() => {
-    // The feed is bounded (LiveFeed's maxSize, see feed.ts) and this fires
-    // 45s after the launch was added — a burst of newer launches can have
-    // aged this one out of the feed by now. Check before, not just in the
-    // .then() below: rescoreHolderConcentrationFromIndex spends a real
-    // getAccountInfo call against the scarce scoring RPC, and that call
-    // happens regardless of whether anything will use its result.
-    if (!feed.has(launch.mint)) {
-      watcher.untrackMint(launch.mint);
-      return;
-    }
-    rescoreHolderConcentrationFromIndex(watcherScoringRpc, launch, balanceIndex)
-      .then((signal) => {
-        if (!signal) return;
-        const existing = feed.get(launch.mint);
-        if (!existing) return;
-        const signals = existing.signals.filter((s) => s.name !== "holder-concentration");
-        signals.push(signal);
-        feed.update(combineSignals(launch.mint, signals));
-        console.log(`rescored holder-concentration for ${launch.mint} from observed trades: ${signal.reasons[0]}`);
-      })
-      .catch((err) => {
-        console.error(
-          `holder-concentration rescore failed for ${launch.mint}:`,
-          err instanceof Error ? err.message : err,
-        );
-      })
-      .finally(() => watcher.untrackMint(launch.mint));
-  }, RESCORE_DELAY_MS);
+  scheduleHolderRescoreFromIndex(launch, {
+    feed,
+    scoringRpc: watcherScoringRpc,
+    balanceIndex,
+    watcher,
+    delayMs: RESCORE_DELAY_MS,
+  });
 }
 
 // How often the backstop poll checks the pump.fun program for new launches

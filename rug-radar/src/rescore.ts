@@ -18,7 +18,7 @@ import type { DiscoveredLaunch } from "./discovery.js";
 import type { BalanceIndex } from "./balanceIndex.js";
 import type { SignalResult } from "./types.js";
 
-type RescoreRpc = Pick<SolanaRpcClient, "getAccountInfo">;
+export type RescoreRpc = Pick<SolanaRpcClient, "getAccountInfo">;
 
 // Returns null when there's nothing worth replacing the existing signal
 // with: no trades observed yet for this mint, or the bonding curve account
