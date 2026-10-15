@@ -1,10 +1,11 @@
 {
-  "updated_at": "2026-10-15T11:28:55Z",
+  "updated_at": "2026-10-15T16:58:13Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 59,
-    "turns": 26
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 60,
+    "started_at": "2026-10-15T16:58:13Z",
+    "turns": 0
   },
   "round": {
     "number": null,
@@ -578,11 +579,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-15T04:36:43Z",
-      "kind": "edit",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
       "t": "2026-10-15T04:36:45Z",
       "kind": "think",
       "text": "Now let's write the test file mirroring poller.test.ts's structure."
@@ -976,11 +972,16 @@
       "t": "2026-10-15T11:28:55Z",
       "kind": "done",
       "text": "Session 59 finished \u00b7 26 steps \u00b7 covered by Claude subscription ($1.57 API value)"
+    },
+    {
+      "t": "2026-10-15T16:58:13Z",
+      "kind": "start",
+      "text": "Session 60 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-10-15T14:24:51Z"
+    "next_run": "2026-10-15T19:58:13Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
