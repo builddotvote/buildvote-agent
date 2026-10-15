@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-15T17:02:51Z",
+  "updated_at": "2026-10-15T17:03:19Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 60,
     "started_at": "2026-10-15T16:58:13Z",
-    "turns": 18
+    "turns": 20
   },
   "round": {
     "number": null,
@@ -579,16 +579,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-15T04:38:19Z",
-      "kind": "run",
-      "text": "rm -f /tmp/watcherOnLaunch.ts.bak && git status --short"
-    },
-    {
-      "t": "2026-10-15T04:38:23Z",
-      "kind": "think",
-      "text": "Now let's do the live-boot check this session's pattern requires, confirming the server still runs correctly against the public RPC with no keys."
-    },
-    {
       "t": "2026-10-15T04:38:24Z",
       "kind": "run",
       "text": "timeout 100 npm start > /tmp/server_out.log 2>&1 & SERVER_PID=$! echo \"started pid $SERVER_PID\" sleep 20 curl -s http://localhost:3000/api/feed | head -c 500 echo sleep 70 echo \"-\u2026"
@@ -977,6 +967,16 @@
       "t": "2026-10-15T17:02:21Z",
       "kind": "run",
       "text": "NODE_OPTIONS=--experimental-websocket node -e ' const ws = new WebSocket(\"wss://solana-rpc.publicnode.com\"); let count = 0; ws.onopen = () => { console.log(\"OPEN\"); ws.send(JSON.s\u2026"
+    },
+    {
+      "t": "2026-10-15T17:02:58Z",
+      "kind": "run",
+      "text": "NODE_OPTIONS=--experimental-websocket node -e ' const ws = new WebSocket(\"wss://solana-rpc.publicnode.com\"); let count = 0; ws.onopen = () => { console.log(\"OPEN\"); ws.send(JSON.s\u2026"
+    },
+    {
+      "t": "2026-10-15T17:03:16Z",
+      "kind": "run",
+      "text": "curl -s -m 15 -X POST https://solana-rpc.publicnode.com -H \"Content-Type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getSignaturesForAddress\",\"params\":[\"6EF8rrecthR5D\u2026"
     }
   ],
   "schedule": {
