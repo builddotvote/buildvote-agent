@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-15T17:04:41Z",
+  "updated_at": "2026-10-15T17:05:41Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 60,
     "started_at": "2026-10-15T16:58:13Z",
-    "turns": 22
+    "turns": 24
   },
   "round": {
     "number": null,
@@ -579,16 +579,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-15T04:40:01Z",
-      "kind": "run",
-      "text": "sleep 15; tail -80 /tmp/server_out.log; echo \"---ps after timeout---\"; ps aux | grep -E \"tsx|server.ts\" | grep -v grep"
-    },
-    {
-      "t": "2026-10-15T04:40:22Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git status --short && rm -f /tmp/server_out.log"
-    },
-    {
       "t": "2026-10-15T04:40:24Z",
       "kind": "think",
       "text": "Clean \u2014 only the intended files changed, no stray processes or scratch files. Now let's update the README to match the established pattern, then write up PROGRESS.md."
@@ -975,6 +965,16 @@
     },
     {
       "t": "2026-10-15T17:04:26Z",
+      "kind": "run",
+      "text": "NODE_OPTIONS=--experimental-websocket node -e ' const ws = new WebSocket(\"wss://solana-rpc.publicnode.com\"); let count = 0; ws.onopen = () => { console.log(\"OPEN\"); ws.send(JSON.s\u2026"
+    },
+    {
+      "t": "2026-10-15T17:04:54Z",
+      "kind": "run",
+      "text": "grep -n \"logsSubscribe\\|mentions\\|commitment\" src/wsDiscovery.ts"
+    },
+    {
+      "t": "2026-10-15T17:05:00Z",
       "kind": "run",
       "text": "NODE_OPTIONS=--experimental-websocket node -e ' const ws = new WebSocket(\"wss://solana-rpc.publicnode.com\"); let count = 0; ws.onopen = () => { console.log(\"OPEN\"); ws.send(JSON.s\u2026"
     }
