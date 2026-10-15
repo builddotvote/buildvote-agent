@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-15T04:35:28Z",
+  "updated_at": "2026-10-15T04:35:55Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 58,
     "started_at": "2026-10-15T04:34:35Z",
-    "turns": 12
+    "turns": 16
   },
   "round": {
     "number": null,
@@ -561,31 +561,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-14T17:15:14Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git status --short"
-    },
-    {
-      "t": "2026-10-14T17:15:16Z",
-      "kind": "think",
-      "text": "Only the intended files changed. Now let's write the PROGRESS.md session entry."
-    },
-    {
-      "t": "2026-10-14T17:15:17Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-14T17:15:42Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-14T17:15:46Z",
-      "kind": "run",
-      "text": "tail -5 /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
-    },
-    {
       "t": "2026-10-14T17:15:49Z",
       "kind": "think",
       "text": "Confirmed this is the true end of file. I'll append via Bash with a heredoc instead."
@@ -959,6 +934,31 @@
       "t": "2026-10-15T04:35:23Z",
       "kind": "run",
       "text": "wc -l src/server.ts src/poller.ts; echo ---; cat src/server.ts"
+    },
+    {
+      "t": "2026-10-15T04:35:31Z",
+      "kind": "read",
+      "text": "rug-radar/src/poller.ts"
+    },
+    {
+      "t": "2026-10-15T04:35:41Z",
+      "kind": "run",
+      "text": "cat src/scorer.ts; echo ===FEED===; cat src/feed.ts"
+    },
+    {
+      "t": "2026-10-15T04:35:44Z",
+      "kind": "run",
+      "text": "ls src/signals src/data; echo ===; cat src/signals/*.ts | head -300"
+    },
+    {
+      "t": "2026-10-15T04:35:46Z",
+      "kind": "think",
+      "text": "These signal modules look solid and well-tested. Let me check the remaining core modules not touched recently \u2014 discovery.ts, rescore.ts, balanceIndex.ts \u2014 for a genuine bug."
+    },
+    {
+      "t": "2026-10-15T04:35:46Z",
+      "kind": "run",
+      "text": "cat src/rescore.ts; echo ===BALANCEINDEX===; cat src/balanceIndex.ts"
     }
   ],
   "schedule": {
