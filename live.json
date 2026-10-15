@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-15T11:26:12Z",
+  "updated_at": "2026-10-15T11:28:23Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 59,
     "started_at": "2026-10-15T11:24:51Z",
-    "turns": 20
+    "turns": 22
   },
   "round": {
     "number": null,
@@ -570,16 +570,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-15T04:35:44Z",
-      "kind": "run",
-      "text": "ls src/signals src/data; echo ===; cat src/signals/*.ts | head -300"
-    },
-    {
-      "t": "2026-10-15T04:35:46Z",
-      "kind": "think",
-      "text": "These signal modules look solid and well-tested. Let me check the remaining core modules not touched recently \u2014 discovery.ts, rescore.ts, balanceIndex.ts \u2014 for a genuine bug."
-    },
-    {
       "t": "2026-10-15T04:35:46Z",
       "kind": "run",
       "text": "cat src/rescore.ts; echo ===BALANCEINDEX===; cat src/balanceIndex.ts"
@@ -968,6 +958,16 @@
       "t": "2026-10-15T11:26:08Z",
       "kind": "run",
       "text": "grep -n \"interface DiscoveredLaunch\" -A 10 src/discovery.ts && echo --- && grep -n \"rpcUrl\\|discoveryRpcUrl\\|wsUrl\" src/config.ts"
+    },
+    {
+      "t": "2026-10-15T11:26:21Z",
+      "kind": "edit",
+      "text": "rug-radar/tmp-probe-rescore-delay.ts"
+    },
+    {
+      "t": "2026-10-15T11:26:23Z",
+      "kind": "run",
+      "text": "NODE_OPTIONS=--experimental-websocket timeout 170 npx tsx tmp-probe-rescore-delay.ts 2>&1 | tail -60"
     }
   ],
   "schedule": {
