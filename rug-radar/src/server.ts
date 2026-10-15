@@ -6,11 +6,11 @@ import { loadConfig } from "./config.js";
 import { SolanaRpcClient, RequestPacer } from "./rpc.js";
 import { LiveFeed } from "./feed.js";
 import { pollOnce, type PollState } from "./poller.js";
-import { scoreLaunch } from "./pipeline.js";
 import { LaunchWatcher, deriveWsUrl } from "./wsDiscovery.js";
 import { DeployerIndex } from "./deployerIndex.js";
 import { ScoringGate } from "./scoringGate.js";
 import { ScoringInFlight } from "./scoringInFlight.js";
+import { handleDiscoveredLaunch } from "./watcherOnLaunch.js";
 import { BalanceIndex } from "./balanceIndex.js";
 import { rescoreHolderConcentrationFromIndex } from "./rescore.js";
 import { combineSignals } from "./scorer.js";
@@ -114,35 +114,24 @@ const pollScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, {
 // launches created while the socket is down (startup, or a reconnect gap).
 const wsUrl = config.wsUrl ?? deriveWsUrl(config.discoveryRpcUrl);
 const watcher = new LaunchWatcher(wsUrl, watcherDiscoveryRpc, {
-  onLaunch: (launch) => {
-    if (feed.has(launch.mint)) return;
-    if (!scoringInFlight.tryAcquire(launch.mint)) {
-      console.error(`skipping launch ${launch.mint}: already being scored by another discovery path`);
-      return;
-    }
-    if (!scoringGate.tryAcquire()) {
-      console.error(`skipping launch ${launch.mint}: too many pending scores`);
-      scoringInFlight.release(launch.mint);
-      return;
-    }
-    scoreLaunch(watcherScoringRpc, launch, deployerIndex)
-      .then((score) => {
-        feed.add(score);
-        // feed.add() drops a zero-signal score (see feed.ts) instead of
-        // keeping it — don't schedule a rescore for a launch that was never
-        // kept, or rescoreHolderConcentrationFromIndex's getAccountInfo call
-        // 45s from now would spend the scoring RPC's scarce budget on a
-        // launch that will never be shown.
-        if (feed.has(launch.mint)) scheduleHolderRescore(launch);
-      })
-      .catch((err) => {
-        console.error(`failed to score launch ${launch.mint}:`, err instanceof Error ? err.message : err);
-      })
-      .finally(() => {
-        scoringGate.release();
-        scoringInFlight.release(launch.mint);
-      });
-  },
+  // handleDiscoveredLaunch (watcherOnLaunch.ts) is the exact same
+  // dedup/gate/score/rescore wiring pollOnce uses for the backstop poller —
+  // pulled out so it's unit-testable without a real socket, the same reason
+  // pollOnce is its own function rather than inline in setInterval below.
+  onLaunch: (launch) =>
+    handleDiscoveredLaunch(launch, {
+      feed,
+      scoringRpc: watcherScoringRpc,
+      deployerIndex,
+      scoringGate,
+      scoringInFlight,
+      // feed.add() drops a zero-signal score (see feed.ts) instead of
+      // keeping it — handleDiscoveredLaunch only calls onScored for a
+      // launch actually kept, so a rescore is never scheduled for one that
+      // would spend rescoreHolderConcentrationFromIndex's getAccountInfo
+      // call 45s from now on a launch that will never be shown.
+      onScored: scheduleHolderRescore,
+    }),
   onTrade: (trade) => balanceIndex.recordTrade(trade),
   onError: (err) => {
     console.error("launch watcher error:", err instanceof Error ? err.message : err);

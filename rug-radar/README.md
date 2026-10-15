@@ -408,6 +408,23 @@ launch <mint>: already being scored by another discovery path"`. Purely
 additive logging, no behavior change, no new tests needed (the skip path
 itself is already covered by `scoringInFlight.test.ts`/`poller.test.ts`).
 
+Until session 58, the websocket watcher's `onLaunch` handler (the dedup/
+gate/in-flight/score/rescore wiring above) lived as an inline closure in
+`server.ts`, with no offline test of its own — `poller.ts`'s equivalent
+logic was already its own function (`pollOnce`) purely so it could be unit
+tested, but the watcher side never got the same treatment. Session 58
+pulled it out into `src/watcherOnLaunch.ts`'s `handleDiscoveredLaunch`,
+taking the same dependencies as `pollOnce` (`feed`, `scoringRpc`,
+`deployerIndex`, `scoringGate`, `scoringInFlight`, `onScored`) as an options
+object instead of positional args, and wired `server.ts`'s watcher
+`onLaunch` to call it. Behavior is unchanged — this is a pure extraction.
+7 new tests in `watcherOnLaunch.test.ts` cover the same cases
+`poller.test.ts` covers for the poller side (dedup skip, gate-full skip,
+in-flight skip, release-after-success, release-after-zero-signal-score,
+`onScored` firing only when the launch is actually kept); verified as real
+regression tests by temporarily removing the `feed.has()` dedup check and
+confirming the matching test fails, same discipline as prior sessions.
+
 ## Live feed
 
 Two discovery paths feed the same pipeline:

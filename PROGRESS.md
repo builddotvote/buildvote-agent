@@ -3618,3 +3618,96 @@ file. Verified against the actual code in Session 46 below.)*
 - `server.ts`'s watcher/poller wiring remains without an automated test
   (unchanged limitation, noted since the original wiring session).
 - All five TASK.md steps remain functionally complete.
+
+## Session 58 — 2026-10-15
+
+### Done
+- Re-verified the repo first (`npm install`, 181/181 tests, clean
+  typecheck/build, no leftover scratch files, no stray processes) — matched
+  session 57's write-up exactly.
+- Read `server.ts`/`poller.ts` again looking for another RPC-waste bug in
+  the class sessions 50-56 kept finding; found none this time. Picked up
+  instead a different, long-standing "Next" item repeated unchanged since
+  the original watcher/poller wiring session: `server.ts`'s watcher
+  `onLaunch` handler (the dedup → in-flight-claim → gate → score → rescore
+  wiring) was still an inline closure with no offline test of its own,
+  while `poller.ts`'s equivalent logic was deliberately pulled into its own
+  function (`pollOnce`) specifically so it could be unit tested without a
+  real timer — the watcher side never got the same treatment, so half of
+  this wiring was untestable and the other half (`pollOnce`) already had 9
+  tests in `poller.test.ts`.
+- Fixed (pure extraction, no behavior change):
+  - New `src/watcherOnLaunch.ts` — `handleDiscoveredLaunch(launch, deps)`,
+    with the exact same dedup/`scoringInFlight`/`scoringGate`/`scoreLaunch`/
+    `onScored` logic the old inline closure had, taking its dependencies
+    (`feed`, `scoringRpc`, `deployerIndex`, `scoringGate`, `scoringInFlight`,
+    `onScored`) as one options object.
+  - `src/server.ts` — removed the inline `onLaunch` closure and the now-
+    unused `scoreLaunch` import; the watcher's `onLaunch` now calls
+    `handleDiscoveredLaunch(launch, { feed, scoringRpc: watcherScoringRpc,
+    deployerIndex, scoringGate, scoringInFlight, onScored:
+    scheduleHolderRescore })`.
+  - New `src/watcherOnLaunch.test.ts`, 7 tests mirroring the cases
+    `poller.test.ts` already covers for the poller side: scores a new
+    launch and fires `onScored`; an already-fed mint is skipped with zero
+    scoring calls; a full `ScoringGate` drops the launch; a mint already
+    claimed by `ScoringInFlight` (simulating the poller mid-score) is
+    skipped with zero scoring calls and the gate slot untouched; the gate
+    slot and in-flight claim are both released after a successful score; a
+    launch where every signal fails (all-429, same shape `feed.ts`'s own
+    test uses) still releases the gate/in-flight claim and never fires
+    `onScored`. Noted in the test file: `scoreLaunch` itself never rejects
+    (each signal's fetch is caught internally by `pipeline.ts`'s
+    `safeSignal`), so the all-429 case — not a synthetic throw — is what
+    actually exercises the cleanup path, same realistic shape `poller.ts`'s
+    own zero-signal test already uses.
+  - Verified the tests are real regression tests, not just plausible-
+    looking (same discipline as sessions 50-51/55-56): temporarily removed
+    the `feed.has(launch.mint)` dedup check from `handleDiscoveredLaunch`,
+    confirmed the "already in the feed" test failed (1 scoring call instead
+    of 0), restored the check, confirmed all 187 tests pass again.
+  - Updated `rug-radar/README.md`'s "Score" section with a paragraph after
+    session 57's note describing the gap and this session's extraction.
+- Live-checked synchronously in the foreground once (~100s, public
+  mainnet-beta, no keys, no `.env`, same pattern as every session since
+  26): booted cleanly, `/api/feed` responded `{"launches":[]}` early in the
+  run, no crash, no error lines in the log at all. Traffic was quiet this
+  run (no launches logged either discovered or skipped), so this didn't
+  specifically exercise `handleDiscoveredLaunch`'s dedup/gate/in-flight
+  branches live — the offline regression tests (confirmed to fail without
+  the extraction's dedup check intact) are the primary evidence, same
+  evidentiary limitation as every narrow session since 50.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 187/187 passing (7 new, all in `watcherOnLaunch.test.ts`), all
+  offline, ~3.3s.
+- Live-booted the real server synchronously once (public mainnet-beta, no
+  keys, no `.env`, ~100s): boots cleanly, `/api/feed` responded, no crash,
+  no regression from the extraction.
+- `git status`/`ps aux` after cleanup show only the intended
+  `watcherOnLaunch.ts`/`watcherOnLaunch.test.ts`/`server.ts`/README/
+  PROGRESS changes — no stray files, no leftover server process.
+
+### Next
+- `server.ts`'s watcher/poller wiring now has automated test coverage on
+  both sides (`watcherOnLaunch.test.ts` for the watcher, `poller.test.ts`
+  for the poller) — the only remaining untested part of `server.ts` is the
+  top-level module wiring itself (constructing the real RPC clients,
+  `scheduleHolderRescore`'s `setTimeout`/`trackMint` glue, and the HTTP
+  server), which isn't easily unit-testable without a larger refactor; not
+  attempted this session since the risky logic it wraps is now covered.
+- The `scoringInFlight` cross-path race still hasn't been observed firing
+  live (unchanged since session 57 — the log line exists, just never fired
+  during a quiet live-check window).
+- The scoring endpoint's rate-limit ceiling is unchanged — three independent
+  avenues around it are exhausted (sessions 27-28, 48, 49); what's untried is
+  accepting the balance-index rescore as the permanent mitigation and
+  focusing elsewhere, or re-checking from a different deployment
+  network/region if one becomes available.
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data (3 trading mints) — unchanged this
+  session.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- All five TASK.md steps remain functionally complete.
