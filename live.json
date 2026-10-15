@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-15T21:25:53Z",
+  "updated_at": "2026-10-15T21:26:22Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 61,
     "started_at": "2026-10-15T21:20:24Z",
-    "turns": 42
+    "turns": 43
   },
   "round": {
     "number": null,
@@ -588,16 +588,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-15T17:09:19Z",
-      "kind": "edit",
-      "text": "rug-radar/src/wsDiscovery.test.ts"
-    },
-    {
-      "t": "2026-10-15T17:09:21Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -60"
-    },
-    {
       "t": "2026-10-15T17:09:24Z",
       "kind": "think",
       "text": "Typecheck is clean. Now let's run the full test suite."
@@ -986,6 +976,16 @@
       "t": "2026-10-15T21:25:50Z",
       "kind": "run",
       "text": "curl -s --max-time 5 http://localhost:8787/api/feed; echo; sleep 20; cat /tmp/live-check.log | tail -40"
+    },
+    {
+      "t": "2026-10-15T21:26:13Z",
+      "kind": "think",
+      "text": "`/api/feed` responds cleanly. Let's wait for the full 60s window to elapse and confirm clean shutdown with no crashes."
+    },
+    {
+      "t": "2026-10-15T21:26:22Z",
+      "kind": "tool",
+      "text": "ScheduleWakeup"
     }
   ],
   "schedule": {
