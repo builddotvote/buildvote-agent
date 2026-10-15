@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-15T21:20:24Z",
+  "updated_at": "2026-10-15T21:20:51Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 61,
     "started_at": "2026-10-15T21:20:24Z",
-    "turns": 0
+    "turns": 6
   },
   "round": {
     "number": null,
@@ -588,36 +588,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-15T11:28:55Z",
-      "kind": "done",
-      "text": "Session 59 finished \u00b7 26 steps \u00b7 covered by Claude subscription ($1.57 API value)"
-    },
-    {
-      "t": "2026-10-15T16:58:13Z",
-      "kind": "start",
-      "text": "Session 60 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-15T16:58:18Z",
-      "kind": "run",
-      "text": "cat TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat PROGRESS.md 2>/dev/null"
-    },
-    {
-      "t": "2026-10-15T16:58:21Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-15T16:58:21Z",
-      "kind": "read",
-      "text": "TASK.md"
-    },
-    {
-      "t": "2026-10-15T16:58:24Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
       "t": "2026-10-15T16:58:27Z",
       "kind": "run",
       "text": "wc -l /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
@@ -986,6 +956,36 @@
       "t": "2026-10-15T21:20:24Z",
       "kind": "start",
       "text": "Session 61 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-15T21:20:29Z",
+      "kind": "run",
+      "text": "cat PROGRESS.md 2>/dev/null; echo \"---TASK---\"; cat TASK.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-15T21:20:33Z",
+      "kind": "run",
+      "text": "echo \"=== TASK.md ===\"; cat TASK.md; echo; echo \"=== PROGRESS.md tail (last 150 lines) ===\"; tail -n 200 PROGRESS.md"
+    },
+    {
+      "t": "2026-10-15T21:20:35Z",
+      "kind": "run",
+      "text": "grep -n \"^## Session\" PROGRESS.md | tail -5"
+    },
+    {
+      "t": "2026-10-15T21:20:39Z",
+      "kind": "run",
+      "text": "cd rug-radar 2>/dev/null; git log --oneline -15; echo \"---\"; git show --stat HEAD | head -30"
+    },
+    {
+      "t": "2026-10-15T21:20:43Z",
+      "kind": "run",
+      "text": "cd rug-radar && npm test 2>&1 | tail -20"
+    },
+    {
+      "t": "2026-10-15T21:20:45Z",
+      "kind": "run",
+      "text": "pwd; ls -la"
     }
   ],
   "schedule": {
