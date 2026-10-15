@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-15T17:09:19Z",
+  "updated_at": "2026-10-15T17:09:47Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 60,
     "started_at": "2026-10-15T16:58:13Z",
-    "turns": 44
+    "turns": 51
   },
   "round": {
     "number": null,
@@ -579,56 +579,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-15T11:25:14Z",
-      "kind": "run",
-      "text": "echo \"PWD=$PWD\"; ls"
-    },
-    {
-      "t": "2026-10-15T11:25:18Z",
-      "kind": "run",
-      "text": "npm install --silent 2>&1 | tail -20 && npm run typecheck 2>&1 | tail -30"
-    },
-    {
-      "t": "2026-10-15T11:25:22Z",
-      "kind": "run",
-      "text": "npm test 2>&1 | tail -20 && echo \"---STATUS---\" && git status --porcelain=v1 -uall . 2>&1 | head -30 && echo \"---PS---\" && ps aux | grep -E \"node|tsx\" | grep -v grep"
-    },
-    {
-      "t": "2026-10-15T11:25:26Z",
-      "kind": "think",
-      "text": "Repo verified clean: 187/187 tests pass, typecheck clean, no stray files or processes. Now let me look for the next concrete piece of work from the backlog."
-    },
-    {
-      "t": "2026-10-15T11:25:27Z",
-      "kind": "run",
-      "text": "ls src | sort"
-    },
-    {
-      "t": "2026-10-15T11:25:32Z",
-      "kind": "read",
-      "text": "rug-radar/src/rescore.ts"
-    },
-    {
-      "t": "2026-10-15T11:25:35Z",
-      "kind": "run",
-      "text": "grep -n \"RESCORE_DELAY_MS\\|scheduleHolderRescore\\|trackMint\" src/server.ts | head -40"
-    },
-    {
-      "t": "2026-10-15T11:25:38Z",
-      "kind": "read",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-15T11:25:40Z",
-      "kind": "run",
-      "text": "grep -n \"^#\\|^##\" README.md"
-    },
-    {
-      "t": "2026-10-15T11:25:42Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
       "t": "2026-10-15T11:25:47Z",
       "kind": "run",
       "text": "grep -n \"Session 4[5-9]\\|Session 5[0-9]\" README.md | head -60"
@@ -977,6 +927,56 @@
       "t": "2026-10-15T17:09:19Z",
       "kind": "edit",
       "text": "rug-radar/src/wsDiscovery.test.ts"
+    },
+    {
+      "t": "2026-10-15T17:09:21Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -60"
+    },
+    {
+      "t": "2026-10-15T17:09:24Z",
+      "kind": "think",
+      "text": "Typecheck is clean. Now let's run the full test suite."
+    },
+    {
+      "t": "2026-10-15T17:09:24Z",
+      "kind": "run",
+      "text": "npm test 2>&1 | tail -60"
+    },
+    {
+      "t": "2026-10-15T17:09:32Z",
+      "kind": "think",
+      "text": "191/191 passing. Now let's verify these are real regression tests by confirming they fail without the fix, per the project's established discipline."
+    },
+    {
+      "t": "2026-10-15T17:09:32Z",
+      "kind": "run",
+      "text": "git stash && git log --oneline -1"
+    },
+    {
+      "t": "2026-10-15T17:09:37Z",
+      "kind": "run",
+      "text": "git stash pop"
+    },
+    {
+      "t": "2026-10-15T17:09:40Z",
+      "kind": "think",
+      "text": "Good, both files restored. Now let's verify the new tests actually fail without the fix by temporarily reverting just the production logic (keep the options/fields so it still com\u2026"
+    },
+    {
+      "t": "2026-10-15T17:09:41Z",
+      "kind": "run",
+      "text": "cp src/wsDiscovery.ts /tmp/wsDiscovery.ts.bak"
+    },
+    {
+      "t": "2026-10-15T17:09:44Z",
+      "kind": "edit",
+      "text": "rug-radar/src/wsDiscovery.ts"
+    },
+    {
+      "t": "2026-10-15T17:09:47Z",
+      "kind": "run",
+      "text": "python3 -c \" import re with open('src/wsDiscovery.ts') as f:     content = f.read() content = content.replace('if (idleFor >= timeout) {', 'if (false && idleFor >= timeout) {') wi\u2026"
     }
   ],
   "schedule": {
