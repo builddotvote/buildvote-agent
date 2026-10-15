@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-15T17:01:39Z",
+  "updated_at": "2026-10-15T17:02:13Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 60,
     "started_at": "2026-10-15T16:58:13Z",
-    "turns": 13
+    "turns": 17
   },
   "round": {
     "number": null,
@@ -579,31 +579,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-15T04:38:04Z",
-      "kind": "run",
-      "text": "node --test --test-name-pattern='already in the feed' dist/watcherOnLaunch.test.js 2>&1 | tail -20 || (npm run build >/dev/null 2>&1 && node --test --test-name-pattern='already in\u2026"
-    },
-    {
-      "t": "2026-10-15T04:38:07Z",
-      "kind": "run",
-      "text": "cat package.json | grep -A3 '\"test\"'"
-    },
-    {
-      "t": "2026-10-15T04:38:10Z",
-      "kind": "run",
-      "text": "node --import tsx --test --test-reporter spec --test-name-pattern='already in the feed' src/watcherOnLaunch.test.ts 2>&1 | tail -30"
-    },
-    {
-      "t": "2026-10-15T04:38:12Z",
-      "kind": "think",
-      "text": "Confirmed: the test fails without the dedup check. Restoring the fix now."
-    },
-    {
-      "t": "2026-10-15T04:38:13Z",
-      "kind": "run",
-      "text": "cp /tmp/watcherOnLaunch.ts.bak src/watcherOnLaunch.ts && npm test 2>&1 | tail -10"
-    },
-    {
       "t": "2026-10-15T04:38:19Z",
       "kind": "think",
       "text": "Good, restore confirmed and all 187 tests pass again. Clean up the backup file."
@@ -977,6 +952,31 @@
       "t": "2026-10-15T16:59:08Z",
       "kind": "run",
       "text": "NODE_OPTIONS=--experimental-websocket timeout 170 npx tsx tmp-probe-rescore-delay.ts 2>&1 | tail -80"
+    },
+    {
+      "t": "2026-10-15T17:01:43Z",
+      "kind": "think",
+      "text": "Zero launches tracked in 150s \u2014 unlike prior sessions that found \"many launches\" in similar windows. Let me check if the watcher actually connected."
+    },
+    {
+      "t": "2026-10-15T17:01:44Z",
+      "kind": "run",
+      "text": "grep -n \"discoveryRpcUrl\\|wsUrl\\|SOLANA_RPC_URL\\|SOLANA_WS_URL\" src/config.ts"
+    },
+    {
+      "t": "2026-10-15T17:01:46Z",
+      "kind": "read",
+      "text": "rug-radar/src/config.ts"
+    },
+    {
+      "t": "2026-10-15T17:01:51Z",
+      "kind": "run",
+      "text": "curl -s -m 10 -X POST https://solana-rpc.publicnode.com -H \"Content-Type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getHealth\"}'; echo; echo \"exit: $?\""
+    },
+    {
+      "t": "2026-10-15T17:01:58Z",
+      "kind": "run",
+      "text": "NODE_OPTIONS=--experimental-websocket node -e ' const ws = new WebSocket(\"wss://solana-rpc.publicnode.com\"); ws.onopen = () => { console.log(\"OPEN\"); ws.send(JSON.stringify({jsonr\u2026"
     }
   ],
   "schedule": {
