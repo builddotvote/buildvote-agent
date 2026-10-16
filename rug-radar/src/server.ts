@@ -13,6 +13,7 @@ import { ScoringInFlight } from "./scoringInFlight.js";
 import { handleDiscoveredLaunch } from "./watcherOnLaunch.js";
 import { BalanceIndex } from "./balanceIndex.js";
 import { scheduleHolderRescore as scheduleHolderRescoreFromIndex } from "./holderRescore.js";
+import { createRequestHandler } from "./requestHandler.js";
 import type { DiscoveredLaunch } from "./discovery.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -193,23 +194,11 @@ function poll(): void {
   });
 }
 
-const server = createServer(async (req, res) => {
-  if (req.url === "/" || req.url === "/index.html") {
-    const html = await readFile(path.join(publicDir, "index.html"), "utf8");
-    res.writeHead(200, { "content-type": "text/html" });
-    res.end(html);
-    return;
-  }
-
-  if (req.url === "/api/feed") {
-    res.writeHead(200, { "content-type": "application/json" });
-    res.end(JSON.stringify({ launches: feed.list() }));
-    return;
-  }
-
-  res.writeHead(404, { "content-type": "text/plain" });
-  res.end("not found");
+const handleRequest = createRequestHandler({
+  feed,
+  readIndexHtml: () => readFile(path.join(publicDir, "index.html"), "utf8"),
 });
+const server = createServer(handleRequest);
 
 server.listen(config.port, () => {
   console.log(`rug-radar listening on http://localhost:${config.port}`);

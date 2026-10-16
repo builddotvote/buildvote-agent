@@ -3808,6 +3808,89 @@ file. Verified against the actual code in Session 46 below.)*
   priority, unchanged this session.
 - All five TASK.md steps remain functionally complete.
 
+## Session 62 — 2026-10-16
+
+### Done
+- Re-verified the repo first (`npm install`, 197/197 tests passing, clean
+  typecheck/build, no leftover scratch files, no stray processes
+  beforehand) — matched session 61's write-up.
+- Sessions 59-61 kept flagging `server.ts`'s module-level wiring as the one
+  untested part, and kept correctly leaving it alone as glue code (RPC
+  client construction, `watcher.start()`/`poll()`/`setInterval`). Re-reading
+  `server.ts` this session split that claim in two: the RPC/watcher/poller
+  wiring really is glue with no branches of its own (already covered
+  indirectly via `handleDiscoveredLaunch`/`pollOnce`/`scheduleHolderRescore`
+  tests) — but the inline `createServer(async (req, res) => {...})` request
+  router (three branches: `/`/`/index.html` → index page, `/api/feed` →
+  JSON, else → 404) is real routing logic with its own branches, and had
+  *no* test coverage at all. That's a genuine, narrow gap distinct from the
+  wiring sessions 59-61 were right to leave alone.
+- Extracted it into `src/requestHandler.ts`: `createRequestHandler({ feed,
+  readIndexHtml })` returns the same `(req, res) => Promise<void>` handler,
+  with `readIndexHtml` injected (server.ts passes a real `fs.readFile` bound
+  to `publicDir`; tests pass a stub) so the routing logic is testable
+  without a real file on disk or a real listening socket — same pattern as
+  `handleDiscoveredLaunch` (watcherOnLaunch.ts) and `pollOnce` (poller.ts).
+  `server.ts` now just does `createServer(createRequestHandler({ feed,
+  readIndexHtml: ... }))`.
+- Added `src/requestHandler.test.ts` (5 tests): `/` and `/index.html` both
+  serve the stubbed index HTML with a 200 and `text/html`; `/api/feed`
+  returns the feed's current contents as JSON (checked both non-empty and
+  empty); an unknown path gets a 404 with `text/plain` "not found". Tests
+  use a minimal fake `ServerResponse` that just records
+  `writeHead`/`end` calls instead of a real socket.
+- Verified the tests are real regression tests, not just plausible-looking
+  (same discipline as sessions 50-51/55-56/58-59): temporarily changed the
+  `/api/feed` branch to always respond `{ launches: [] }` instead of
+  `feed.list()`; confirmed the "returns the feed as JSON" test failed with
+  a clear diff (expected the seeded launch, got `[]`); reverted; confirmed
+  all tests pass again.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 202/202 passing (5 new, all in `requestHandler.test.ts`), all
+  offline, ~3.8s.
+- Live-booted the real server once, synchronously within this turn (not
+  backgrounded-and-scheduled, per session 61's reminder): public
+  mainnet-beta, no keys, no `.env`. Hit all three routes with `curl` against
+  the real running server — `GET /` → 200 (index HTML), `GET /api/feed` →
+  200 (`{"launches":[]}`), `GET /does-not-exist` → 404 — confirming the
+  extracted handler behaves identically to the inline version it replaced.
+  No crash. Traffic was live this time (several launches discovered, scored,
+  or skipped by the gate), unrelated to this session's change.
+- Killed the server by pattern (`pkill -f "tsx src/server.ts"`) rather than
+  by the wrapper PID, since starting it via `nohup npx tsx ... &` leaves the
+  same kind of orphaned `tsx`/`node` child session 60 ran into with
+  `timeout npm start &` — the direct child (`npx`/`sh`) exits on `kill`, but
+  the real `tsx`/`node` process underneath survives. `ps aux` confirmed
+  clean afterward.
+- `git status` after cleanup shows only the intended
+  `requestHandler.ts`/`requestHandler.test.ts`/`server.ts`/PROGRESS.md
+  changes — no stray files, no leftover server process.
+
+### Next
+- `server.ts` no longer has any untested logic of its own — the remaining
+  lines are pure construction/wiring (RPC clients, `watcher`, `poll`,
+  `server.listen`), which has no branches to test beyond what
+  `handleDiscoveredLaunch`/`pollOnce`/`scheduleHolderRescore`/
+  `requestHandler` already cover individually.
+- The `scoringInFlight` cross-path race still hasn't been observed live
+  (unchanged since session 57) — this session's live check had real launch
+  traffic (first non-quiet window since session 58) but didn't specifically
+  confirm this race, since confirming it needs both discovery paths racing
+  the *same* mint, not just general traffic.
+- The scoring endpoint's rate-limit ceiling is unchanged — independent
+  avenues around it are exhausted (sessions 27-28, 48, 49); this session's
+  live window again saw `getTokenLargestAccounts` 429 and the gate (cap 3)
+  saturate under a burst of discovered launches, consistent with prior
+  sessions.
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data — this session's live check was too
+  short (a few seconds, just to hit the three routes) to add to it.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- All five TASK.md steps remain functionally complete.
+
 ## Session 60 — 2026-10-16
 
 ### Done
