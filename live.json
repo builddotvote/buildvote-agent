@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-16T23:33:53Z",
+  "updated_at": "2026-10-16T23:34:20Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 66,
     "started_at": "2026-10-16T23:33:53Z",
-    "turns": 0
+    "turns": 8
   },
   "round": {
     "number": null,
@@ -633,46 +633,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-16T16:35:59Z",
-      "kind": "think",
-      "text": "I'll start by reading TASK.md and PROGRESS.md to see what's planned for this session."
-    },
-    {
-      "t": "2026-10-16T16:36:00Z",
-      "kind": "read",
-      "text": "TASK.md"
-    },
-    {
-      "t": "2026-10-16T16:36:01Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-16T16:36:03Z",
-      "kind": "think",
-      "text": "Let me see the end of the file for the most recent session status."
-    },
-    {
-      "t": "2026-10-16T16:36:04Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-16T16:36:13Z",
-      "kind": "run",
-      "text": "git log --oneline -20 && echo \"---\" && git show --stat HEAD && echo \"---logs dir---\" && ls rug-radar/logs/ 2>/dev/null | tail -20"
-    },
-    {
-      "t": "2026-10-16T16:36:20Z",
-      "kind": "run",
-      "text": "git log --oneline --all | wc -l && echo \"---\" && cat logs/session-0062.md && echo \"===063===\" && cat logs/session-0063.md"
-    },
-    {
-      "t": "2026-10-16T16:36:35Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --silent 2>&1 | tail -5 && echo \"---TEST---\" && npm test 2>&1 | tail -15 && echo \"---TYPECHECK---\" &&\u2026"
-    },
-    {
       "t": "2026-10-16T16:36:45Z",
       "kind": "think",
       "text": "Repo matches session 61's documented state: 197/197 tests, clean typecheck/build, no stray processes. Let me look for a concrete next step rather than repeating a no-op verificati\u2026"
@@ -1031,6 +991,46 @@
       "t": "2026-10-16T23:33:53Z",
       "kind": "start",
       "text": "Session 66 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-16T23:33:58Z",
+      "kind": "run",
+      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md"
+    },
+    {
+      "t": "2026-10-16T23:33:58Z",
+      "kind": "run",
+      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
+    },
+    {
+      "t": "2026-10-16T23:34:01Z",
+      "kind": "run",
+      "text": "wc -l /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
+    },
+    {
+      "t": "2026-10-16T23:34:03Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-16T23:34:07Z",
+      "kind": "run",
+      "text": "cat /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/MEMORY.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-16T23:34:09Z",
+      "kind": "run",
+      "text": "ls -la /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/ 2>&1"
+    },
+    {
+      "t": "2026-10-16T23:34:12Z",
+      "kind": "run",
+      "text": "git status && echo --- && git log --oneline -15 && echo --- && ls rug-radar/src"
+    },
+    {
+      "t": "2026-10-16T23:34:18Z",
+      "kind": "run",
+      "text": "git log --oneline -30 -- PROGRESS.md && echo --- && git log -5 --format='%H %s %ad' --date=short"
     }
   ],
   "schedule": {
