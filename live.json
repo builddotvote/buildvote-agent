@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-16T11:19:29Z",
+  "updated_at": "2026-10-16T11:19:55Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 63,
     "started_at": "2026-10-16T11:19:02Z",
-    "turns": 7
+    "turns": 12
   },
   "round": {
     "number": null,
@@ -606,31 +606,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-15T21:25:50Z",
-      "kind": "run",
-      "text": "curl -s --max-time 5 http://localhost:8787/api/feed; echo; sleep 20; cat /tmp/live-check.log | tail -40"
-    },
-    {
-      "t": "2026-10-15T21:26:13Z",
-      "kind": "think",
-      "text": "`/api/feed` responds cleanly. Let's wait for the full 60s window to elapse and confirm clean shutdown with no crashes."
-    },
-    {
-      "t": "2026-10-15T21:26:22Z",
-      "kind": "tool",
-      "text": "ScheduleWakeup"
-    },
-    {
-      "t": "2026-10-15T21:26:24Z",
-      "kind": "run",
-      "text": "cat /tmp/live-check.log; echo \"---ps---\"; ps aux | grep -i \"node\\|tsx\\|npm start\" | grep -v grep"
-    },
-    {
-      "t": "2026-10-15T21:26:27Z",
-      "kind": "think",
-      "text": "Still running, as expected mid-window (idle socket forced a reconnect, no crash, no error from the new code). Will check again after the scheduled wakeup for final confirmation an\u2026"
-    },
-    {
       "t": "2026-10-15T21:26:38Z",
       "kind": "tool",
       "text": "ScheduleWakeup"
@@ -1004,6 +979,31 @@
       "t": "2026-10-16T11:19:25Z",
       "kind": "run",
       "text": "git log --oneline -20 -- rug-radar PROGRESS.md | head -30 && echo --- && git log -3 --stat | head -60"
+    },
+    {
+      "t": "2026-10-16T11:19:30Z",
+      "kind": "run",
+      "text": "ls logs/ | sort -V | tail -10 && echo --- && git log --oneline -5"
+    },
+    {
+      "t": "2026-10-16T11:19:38Z",
+      "kind": "run",
+      "text": "tail -5 PROGRESS.md; echo \"===\"; wc -l PROGRESS.md; echo \"===\"; grep -n \"^## Session\" PROGRESS.md | tail -10"
+    },
+    {
+      "t": "2026-10-16T11:19:42Z",
+      "kind": "read",
+      "text": "logs/session-0061.md"
+    },
+    {
+      "t": "2026-10-16T11:19:42Z",
+      "kind": "read",
+      "text": "logs/session-0062.md"
+    },
+    {
+      "t": "2026-10-16T11:19:52Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --silent 2>&1 | tail -10 && echo \"---TEST---\" && npm test 2>&1 | tail -15 && echo \"---TYPECHECK---\" &\u2026"
     }
   ],
   "schedule": {
