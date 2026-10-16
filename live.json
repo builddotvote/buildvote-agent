@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-16T21:05:18Z",
+  "updated_at": "2026-10-16T21:05:46Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 65,
     "started_at": "2026-10-16T21:04:51Z",
-    "turns": 7
+    "turns": 13
   },
   "round": {
     "number": null,
@@ -624,36 +624,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-16T11:20:18Z",
-      "kind": "run",
-      "text": "sed -n '/Known limitations/,$p' README.md | head -150"
-    },
-    {
-      "t": "2026-10-16T11:20:21Z",
-      "kind": "run",
-      "text": "sed -n '/## Known limitations/,$p' README.md | head -250"
-    },
-    {
-      "t": "2026-10-16T11:20:33Z",
-      "kind": "read",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-16T11:20:54Z",
-      "kind": "run",
-      "text": "cat package.json"
-    },
-    {
-      "t": "2026-10-16T11:21:01Z",
-      "kind": "run",
-      "text": "NODE_OPTIONS=--experimental-websocket node --import tsx src/server.ts > /tmp/live-check-s63.log 2>&1 & echo \"PID $!\" > /tmp/live-check-s63.pid; cat /tmp/live-check-s63.pid"
-    },
-    {
-      "t": "2026-10-16T11:21:03Z",
-      "kind": "think",
-      "text": "Let it run for ~140s while I monitor, then I'll check the feed and kill it cleanly."
-    },
-    {
       "t": "2026-10-16T11:21:04Z",
       "kind": "run",
       "text": "sleep 30; curl -s --max-time 5 http://localhost:8787/api/feed; echo; echo \"---log tail---\"; tail -30 /tmp/live-check-s63.log"
@@ -1022,6 +992,36 @@
       "t": "2026-10-16T21:05:16Z",
       "kind": "run",
       "text": "git log --oneline -30; echo \"---\"; git log --oneline | wc -l"
+    },
+    {
+      "t": "2026-10-16T21:05:20Z",
+      "kind": "run",
+      "text": "ls -la; echo \"---rug-radar---\"; ls -la rug-radar/ 2>/dev/null; echo \"---logs---\"; ls logs/ 2>/dev/null | tail -20"
+    },
+    {
+      "t": "2026-10-16T21:05:25Z",
+      "kind": "run",
+      "text": "wc -l logs/session-006{2,3,4}.md"
+    },
+    {
+      "t": "2026-10-16T21:05:28Z",
+      "kind": "read",
+      "text": "logs/session-0062.md"
+    },
+    {
+      "t": "2026-10-16T21:05:28Z",
+      "kind": "read",
+      "text": "logs/session-0063.md"
+    },
+    {
+      "t": "2026-10-16T21:05:29Z",
+      "kind": "read",
+      "text": "logs/session-0064.md"
+    },
+    {
+      "t": "2026-10-16T21:05:46Z",
+      "kind": "run",
+      "text": "git status && echo \"---PROCS---\" && ps aux | grep -iE \"tsx|node.*server\" | grep -v grep; echo \"(none expected above)\" && echo \"---rug-radar test---\" && cd rug-radar && npm install\u2026"
     }
   ],
   "schedule": {
