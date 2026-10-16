@@ -3867,3 +3867,80 @@ file. Verified against the actual code in Session 46 below.)*
 - `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
   priority, unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 61 — 2026-10-16
+
+### Done
+- Re-verified the repo first (`npm install`, 197/197 tests, clean
+  typecheck/build, no leftover scratch files, no stray processes beforehand)
+  — matched session 60's write-up exactly. `grep`'d for `TODO`/`FIXME`/`XXX`
+  in `src/` again (none), and re-read `server.ts` end to end looking for
+  anything unaddressed beyond the tracked "Next" items; found nothing new.
+- Ran a live check (public mainnet-beta, no keys, no `.env`) and, partway
+  through, repeated the exact mistake session 26 already diagnosed and
+  warned against: started the server in the background with a plain `&`
+  (not the harness's `run_in_background`) and called `ScheduleWakeup` to
+  "check back" on it later. Caught it immediately on re-reading session 26's
+  own note in this file ("don't background a live-boot/smoke test and
+  `ScheduleWakeup` to check it later — the sandbox resets between sessions in
+  this project") — recovered by checking the running server's log/feed and
+  killing it synchronously within this same turn instead of waiting for the
+  scheduled wakeup to fire (which, per session 26's finding, would most
+  likely land in a fresh sandbox with no access to the backgrounded process
+  or its log file). No harm done this time since the check-and-kill happened
+  before the turn ended, but worth re-flagging plainly: **do not call
+  `ScheduleWakeup` for anything backgrounded in this project** — if a live
+  check needs more than one Bash call's worth of waiting, wait on it
+  synchronously (or via the harness's own `run_in_background` + notification
+  for a command started that way) within the same turn, never a scheduled
+  wakeup.
+- The live check itself (~90s, foreground-equivalent since it was checked and
+  killed synchronously): server booted cleanly, the websocket discovered
+  many launches in quick succession, and the `ScoringGate` (cap 3) stayed
+  saturated almost the whole window — most discovered launches were skipped
+  with "too many pending scores" rather than reaching a signal fetch at all,
+  and the handful that did get a `getTokenLargestAccounts` call still hit
+  429. **Zero launches landed in `/api/feed`** in this window. No crash, no
+  leftover process after the kill (confirmed via `ps aux`), `git status`
+  clean after cleanup (only this file changed).
+- This adds no new data toward the two open measurement items
+  (`RESCORE_DELAY_MS`'s single-session sample, the still-unobserved
+  `scoringInFlight` cross-path race) since no launch ever got far enough
+  through the gate to reach `trackMint`, and the gate was saturated enough
+  that watcher/poller overlap on the same mint was never going to be the
+  bottleneck this run anyway.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 197/197 passing (no new tests — no code changed this session),
+  all offline, ~3.8s.
+- Live-booted the real server once (public mainnet-beta, no keys, no `.env`,
+  ~90s, started and stopped synchronously within one turn after catching the
+  `ScheduleWakeup` mistake above): boots cleanly, `/api/feed` responded, no
+  crash, no leftover process after an explicit `kill`.
+- `git status`/`ps aux` after cleanup show only the intended PROGRESS.md
+  change — no stray files, no leftover server process.
+
+### Next
+- **Process reminder, now confirmed a second time:** never pair a
+  backgrounded (`&`) live-check process with `ScheduleWakeup` in this
+  project — the sandbox doesn't survive to the wakeup. Use a single turn,
+  synchronous checks, or the harness's own tracked `run_in_background` +
+  notification instead.
+- `server.ts`'s remaining untested part is still the literal module-level
+  wiring (constructing the real RPC clients, the HTTP server,
+  `watcher.start()`/`poll()`/`setInterval`) — unchanged, still glue code
+  wrapping already-tested pieces.
+- The `scoringInFlight` cross-path race still hasn't been observed live
+  (unchanged since session 57) — this session's gate-saturated window
+  couldn't have exercised it either, for the reason noted above.
+- The scoring endpoint's rate-limit ceiling is unchanged — independent
+  avenues around it are exhausted (sessions 27-28, 48, 49); this session's
+  window was, if anything, a more severe example of it (gate saturated by
+  skips rather than even reaching a 429 for most launches).
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data — this session's window didn't add to
+  it (no launch got far enough through the gate to reach `trackMint`).
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- All five TASK.md steps remain functionally complete.
