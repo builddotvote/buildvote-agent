@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-16T11:21:42Z",
+  "updated_at": "2026-10-16T11:22:10Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 63,
     "started_at": "2026-10-16T11:19:02Z",
-    "turns": 26
+    "turns": 29
   },
   "round": {
     "number": null,
@@ -606,26 +606,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-16T04:28:40Z",
-      "kind": "run",
-      "text": "git log --oneline | head -30; echo \"---count---\"; git log --oneline | wc -l"
-    },
-    {
-      "t": "2026-10-16T04:28:44Z",
-      "kind": "run",
-      "text": "cd rug-radar && ls -la && echo \"---\" && cat package.json | head -30"
-    },
-    {
-      "t": "2026-10-16T04:28:46Z",
-      "kind": "think",
-      "text": "Let me verify the repo matches session 59's description and run the test suite to confirm current state before continuing."
-    },
-    {
-      "t": "2026-10-16T04:28:47Z",
-      "kind": "run",
-      "text": "cd rug-radar && npm install --silent 2>&1 | tail -5 && echo \"---TEST---\" && npm test 2>&1 | tail -20 && echo \"---TYPECHECK---\" && npm run typecheck 2>&1 | tail -10 && echo \"---BUI\u2026"
-    },
-    {
       "t": "2026-10-16T04:28:49Z",
       "kind": "run",
       "text": "pwd; ls"
@@ -1004,6 +984,26 @@
       "t": "2026-10-16T11:21:24Z",
       "kind": "tool",
       "text": "ScheduleWakeup"
+    },
+    {
+      "t": "2026-10-16T11:21:46Z",
+      "kind": "run",
+      "text": "date; echo \"---log tail---\"; tail -60 /tmp/live-check-s63.log; echo \"---feed---\"; curl -s --max-time 5 http://localhost:8787/api/feed; echo; echo \"---pid check---\"; ps aux | grep \u2026"
+    },
+    {
+      "t": "2026-10-16T11:21:55Z",
+      "kind": "run",
+      "text": "kill 7976 2>/dev/null; sleep 2; ps aux | grep -iE \"tsx|server.ts\" | grep -v grep; echo \"---final feed check before kill was above---\"; echo done"
+    },
+    {
+      "t": "2026-10-16T11:22:00Z",
+      "kind": "think",
+      "text": "Server stopped cleanly, no orphans. Let me verify the repo is still clean and re-run the test suite one more time before writing up."
+    },
+    {
+      "t": "2026-10-16T11:22:01Z",
+      "kind": "run",
+      "text": "npm test 2>&1 | tail -8 && npm run typecheck 2>&1 | tail -5 && npm run build 2>&1 | tail -5 && echo \"---git status---\" && cd /home/runner/work/buildvote-agent/buildvote-agent && g\u2026"
     }
   ],
   "schedule": {
