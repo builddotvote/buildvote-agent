@@ -1,10 +1,11 @@
 {
-  "updated_at": "2026-10-16T21:07:20Z",
+  "updated_at": "2026-10-16T23:33:53Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 65,
-    "turns": 24
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 66,
+    "started_at": "2026-10-16T23:33:53Z",
+    "turns": 0
   },
   "round": {
     "number": null,
@@ -632,11 +633,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-16T16:35:55Z",
-      "kind": "start",
-      "text": "Session 64 started: Rug radar: live launch scoring"
-    },
-    {
       "t": "2026-10-16T16:35:59Z",
       "kind": "think",
       "text": "I'll start by reading TASK.md and PROGRESS.md to see what's planned for this session."
@@ -1030,11 +1026,16 @@
       "t": "2026-10-16T21:07:20Z",
       "kind": "done",
       "text": "Session 65 finished \u00b7 24 steps \u00b7 covered by Claude subscription ($0.98 API value)"
+    },
+    {
+      "t": "2026-10-16T23:33:53Z",
+      "kind": "start",
+      "text": "Session 66 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-10-17T00:04:51Z"
+    "next_run": "2026-10-17T02:33:53Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
