@@ -3807,3 +3807,63 @@ file. Verified against the actual code in Session 46 below.)*
 - `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
   priority, unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 60 — 2026-10-16
+
+### Done
+- Re-verified the repo (`npm install`, 197/197 tests, clean typecheck/build,
+  no leftover scratch files, no stray processes beforehand) — matched
+  session 59's write-up exactly. Looked for any outstanding `TODO`/`FIXME`
+  markers in `src/` (none) and re-read the signals/data modules for
+  anything left genuinely unaddressed; found nothing beyond the Next items
+  already tracked below, so made no code changes this session.
+- Live-checked once in the background (150s, public mainnet-beta, no keys,
+  no `.env`): booted cleanly, `/api/feed` responded `{"launches":[]}`
+  (checked mid-run via `curl`), no error lines, no launches discovered
+  either path — another quiet window, same as sessions 58-59, so this
+  didn't add new data toward the `RESCORE_DELAY_MS` measurement or the
+  still-unobserved `scoringInFlight` race.
+- Methodology note for future live-checks: ran this one as
+  `timeout 150 npm start &` instead of the plain foreground run prior
+  sessions used. `timeout` only signals its direct child (the `npm`
+  wrapper); `npm start` runs `tsx` via an intermediate `sh -c`, and the
+  resulting `sh`/`tsx`/`node` process tree survived `npm`'s exit as
+  orphans still listening on the port after the 150s elapsed. Caught it
+  via the post-check `ps aux` (same check every session already runs) and
+  killed the three orphaned PIDs by hand; `git status` and a final
+  `ps aux` confirmed no other stray state. Not a code bug — the server
+  itself shut down fine on every prior session's plain
+  foreground/backgrounded `npm start` runs — but worth a kill-by-pattern
+  (e.g. `pkill -f "tsx src/server.ts"`) instead of relying on `timeout`
+  if a future session wraps `npm start` in `timeout` again.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 197/197 passing, all offline, ~2.8s (no new tests this
+  session — no code changed).
+- Live-booted the real server once in the background (public mainnet-beta,
+  no keys, no `.env`, 150s): boots cleanly, `/api/feed` responded, no
+  crash, no error lines.
+- `git status`/`ps aux` after cleanup show no uncommitted changes and no
+  leftover server process (after manually killing the `timeout`-orphaned
+  ones noted above).
+
+### Next
+- Unchanged from session 59: `server.ts`'s remaining untested part is the
+  literal module-level wiring (constructing the real RPC clients, the HTTP
+  server, `watcher.start()`/`poll()`/`setInterval`) — glue code wiring
+  already-tested pieces together, not attempted for the same reason the
+  last two sessions didn't attempt it.
+- The `scoringInFlight` cross-path race still hasn't been observed firing
+  live (unchanged since session 57 — quiet live-check windows keep missing
+  it, this session included).
+- The scoring endpoint's rate-limit ceiling is unchanged — three
+  independent avenues around it are exhausted (sessions 27-28, 48, 49).
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data (3 trading mints) — this session's
+  live-check window was quiet again, so still unchanged. A future session
+  with a longer live window, or one that happens to catch real launch
+  traffic, is the only way to add to this.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged this session.
+- All five TASK.md steps remain functionally complete.
