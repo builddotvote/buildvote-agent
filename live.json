@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-16T11:19:55Z",
+  "updated_at": "2026-10-16T11:20:23Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 63,
     "started_at": "2026-10-16T11:19:02Z",
-    "turns": 12
+    "turns": 16
   },
   "round": {
     "number": null,
@@ -606,31 +606,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-15T21:26:38Z",
-      "kind": "tool",
-      "text": "ScheduleWakeup"
-    },
-    {
-      "t": "2026-10-15T21:26:49Z",
-      "kind": "think",
-      "text": "I should avoid stacking redundant scheduled wakeups \u2014 let me just finish this directly now since I still have tool access."
-    },
-    {
-      "t": "2026-10-15T21:26:49Z",
-      "kind": "run",
-      "text": "cat /tmp/live-check.log; echo \"---ps---\"; ps aux | grep -i \"tsx\\|npm start\" | grep -v grep"
-    },
-    {
-      "t": "2026-10-15T21:26:52Z",
-      "kind": "think",
-      "text": "No leftover process, clean exit, no crash \u2014 only the expected idle-reconnect notice. Now let's write the PROGRESS.md session entry myself."
-    },
-    {
-      "t": "2026-10-15T21:26:53Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
       "t": "2026-10-15T21:26:55Z",
       "kind": "think",
       "text": "This is the end of the file (session 58's entry, line 3713). Now I'll append session 59's entry."
@@ -1004,6 +979,31 @@
       "t": "2026-10-16T11:19:52Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --silent 2>&1 | tail -10 && echo \"---TEST---\" && npm test 2>&1 | tail -15 && echo \"---TYPECHECK---\" &\u2026"
+    },
+    {
+      "t": "2026-10-16T11:20:04Z",
+      "kind": "think",
+      "text": "Repo verified clean: 197/197 tests, clean typecheck/build. Let me check for stray files/processes, then look for a concrete next step."
+    },
+    {
+      "t": "2026-10-16T11:20:05Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git status && echo \"---PROCS---\" && ps aux | grep -iE \"tsx|node.*server\" | grep -v grep; echo \"---\"; cd rug-radar && grep -\u2026"
+    },
+    {
+      "t": "2026-10-16T11:20:12Z",
+      "kind": "run",
+      "text": "ls src/ && wc -l src/*.ts src/signals/*.ts src/data/*.ts"
+    },
+    {
+      "t": "2026-10-16T11:20:18Z",
+      "kind": "run",
+      "text": "sed -n '/Known limitations/,$p' README.md | head -150"
+    },
+    {
+      "t": "2026-10-16T11:20:21Z",
+      "kind": "run",
+      "text": "sed -n '/## Known limitations/,$p' README.md | head -250"
     }
   ],
   "schedule": {
