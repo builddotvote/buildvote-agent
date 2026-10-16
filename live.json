@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-16T16:38:38Z",
+  "updated_at": "2026-10-16T16:39:05Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 64,
     "started_at": "2026-10-16T16:35:55Z",
-    "turns": 28
+    "turns": 32
   },
   "round": {
     "number": null,
@@ -615,26 +615,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-16T04:31:54Z",
-      "kind": "think",
-      "text": "I'll append directly at the end of the file instead, which is unambiguous."
-    },
-    {
-      "t": "2026-10-16T04:32:05Z",
-      "kind": "run",
-      "text": "cat >> /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md << 'EOF'  ## Session 60 \u2014 2026-10-16  ### Done - Re-verified the repo (`npm install`, 197/197 tests, clean typ\u2026"
-    },
-    {
-      "t": "2026-10-16T04:32:07Z",
-      "kind": "think",
-      "text": "PROGRESS.md updated. Final sanity check on repo state."
-    },
-    {
-      "t": "2026-10-16T04:32:07Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git status && ps aux | grep -E \"tsx|node.*server\" | grep -v grep"
-    },
-    {
       "t": "2026-10-16T04:32:13Z",
       "kind": "think",
       "text": "Only PROGRESS.md is modified, no stray processes. Per the project rules I won't commit or push \u2014 the runner handles that."
@@ -1013,6 +993,26 @@
       "t": "2026-10-16T16:38:05Z",
       "kind": "read",
       "text": "rug-radar/src/wsDiscovery.ts"
+    },
+    {
+      "t": "2026-10-16T16:38:46Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/holderConcentration.ts"
+    },
+    {
+      "t": "2026-10-16T16:38:47Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/liquidity.ts"
+    },
+    {
+      "t": "2026-10-16T16:38:47Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/bondingCurve.ts"
+    },
+    {
+      "t": "2026-10-16T16:38:48Z",
+      "kind": "read",
+      "text": "rug-radar/src/wsLogParser.ts"
     }
   ],
   "schedule": {
