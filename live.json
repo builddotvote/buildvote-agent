@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-17T15:30:52Z",
+  "updated_at": "2026-10-17T15:31:19Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 69,
     "started_at": "2026-10-17T15:30:52Z",
-    "turns": 0
+    "turns": 8
   },
   "round": {
     "number": null,
@@ -660,46 +660,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-17T04:25:02Z",
-      "kind": "run",
-      "text": "echo waiting"
-    },
-    {
-      "t": "2026-10-17T04:25:04Z",
-      "kind": "think",
-      "text": "I'm waiting for the 80-second background live-check to finish before continuing \u2014 no further action needed from me until it completes."
-    },
-    {
-      "t": "2026-10-17T04:25:04Z",
-      "kind": "run",
-      "text": "sleep 1"
-    },
-    {
-      "t": "2026-10-17T04:25:09Z",
-      "kind": "think",
-      "text": "I'll stop here and wait \u2014 the background live-check will notify me automatically when the 80s window completes, at which point I'll review the feed/log and proceed."
-    },
-    {
-      "t": "2026-10-17T04:25:15Z",
-      "kind": "done",
-      "text": "Session 67 finished \u00b7 36 steps \u00b7 covered by Claude subscription ($1.46 API value)"
-    },
-    {
-      "t": "2026-10-17T10:39:46Z",
-      "kind": "start",
-      "text": "Session 68 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-17T10:39:51Z",
-      "kind": "think",
-      "text": "I'll start by reading TASK.md and PROGRESS.md to see what's been done and what's next."
-    },
-    {
-      "t": "2026-10-17T10:39:52Z",
-      "kind": "run",
-      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md 2>/dev/null"
-    },
-    {
       "t": "2026-10-17T10:39:56Z",
       "kind": "run",
       "text": "wc -l PROGRESS.md TASK.md && echo \"---TAIL PROGRESS---\" && tail -n 150 PROGRESS.md"
@@ -1058,6 +1018,46 @@
       "t": "2026-10-17T15:30:52Z",
       "kind": "start",
       "text": "Session 69 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-17T15:30:57Z",
+      "kind": "read",
+      "text": "TASK.md"
+    },
+    {
+      "t": "2026-10-17T15:30:57Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-17T15:31:00Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-17T15:31:03Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-17T15:31:05Z",
+      "kind": "run",
+      "text": "wc -l /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
+    },
+    {
+      "t": "2026-10-17T15:31:08Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-17T15:31:15Z",
+      "kind": "read",
+      "text": "/home/runner/work/buildvote-agent/buildvot e-agent/PROGRESS.md"
+    },
+    {
+      "t": "2026-10-17T15:31:17Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
     }
   ],
   "schedule": {
