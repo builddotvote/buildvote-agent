@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-17T04:22:08Z",
+  "updated_at": "2026-10-17T04:22:34Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 67,
     "started_at": "2026-10-17T04:22:08Z",
-    "turns": 0
+    "turns": 7
   },
   "round": {
     "number": null,
@@ -642,41 +642,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-16T21:05:46Z",
-      "kind": "run",
-      "text": "git status && echo \"---PROCS---\" && ps aux | grep -iE \"tsx|node.*server\" | grep -v grep; echo \"(none expected above)\" && echo \"---rug-radar test---\" && cd rug-radar && npm install\u2026"
-    },
-    {
-      "t": "2026-10-16T21:05:56Z",
-      "kind": "think",
-      "text": "Repo is clean, no stray processes, 197/197 tests pass, typecheck/build clean. Session 64's log shows it ran a background `npm start` live check and ended (step limit) right after \u2026"
-    },
-    {
-      "t": "2026-10-16T21:05:58Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git status --porcelain=v1 --ignored | head -30; echo \"---find tmp/scratch files---\"; find rug-radar -maxdepth 2 -iname \"tmp\u2026"
-    },
-    {
-      "t": "2026-10-16T21:06:08Z",
-      "kind": "read",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-16T21:06:16Z",
-      "kind": "run",
-      "text": "sed -n '/## Known limitations/,$p' README.md"
-    },
-    {
-      "t": "2026-10-16T21:06:26Z",
-      "kind": "run",
-      "text": "cd rug-radar && ls src/*.test.ts | xargs -n1 basename | grep -i scoringInFlight; echo \"---\"; cat src/scoringInFlight.ts 2>/dev/null | head -60"
-    },
-    {
-      "t": "2026-10-16T21:06:29Z",
-      "kind": "run",
-      "text": "pwd"
-    },
-    {
       "t": "2026-10-16T21:06:43Z",
       "kind": "think",
       "text": "I'll reconstruct session 64 into PROGRESS.md (it ended mid-live-check without writing it up), then run a fresh live check to try to gather more data on the open measurement items."
@@ -1040,6 +1005,41 @@
       "t": "2026-10-17T04:22:08Z",
       "kind": "start",
       "text": "Session 67 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-17T04:22:12Z",
+      "kind": "run",
+      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-17T04:22:14Z",
+      "kind": "run",
+      "text": "wc -l /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md; echo \"---\"; tail -150 /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
+    },
+    {
+      "t": "2026-10-17T04:22:18Z",
+      "kind": "run",
+      "text": "grep -n \"^## Session\" /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md | tail -20"
+    },
+    {
+      "t": "2026-10-17T04:22:21Z",
+      "kind": "run",
+      "text": "git log --oneline -20"
+    },
+    {
+      "t": "2026-10-17T04:22:23Z",
+      "kind": "run",
+      "text": "git log --all --oneline | head -30; echo \"---\"; git log -1 --stat"
+    },
+    {
+      "t": "2026-10-17T04:22:27Z",
+      "kind": "run",
+      "text": "grep -n \"^## Session\" /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
+    },
+    {
+      "t": "2026-10-17T04:22:31Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
     }
   ],
   "schedule": {
