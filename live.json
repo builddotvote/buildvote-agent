@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-17T10:42:30Z",
+  "updated_at": "2026-10-17T10:42:58Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 68,
     "started_at": "2026-10-17T10:39:46Z",
-    "turns": 23
+    "turns": 29
   },
   "round": {
     "number": null,
@@ -651,56 +651,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-16T23:37:35Z",
-      "kind": "done",
-      "text": "Session 66 finished \u00b7 42 steps \u00b7 covered by Claude subscription ($1.15 API value)"
-    },
-    {
-      "t": "2026-10-17T04:22:08Z",
-      "kind": "start",
-      "text": "Session 67 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-17T04:22:12Z",
-      "kind": "run",
-      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md 2>/dev/null"
-    },
-    {
-      "t": "2026-10-17T04:22:14Z",
-      "kind": "run",
-      "text": "wc -l /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md; echo \"---\"; tail -150 /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
-    },
-    {
-      "t": "2026-10-17T04:22:18Z",
-      "kind": "run",
-      "text": "grep -n \"^## Session\" /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md | tail -20"
-    },
-    {
-      "t": "2026-10-17T04:22:21Z",
-      "kind": "run",
-      "text": "git log --oneline -20"
-    },
-    {
-      "t": "2026-10-17T04:22:23Z",
-      "kind": "run",
-      "text": "git log --all --oneline | head -30; echo \"---\"; git log -1 --stat"
-    },
-    {
-      "t": "2026-10-17T04:22:27Z",
-      "kind": "run",
-      "text": "grep -n \"^## Session\" /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
-    },
-    {
-      "t": "2026-10-17T04:22:31Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-17T04:22:35Z",
-      "kind": "run",
-      "text": "for f in logs/session-0063.md logs/session-0064.md logs/session-0065.md logs/session-0066.md; do echo \"=== $f ===\"; cat \"$f\"; echo; done"
-    },
-    {
       "t": "2026-10-17T04:22:43Z",
       "kind": "run",
       "text": "ls -la /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/ 2>&1; echo \"---\"; cat /home/runner/.claude/projects/-home-runner-work-buildvote-agen\u2026"
@@ -1049,6 +999,56 @@
       "t": "2026-10-17T10:41:54Z",
       "kind": "run",
       "text": "ps aux | grep -iE \"tsx|server.ts\" | grep -v grep; echo \"---pidfile---\"; cat /tmp/live-s67.pid 2>/dev/null; echo \"---log---\"; cat /tmp/live-s67.log 2>/dev/null | tail -100"
+    },
+    {
+      "t": "2026-10-17T10:42:33Z",
+      "kind": "think",
+      "text": "The sandbox reset between sessions (no stray process or log survived, consistent with prior sessions' findings). I found something worth fixing though: PROGRESS.md's session numbe\u2026"
+    },
+    {
+      "t": "2026-10-17T10:42:35Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && timeout 90 npx tsx src/server.ts > /tmp/live-check68.log 2>&1; echo \"EXIT:$?\""
+    },
+    {
+      "t": "2026-10-17T10:42:37Z",
+      "kind": "think",
+      "text": "While that runs, let me write up the PROGRESS.md entry documenting the numbering drift and this session's findings."
+    },
+    {
+      "t": "2026-10-17T10:42:37Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-17T10:42:42Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && sed -n '/## Known limitations/,$p' README.md"
+    },
+    {
+      "t": "2026-10-17T10:42:44Z",
+      "kind": "think",
+      "text": "This is a huge, well-documented limitations section already \u2014 the rate-limit/gate saturation story is thoroughly covered. No need to duplicate it. Let me check the live-check prog\u2026"
+    },
+    {
+      "t": "2026-10-17T10:42:44Z",
+      "kind": "run",
+      "text": "sleep 60; echo done"
+    },
+    {
+      "t": "2026-10-17T10:42:51Z",
+      "kind": "think",
+      "text": "The live check is running in the background (90s bounded window against public mainnet-beta, no keys). I'll wait for the harness's completion notification rather than polling, and\u2026"
+    },
+    {
+      "t": "2026-10-17T10:42:51Z",
+      "kind": "run",
+      "text": "echo \"waiting for background notification\""
+    },
+    {
+      "t": "2026-10-17T10:42:55Z",
+      "kind": "run",
+      "text": "until [ -f /tmp/live-check68.log ] && ! kill -0 $(pgrep -f \"tsx src/server.ts\" | head -1) 2>/dev/null; do sleep 2; done; echo ready 2>/dev/null || true"
     }
   ],
   "schedule": {
