@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-17T10:41:10Z",
+  "updated_at": "2026-10-17T10:41:37Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 68,
     "started_at": "2026-10-17T10:39:46Z",
-    "turns": 15
+    "turns": 20
   },
   "round": {
     "number": null,
@@ -651,36 +651,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-16T23:36:46Z",
-      "kind": "think",
-      "text": "Cleaned up \u2014 no stray processes. Let's confirm git status is clean apart from the intended files."
-    },
-    {
-      "t": "2026-10-16T23:36:47Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git status"
-    },
-    {
-      "t": "2026-10-16T23:36:49Z",
-      "kind": "think",
-      "text": "Only the intended files changed. Now let's update PROGRESS.md."
-    },
-    {
-      "t": "2026-10-16T23:36:49Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && git -C .. diff --stat rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-16T23:37:13Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-16T23:37:16Z",
-      "kind": "think",
-      "text": "I left a sloppy placeholder phrase in the \"Done\" section \u2014 let me fix it."
-    },
-    {
       "t": "2026-10-16T23:37:18Z",
       "kind": "edit",
       "text": "PROGRESS.md"
@@ -1049,6 +1019,36 @@
       "t": "2026-10-17T10:41:10Z",
       "kind": "think",
       "text": "Good, that's a legitimate separation: `src/signals/` is pure scoring logic (step 3/4), `src/data/` is the RPC data-fetching layer (step 2) that feeds into it. Not duplication. Let\u2026"
+    },
+    {
+      "t": "2026-10-17T10:41:11Z",
+      "kind": "run",
+      "text": "grep -rn \"TODO\\|FIXME\\|XXX\" src/ || echo \"none found\""
+    },
+    {
+      "t": "2026-10-17T10:41:19Z",
+      "kind": "run",
+      "text": "cat src/scoringInFlight.ts"
+    },
+    {
+      "t": "2026-10-17T10:41:23Z",
+      "kind": "run",
+      "text": "cat src/scoringInFlight.test.ts"
+    },
+    {
+      "t": "2026-10-17T10:41:30Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && cat queue.json && echo \"---logs---\" && ls -la logs/ && echo \"---agent---\" && ls -la agent/"
+    },
+    {
+      "t": "2026-10-17T10:41:33Z",
+      "kind": "think",
+      "text": "There are session logs up through session-0067.md \u2014 this is the authoritative session counter (PROGRESS.md's own numbering drifted/duplicated). Let me check the most recent log fo\u2026"
+    },
+    {
+      "t": "2026-10-17T10:41:33Z",
+      "kind": "read",
+      "text": "logs/session-0067.md"
     }
   ],
   "schedule": {
