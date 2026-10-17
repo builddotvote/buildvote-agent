@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-17T23:13:39Z",
+  "updated_at": "2026-10-17T23:14:24Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 71,
     "started_at": "2026-10-17T23:06:48Z",
-    "turns": 22
+    "turns": 25
   },
   "round": {
     "number": null,
@@ -678,31 +678,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-17T15:32:08Z",
-      "kind": "read",
-      "text": "logs/session-0067.md"
-    },
-    {
-      "t": "2026-10-17T15:32:08Z",
-      "kind": "read",
-      "text": "logs/session-0068.md"
-    },
-    {
-      "t": "2026-10-17T15:32:26Z",
-      "kind": "run",
-      "text": "git status && echo \"---PROCS---\" && ps aux | grep -iE \"tsx|node.*server\" | grep -v grep; echo \"(none expected above)\" && echo \"---TMP---\" && ls -la /tmp/ 2>/dev/null | grep -iE \"l\u2026"
-    },
-    {
-      "t": "2026-10-17T15:32:40Z",
-      "kind": "think",
-      "text": "I'll run one bounded, synchronous live check (single Bash call, no backgrounding or scheduled wakeups \u2014 the pattern sessions 63-68 kept failing to follow) to get real data without\u2026"
-    },
-    {
-      "t": "2026-10-17T15:32:42Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && NODE_OPTIONS=--experimental-websocket timeout 90 npx tsx src/server.ts > /tmp/live-check-69.log 2>&1; echo \"EXIT:\u2026"
-    },
-    {
       "t": "2026-10-17T15:34:29Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"^## Session\" PROGRESS.md"
@@ -1076,6 +1051,31 @@
       "t": "2026-10-17T23:12:29Z",
       "kind": "run",
       "text": "\\ (NODE_OPTIONS=--experimental-websocket npx tsx src/server.ts > /tmp/live-check2.log 2>&1 &) ; \\ sleep 70 ; \\ echo \"--- /api/feed ---\" ; \\ curl -s http://localhost:8787/api/feed \u2026"
+    },
+    {
+      "t": "2026-10-17T23:13:49Z",
+      "kind": "think",
+      "text": "This directly contradicts the \"zero launches ever land in `/api/feed`\" conclusion from recent sessions \u2014 a launch landed with 3 of 4 signals (holder-concentration dropped due to t\u2026"
+    },
+    {
+      "t": "2026-10-17T23:13:51Z",
+      "kind": "run",
+      "text": "ps aux | grep -i \"tsx\\|server.ts\\|node \" | grep -v grep; echo \"---\"; curl -s --max-time 2 http://localhost:8787/api/feed; echo; echo \"---git status---\"; git status; rm -f /tmp/liv\u2026"
+    },
+    {
+      "t": "2026-10-17T23:13:54Z",
+      "kind": "think",
+      "text": "Process confirmed stopped (curl now fails to connect), repo clean. Now let me write up this session's findings in PROGRESS.md."
+    },
+    {
+      "t": "2026-10-17T23:13:54Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-17T23:14:24Z",
+      "kind": "edit",
+      "text": "PROGRESS.md"
     }
   ],
   "schedule": {
