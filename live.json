@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-17T10:40:41Z",
+  "updated_at": "2026-10-17T10:41:10Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 68,
     "started_at": "2026-10-17T10:39:46Z",
-    "turns": 11
+    "turns": 15
   },
   "round": {
     "number": null,
@@ -651,41 +651,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-16T23:36:24Z",
-      "kind": "run",
-      "text": "(NODE_OPTIONS=--experimental-websocket nohup npx tsx src/server.ts > /tmp/server.log 2>&1 & echo $! > /tmp/server.pid) && sleep 5 && cat /tmp/server.pid"
-    },
-    {
-      "t": "2026-10-16T23:36:32Z",
-      "kind": "run",
-      "text": "curl -s localhost:3000/ -o /dev/null -w \"GET / -> %{http_code}\\n\"; curl -s localhost:3000/api/feed -w \"\\nGET /api/feed -> %{http_code}\\n\"; curl -s localhost:3000/does-not-exist -w\u2026"
-    },
-    {
-      "t": "2026-10-16T23:36:35Z",
-      "kind": "run",
-      "text": "curl -s localhost:8787/ -o /dev/null -w \"GET / -> %{http_code}\\n\"; curl -s localhost:8787/api/feed -w \"\\nGET /api/feed -> %{http_code}\\n\"; curl -s localhost:8787/does-not-exist -o\u2026"
-    },
-    {
-      "t": "2026-10-16T23:36:37Z",
-      "kind": "think",
-      "text": "All three routes work correctly in the real server. Now clean up."
-    },
-    {
-      "t": "2026-10-16T23:36:38Z",
-      "kind": "run",
-      "text": "kill $(cat /tmp/server.pid) 2>&1; sleep 1; ps aux | grep -E \"tsx|server.ts\" | grep -v grep; rm -f /tmp/server.pid /tmp/server.log"
-    },
-    {
-      "t": "2026-10-16T23:36:42Z",
-      "kind": "run",
-      "text": "pkill -f \"tsx src/server.ts\" 2>&1; sleep 1; ps aux | grep -E \"tsx|server.ts\" | grep -v grep; echo \"cleanup check done\""
-    },
-    {
-      "t": "2026-10-16T23:36:44Z",
-      "kind": "run",
-      "text": "ps aux | grep -E \"tsx|server.ts\" | grep -v grep; echo done"
-    },
-    {
       "t": "2026-10-16T23:36:46Z",
       "kind": "think",
       "text": "Cleaned up \u2014 no stray processes. Let's confirm git status is clean apart from the intended files."
@@ -1049,6 +1014,41 @@
       "t": "2026-10-17T10:40:34Z",
       "kind": "run",
       "text": "npm install --silent 2>&1 | tail -20 && echo \"---TYPECHECK---\" && npm run typecheck 2>&1 | tail -30 && echo \"---BUILD---\" && npm run build 2>&1 | tail -30 && echo \"---TEST---\" && \u2026"
+    },
+    {
+      "t": "2026-10-17T10:40:43Z",
+      "kind": "think",
+      "text": "Repo is clean: 202/202 tests pass, typecheck and build are clean. No stray processes or files."
+    },
+    {
+      "t": "2026-10-17T10:40:44Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git status && ps aux | grep -E \"tsx|node\" | grep -v grep"
+    },
+    {
+      "t": "2026-10-17T10:40:57Z",
+      "kind": "read",
+      "text": "TASK.md"
+    },
+    {
+      "t": "2026-10-17T10:41:02Z",
+      "kind": "think",
+      "text": "I noticed both `src/data/` and `src/signals/` directories contain files with identical names (bundledBuys, deployerHistory, holderConcentration, liquidity). Let me check if this i\u2026"
+    },
+    {
+      "t": "2026-10-17T10:41:03Z",
+      "kind": "run",
+      "text": "echo \"--- data dir ---\" && wc -l src/data/*.ts && echo \"--- signals dir ---\" && wc -l src/signals/*.ts"
+    },
+    {
+      "t": "2026-10-17T10:41:07Z",
+      "kind": "run",
+      "text": "head -20 src/signals/bundledBuys.ts && echo \"===\" && head -20 src/data/bundledBuys.ts"
+    },
+    {
+      "t": "2026-10-17T10:41:10Z",
+      "kind": "think",
+      "text": "Good, that's a legitimate separation: `src/signals/` is pure scoring logic (step 3/4), `src/data/` is the RPC data-fetching layer (step 2) that feeds into it. Not duplication. Let\u2026"
     }
   ],
   "schedule": {
