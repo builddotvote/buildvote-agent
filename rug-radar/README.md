@@ -408,6 +408,24 @@ launch <mint>: already being scored by another discovery path"`. Purely
 additive logging, no behavior change, no new tests needed (the skip path
 itself is already covered by `scoringInFlight.test.ts`/`poller.test.ts`).
 
+Sessions 57-69 kept this log line's absence from any live check open as
+"the cross-path race has never been observed live." Re-reading both call
+sites (session 70) closes that: `tryAcquire()` runs synchronously, before
+either path's first `await`, in both `handleDiscoveredLaunch`
+(`watcherOnLaunch.ts`) and `pollOnce`'s per-launch loop (`poller.ts`).
+Node has one JS thread, so whichever path's handler for a given mint
+starts running always finishes its claim-or-skip check without the other
+interleaving mid-check — the outcome is deterministic by construction, not
+a race condition that needs live traffic to confirm. Both possible
+orderings are already exercised offline: `poller.test.ts`'s "a launch
+already claimed by the watcher's in-flight score is skipped, not
+re-scored" and `watcherOnLaunch.test.ts`'s "a mint already claimed by the
+poller's in-flight score is skipped, not re-scored" cover watcher-first and
+poller-first respectively. A live window where the log line fires would
+confirm the two paths happened to overlap on the same mint in practice,
+but adds no new evidence about *correctness* beyond what these two tests
+already prove. Not something to keep chasing in future live checks.
+
 Until session 58, the websocket watcher's `onLaunch` handler (the dedup/
 gate/in-flight/score/rescore wiring above) lived as an inline closure in
 `server.ts`, with no offline test of its own — `poller.ts`'s equivalent

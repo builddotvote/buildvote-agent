@@ -4175,3 +4175,74 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   priority, unchanged.
 - All five TASK.md steps remain functionally complete; nothing in this
   session's review found a new concrete code gap worth fixing.
+
+## Session 70 — 2026-10-17
+
+### Done
+- Re-verified the repo first (`npm install`, 202/202 tests, clean
+  typecheck/build, `git status`/`ps aux` clean before starting) — matched
+  session 69's write-up exactly.
+- Session 69 flagged that further live checks of the rate-limit ceiling have
+  diminishing value without a new idea, so instead looked hard at the other
+  open item every session since 57 kept carrying forward unchanged: "the
+  `scoringInFlight` cross-path race still hasn't been observed firing live."
+  Re-read both call sites (`src/watcherOnLaunch.ts`'s `handleDiscoveredLaunch`
+  and `src/poller.ts`'s `pollOnce`) closely enough to check whether "observe
+  it live" was ever the right bar for this item in the first place.
+  - Both paths call `scoringInFlight.tryAcquire(mint)` synchronously, before
+    either path's first `await` for that mint. Node has one JS thread, so
+    whichever path's handler for a given mint starts running always
+    completes its claim-or-skip check without the other interleaving
+    mid-check. The outcome (one path claims, the other skips) is
+    deterministic by construction, not a true data race — there is no
+    interleaving that could produce a different result than what the code
+    already guarantees.
+  - Both possible orderings are already exercised offline:
+    `poller.test.ts`'s "a launch already claimed by the watcher's in-flight
+    score is skipped, not re-scored" (watcher claims first) and
+    `watcherOnLaunch.test.ts`'s "a mint already claimed by the poller's
+    in-flight score is skipped, not re-scored" (poller claims first). Ran
+    both tests individually to confirm they exercise the skip branch (not
+    just pass trivially): temporarily commented out the `tryAcquire` check
+    in `poller.ts`, confirmed the watcher-test analog in `poller.test.ts`
+    failed with a clear diff (expected empty feed, got a scored launch),
+    reverted, confirmed all 202 tests pass again.
+  - Conclusion: a live window where session 57's skip log line fires would
+    only confirm the two paths happened to overlap on the same mint in
+    practice — it adds no new evidence about *correctness* beyond what
+    these two tests already prove. This item has been miscategorized as an
+    open empirical question for 13 sessions (57-69); it's closed by
+    construction, not by observation.
+  - Documented this in `rug-radar/README.md` right after session 57's
+    "no way to confirm live" passage (the "Known limitations" prose didn't
+    carry this item at all — it only lived in this file's recurring "Next"
+    list), and removed it from the "Next" list below since there's nothing
+    further to check.
+  - No production code changed — this was a documentation/backlog
+    correction, not a behavior change, so no new tests were needed beyond
+    the verification above.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 202/202 passing, all offline, ~4.5s (no new tests — no
+  production code changed this session).
+- `git status`/`ps aux` clean after finishing — only `README.md`/
+  `PROGRESS.md` changed, no stray files, no server process started this
+  session (none was needed).
+
+### Next
+- The `scoringInFlight` cross-path race item (open since session 57) is
+  now closed per the "Done" section above — remove it from future "Next"
+  lists; it was never actually open, only miscategorized as needing live
+  confirmation it doesn't need.
+- The scoring endpoint's rate-limit ceiling is unchanged and reconfirmed
+  five-plus times (sessions 21, 26, 61, 68, 69) with identical symptoms —
+  per session 69, further live checks of this exact thing have strongly
+  diminishing value without a specific new idea to test. The balance-index
+  rescore (sessions 32-57) remains the accepted permanent mitigation.
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data (3 trading mints) — needs a live
+  window with real trading activity to add to it, unchanged this session.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged.
+- All five TASK.md steps remain functionally complete.
