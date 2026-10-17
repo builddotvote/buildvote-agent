@@ -4246,3 +4246,93 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
 - `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
   priority, unchanged.
 - All five TASK.md steps remain functionally complete.
+
+## Session 71 — 2026-10-17
+
+### Done
+- Re-verified the repo first (`npm install`, 202/202 tests, clean
+  typecheck/build, `git status`/`ps aux` clean before starting) — matched
+  session 70's write-up.
+- Per session 69/70's own advice ("further live checks of the rate-limit
+  ceiling have diminishing value without a specific new idea"), spent most of
+  this session reading rather than live-checking: went through
+  `scoringGate.ts`, `scoringInFlight.ts`, `balanceIndex.ts`, `rescore.ts`,
+  `holderRescore.ts`, `watcherOnLaunch.ts`, `poller.ts`, and `rpc.ts`'s
+  `RequestPacer`/retry/concurrency-slot logic end to end looking for a new,
+  concrete bug (not yet caught by the 202 existing tests). Found none —
+  acquire/release pairing in both discovery paths' `finally` blocks is
+  correct, `RequestPacer`'s chained-promise reservation avoids the
+  read-then-write race its own comment warns about, `BalanceIndex`'s FIFO
+  eviction is consistent. No code changes from this review.
+- Ran one bounded, synchronous (not backgrounded, no `ScheduleWakeup` —
+  per session 69's hard-learned process fix) live check anyway, as a basic
+  regression check rather than a rate-limit investigation: `timeout 100 npx
+  tsx src/server.ts`, output to a temp file, process exits on its own when
+  `timeout` elapses. Expected the same "gate saturates, nothing scored"
+  result sessions 61-69 kept finding. Log showed 26 of ~30 discovered
+  launches skipped at the gate ("too many pending scores"), 4 reached a
+  signal fetch and hit the known `getTokenLargestAccounts` 429 for
+  holder-concentration — but **no `dropping launch` (zero-signal) or
+  `failed to score` line appeared for any of those 4**, which would mean
+  they succeeded with partial signals rather than failing outright,
+  contradicting "zero launches landed" from sessions 61/63/68/69.
+- Verified that inference directly rather than trusting log absence: ran the
+  server a second time, backgrounded only within one single Bash call (not
+  `run_in_background`, not spanning turns — started with `&` inside one
+  compound command, `sleep 70`, `curl localhost:8787/api/feed`, then
+  `pkill -f "tsx src/server.ts"`, all in the same call, matching the
+  "single bounded call, no multi-turn waiting" pattern session 69
+  prescribed). Confirmed directly: `/api/feed` returned one real launch
+  (`2E6cB7iArw3NpueCKir7auxue2JyE3DeFdJ8UkPXpump`) with 3 of 4 signals
+  (deployer-history 40, bundled-buys 0, liquidity 80 — "still on bonding
+  curve with thin real liquidity (0.03 SOL)") and holder-concentration
+  missing, combined score 50. This is a genuinely new finding, not a
+  repeat of prior sessions' result: **the live feed does populate under
+  current conditions** — holder-concentration is routinely dropped (the
+  long-documented `getTokenLargestAccounts` 429 ceiling, sessions 27-28/45),
+  and the `ScoringGate` cap of 3 keeps throughput low under bursty traffic,
+  but the system is not completely non-functional under load the way the
+  last four sessions' short (90-150s) observation windows suggested — those
+  windows most likely just didn't happen to overlap with one of the few
+  launches that make it through the gate and finish before the window ends.
+  Confirmed both processes exited cleanly (`ps aux`/`curl` both empty
+  afterward) and `git status` stayed clean (no stray files, no PROGRESS.md
+  change needed mid-check since it was written after, per session 69's own
+  "write PROGRESS before a long check" advice — this session's checks were
+  short enough that sequencing didn't matter).
+- No production code changed this session — this was a review-and-verify
+  session, not a fix session; the one finding above is a correction to this
+  file's own standing diagnosis, not a code defect.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 202/202 passing, all offline, ~4s (no new tests — no
+  production code changed this session).
+- Two live-booted checks (public mainnet-beta, no keys, no `.env`), both
+  single-call and bounded (100s via `timeout`, then 70s backgrounded-and-
+  killed within one call): no crash either time, both left no stray
+  process or scratch file afterward.
+- `git status`/`ps aux` clean after finishing — only this PROGRESS.md change.
+
+### Next
+- **Correction to the standing diagnosis** (sessions 61/63/68/69 said "zero
+  launches land in `/api/feed`" under load): that undersold it. The feed
+  does populate — holder-concentration is dropped almost every time
+  (consistent 429), and the gate's cap of 3 means only a handful of launches
+  per minute actually finish scoring under bursty traffic, but it is not a
+  complete outage. Future live checks should curl `/api/feed` directly
+  (as this session did) rather than inferring success/failure from the
+  absence of an error log line, and should run long enough (more than ~100s)
+  to let more than one or two launches clear the gate before concluding
+  anything about throughput.
+- The scoring endpoint's rate-limit ceiling itself is unchanged — this
+  session didn't find a new angle on it, just a clearer picture of its
+  actual effect (degraded throughput + near-total holder-concentration
+  loss, not total failure). The balance-index rescore remains the
+  mitigation for the latter.
+- `RESCORE_DELAY_MS` (45s, session 47) and `findFundingSource`'s ~2% unknown
+  rate (session 39) are both unchanged — still need a live window with real
+  trading activity, same blocker as before.
+- All five TASK.md steps remain functionally complete; this session's actual
+  contribution is correcting the last few sessions' overly bleak read of the
+  gate-saturation symptom, not a code or test change.
