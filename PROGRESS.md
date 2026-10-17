@@ -4027,3 +4027,151 @@ file. Verified against the actual code in Session 46 below.)*
 - `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
   priority, unchanged this session.
 - All five TASK.md steps remain functionally complete.
+
+## Session 69 — 2026-10-17
+
+### Note on session numbering drift (read this first)
+PROGRESS.md's session numbers above stopped reliably matching the real
+harness session count a while back: the entry titled "Session 62" (line
+~3811, the `requestHandler.ts` extraction) actually corresponds to
+`logs/session-0066.md`, and the later "Session 60"/"Session 61" entries
+(timeout-orphan finding; the `ScheduleWakeup`-on-a-backgrounded-process
+mistake) correspond to other real harness runs, not strictly in the order
+their titles suggest. `logs/session-0068.md` first identified this drift but
+ran out of steps before fixing or writing it up. Root cause: several sessions
+(63, 64, 65, 67, 68 — confirmed by reading `logs/session-00{63,64,65,67,68}.md`)
+never wrote a PROGRESS.md entry at all (each one backgrounded a live-check
+server process, then waited across turns — sometimes with `ScheduleWakeup`,
+sometimes just idling — and ran out of steps before the wait resolved), so
+later sessions miscounted "the next session number" from this file's own
+(already-gapped) history instead of from `logs/`. **`logs/session-NNNN.md`
+is the authoritative session count, not the headers in this file.** This
+entry is real harness session 69 (confirmed via `ls logs/ | sort -V | tail`).
+Not rewriting the headers above — too large a diff for the value — but
+flagging it here so future sessions trust `logs/` over this file's numbering.
+
+### Done
+- Re-verified the repo first: `npm install`, `npm run typecheck`, `npm run
+  build`, `npm test` (202/202 passing, offline, matches the real current
+  state — `src/requestHandler.ts` and its test exist, confirming the
+  "Session 62"-labeled extraction above is genuinely present in the repo).
+  `git status` and `ps aux` were clean before starting (no leftover scratch
+  files or processes from session 68, consistent with every prior finding
+  that this project's sandbox resets between sessions).
+- Read `logs/session-0063.md` through `logs/session-0068.md` in full to
+  recover what actually happened in the six sessions this file never
+  documented:
+  - **63**: no code changes. Re-verified the repo, ran a ~90s live check
+    (discovery worked, `ScoringGate` saturated, zero launches landed).
+    Partway through, repeated session 26's already-diagnosed mistake
+    (backgrounded the server with `&` then called `ScheduleWakeup` to check
+    back) — caught it by re-reading this file's own warning, recovered by
+    checking/killing synchronously within the same turn. Wrote this up as
+    "Session 61" in this file (the entry at line 3954).
+  - **64**: no code changes. Re-read most of `src/` looking for a new bug,
+    found none concretely exploitable. Started a **harness-tracked**
+    `run_in_background` live check (not a raw `&`), correctly noted that
+    such tasks auto-notify on completion so `ScheduleWakeup` is redundant for
+    them — but called `ScheduleWakeup` anyway as an unneeded "fallback," then
+    ran out of steps waiting. Never wrote up PROGRESS.md.
+  - **65**: no code changes. Backfilled some context, started another
+    backgrounded live check (`(npm start > log 2>&1 &)`, detached), called
+    `ScheduleWakeup` again despite the same harness-tracking point session 64
+    had just made, ran out of steps waiting. Never wrote up PROGRESS.md.
+  - **66**: the real session behind this file's "Session 62" entry (line
+    3811) — extracted `src/requestHandler.ts` out of `server.ts`'s inline
+    HTTP router (3 branches: `/`/`/index.html`, `/api/feed`, 404), added 5
+    tests, verified them as real regression tests by breaking the code and
+    confirming a failure, live-checked all three routes against the real
+    running server via `curl`, cleaned up correctly. This work is genuinely
+    in the repo (confirmed again this session). Wrote itself up under the
+    (incorrect) label "Session 62."
+  - **67**: no code changes. Reviewed core modules for new bugs, found none.
+    Started a backgrounded live check via `nohup ... &` with a pidfile
+    (avoiding the raw-`&`-plus-`ScheduleWakeup` mistake), but then spent
+    nearly all its remaining steps in a `sleep 1`/`think "I'll wait"` loop
+    rather than one bounded synchronous wait, and ran out of steps before the
+    80s window even finished. Never wrote up PROGRESS.md; left the server
+    process running (confirmed gone by session 68, consistent with the
+    sandbox-reset pattern).
+  - **68**: no code changes. Found and correctly diagnosed this exact
+    numbering-drift issue (see note above) but didn't fix it. Ran a live
+    check two ways: first forgot `NODE_OPTIONS=--experimental-websocket`
+    (websocket watcher failed every retry, wasted the whole 90s window with
+    no useful data), then re-ran correctly with a bounded `timeout 90 ...`
+    foreground-equivalent command. Result matched the long-documented
+    pattern (gate saturates at cap 3, remaining signal fetches hit 429, zero
+    launches landed) — no new finding. Called `ScheduleWakeup` once
+    mid-session despite its own earlier note that it was unnecessary, then
+    spent its remaining steps explicitly waiting for a task-notification that
+    (per this file's own session-26 finding) was never going to carry useful
+    state across a session boundary anyway, and ran out of steps before
+    writing up PROGRESS.md.
+  - **Pattern across all six**: every session that didn't make a code change
+    tried to background a live-check server process and then wait on it
+    across multiple turns (via `ScheduleWakeup`, a `sleep`/`think` loop, or an
+    explicit "wait for task-notification"), and the *waiting itself* — not
+    the live check — is what burned through the step budget before
+    PROGRESS.md got updated. Several of these also independently rediscovered
+    pieces of session 26's and session 61's already-written warnings about
+    this exact failure mode before running out of steps to act on them.
+- Given that pattern, ran my own live check as a single, bounded, synchronous
+  Bash call this session (`NODE_OPTIONS=--experimental-websocket timeout 90
+  npx tsx src/server.ts`, output captured to a temp file, no backgrounding,
+  no `ScheduleWakeup`, no multi-turn waiting) — the correct pattern this file
+  has recommended since session 26. Result: discovery found launches quickly
+  (dozens in the window), `ScoringGate` (cap 3) saturated almost immediately
+  and logged clean "too many pending scores" skips for the rest, the handful
+  of launches that did reach a signal fetch hit `getTokenLargestAccounts`
+  429s. No launch-scored success line anywhere in the log, so (consistent
+  with every live check since session 21) zero launches landed in
+  `/api/feed` this window. This is not a new finding — it's the same
+  rate-limit ceiling sessions 21, 26, 61, and 68 already confirmed — but it
+  confirms the ceiling is still exactly where it was, with no regression from
+  any of the (code-free) sessions in between. Deleted the temp log file
+  afterward.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 202/202 passing, all offline, ~4s (unchanged — no code changes
+  this session).
+- Live-checked the real server once, synchronously, in a single bounded Bash
+  call (90s, public mainnet-beta, no keys, no `.env`): boots cleanly, `tsx`
+  process exits on its own when the `timeout` elapses (no orphan to clean up,
+  unlike session 60's `timeout npm start &` finding — running `npx tsx`
+  directly under `timeout` without an intermediate `npm`/`sh` wrapper avoids
+  that orphaning).
+- `git status`/`ps aux` after cleanup show only the intended PROGRESS.md
+  change — no stray files, no leftover server process.
+
+### Next
+- **Process fix for future sessions, stated plainly:** if a live check needs
+  to run longer than one Bash call's timeout allows information-gathering
+  for, prefer a single bounded `timeout N <command>` call over backgrounding.
+  If backgrounding is genuinely needed, use the harness's own
+  `run_in_background` (which auto-notifies on completion) and then actually
+  stop issuing tool calls and let the turn end naturally — don't spend
+  remaining steps on `sleep 1`/`ScheduleWakeup`/manual wait-loops, all of
+  which either waste steps or (per session 26's finding, re-confirmed by
+  sessions 63/68 making the same mistake again) won't survive to a scheduled
+  wakeup in this project's per-session sandbox anyway. And write
+  PROGRESS.md *before* starting a long live check, not after — every session
+  this entry backfills lost its write-up by sequencing it last.
+- The scoring endpoint's rate-limit ceiling is unchanged and now reconfirmed
+  a fifth-plus time (sessions 21, 26, 61, 68, 69) with identical symptoms —
+  further live checks of this exact thing have strongly diminishing value.
+  Three independent mitigation avenues are already exhausted (sessions
+  27-28, 48, 49) and the balance-index rescore (sessions 32-57) is the
+  accepted permanent mitigation. Unless a session has a *specific new idea*
+  to test (not just "run it again and see"), this is better left alone.
+- The `scoringInFlight` cross-path race still hasn't been observed live
+  (unchanged since session 57) — any future attempt needs a window where the
+  gate *isn't* saturated (so launches actually reach scoring) and both
+  discovery paths race the same mint, which the gate-saturated windows seen
+  in sessions 61-69 couldn't have exercised either way.
+- `RESCORE_DELAY_MS` (45s, session 47) is still based on a single
+  measurement session's worth of data — unchanged, same blocker as above.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — not a
+  priority, unchanged.
+- All five TASK.md steps remain functionally complete; nothing in this
+  session's review found a new concrete code gap worth fixing.
