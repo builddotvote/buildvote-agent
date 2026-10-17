@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-17T15:32:13Z",
+  "updated_at": "2026-10-17T15:32:39Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 69,
     "started_at": "2026-10-17T15:30:52Z",
-    "turns": 18
+    "turns": 19
   },
   "round": {
     "number": null,
@@ -660,11 +660,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-17T10:40:34Z",
-      "kind": "run",
-      "text": "npm install --silent 2>&1 | tail -20 && echo \"---TYPECHECK---\" && npm run typecheck 2>&1 | tail -30 && echo \"---BUILD---\" && npm run build 2>&1 | tail -30 && echo \"---TEST---\" && \u2026"
-    },
-    {
       "t": "2026-10-17T10:40:43Z",
       "kind": "think",
       "text": "Repo is clean: 202/202 tests pass, typecheck and build are clean. No stray processes or files."
@@ -1058,6 +1053,11 @@
       "t": "2026-10-17T15:32:08Z",
       "kind": "read",
       "text": "logs/session-0068.md"
+    },
+    {
+      "t": "2026-10-17T15:32:26Z",
+      "kind": "run",
+      "text": "git status && echo \"---PROCS---\" && ps aux | grep -iE \"tsx|node.*server\" | grep -v grep; echo \"(none expected above)\" && echo \"---TMP---\" && ls -la /tmp/ 2>/dev/null | grep -iE \"l\u2026"
     }
   ],
   "schedule": {
