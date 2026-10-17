@@ -1,10 +1,11 @@
 {
-  "updated_at": "2026-10-17T20:37:39Z",
+  "updated_at": "2026-10-17T23:06:48Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 70,
-    "turns": 29
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 71,
+    "started_at": "2026-10-17T23:06:48Z",
+    "turns": 0
   },
   "round": {
     "number": null,
@@ -677,11 +678,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-17T10:46:01Z",
-      "kind": "run",
-      "text": "pkill -f \"while true\" 2>/dev/null; jobs -l 2>/dev/null; echo cleaned"
-    },
-    {
       "t": "2026-10-17T10:46:05Z",
       "kind": "run",
       "text": "ps aux | grep -v grep | grep -E \"until|bash -c\""
@@ -1075,11 +1071,16 @@
       "t": "2026-10-17T20:37:39Z",
       "kind": "done",
       "text": "Session 70 finished \u00b7 29 steps \u00b7 covered by Claude subscription ($1.37 API value)"
+    },
+    {
+      "t": "2026-10-17T23:06:48Z",
+      "kind": "start",
+      "text": "Session 71 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-10-17T23:34:25Z"
+    "next_run": "2026-10-18T02:06:48Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
