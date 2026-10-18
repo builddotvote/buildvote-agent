@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-18T23:13:23Z",
+  "updated_at": "2026-10-18T23:13:49Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 76,
     "started_at": "2026-10-18T23:09:33Z",
-    "turns": 60
+    "turns": 65
   },
   "round": {
     "number": null,
@@ -723,46 +723,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-18T20:43:51Z",
-      "kind": "think",
-      "text": "Now update the test script glob to pick up test files under `public/` too:"
-    },
-    {
-      "t": "2026-10-18T20:43:53Z",
-      "kind": "edit",
-      "text": "rug-radar/package.json"
-    },
-    {
-      "t": "2026-10-18T20:43:55Z",
-      "kind": "think",
-      "text": "Now run typecheck, build, and the full test suite to confirm everything works:"
-    },
-    {
-      "t": "2026-10-18T20:43:56Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -n 40 && echo \"---build---\" && npm run build 2>&1 | tail -n 40 && echo \"---test---\" && npm test 2>&1 | tail -n 60"
-    },
-    {
-      "t": "2026-10-18T20:44:07Z",
-      "kind": "think",
-      "text": "Let me do a quick smoke test that the server actually serves the new route end-to-end:"
-    },
-    {
-      "t": "2026-10-18T20:44:09Z",
-      "kind": "run",
-      "text": "PORT=8799 timeout 8 node --import tsx src/server.ts > /tmp/server.log 2>&1 &  SERVER_PID=$! sleep 2 echo \"---/ ---\"; curl -s -o /dev/null -w \"%{http_code}\\n\" http://localhost:8799\u2026"
-    },
-    {
-      "t": "2026-10-18T20:44:20Z",
-      "kind": "think",
-      "text": "All three routes work correctly (the WebSocket flag warning is expected \u2014 `npm start`/`npm run dev` set `NODE_OPTIONS=--experimental-websocket`, I just ran the bare node command f\u2026"
-    },
-    {
-      "t": "2026-10-18T20:44:21Z",
-      "kind": "run",
-      "text": "rm -f /tmp/server.log; git -C /home/runner/work/buildvote-agent/buildvote-agent status --short; ps aux | grep -i \"server.ts\\|node\" | grep -v grep"
-    },
-    {
       "t": "2026-10-18T20:44:23Z",
       "kind": "think",
       "text": "Clean \u2014 no stray processes, exactly the expected files changed. Now let me update `PROGRESS.md` with this session's work."
@@ -1121,6 +1081,46 @@
       "t": "2026-10-18T23:12:59Z",
       "kind": "run",
       "text": "cat -n src/signals/bundledBuys.ts; echo \"=== TEST ===\"; cat -n src/signals/bundledBuys.test.ts"
+    },
+    {
+      "t": "2026-10-18T23:13:28Z",
+      "kind": "think",
+      "text": "Found a genuine, fresh gap: boundary-value test coverage for the four signal scorers' risk-band thresholds is inconsistent (some exact thresholds tested, others not). I'll fill in\u2026"
+    },
+    {
+      "t": "2026-10-18T23:13:29Z",
+      "kind": "read",
+      "text": "rug-radar/src/signals/liquidity.test.ts"
+    },
+    {
+      "t": "2026-10-18T23:13:34Z",
+      "kind": "edit",
+      "text": "rug-radar/src/signals/liquidity.test.ts"
+    },
+    {
+      "t": "2026-10-18T23:13:36Z",
+      "kind": "think",
+      "text": "Now holderConcentration:"
+    },
+    {
+      "t": "2026-10-18T23:13:36Z",
+      "kind": "read",
+      "text": "rug-radar/src/signals/holderConcentration.test.ts"
+    },
+    {
+      "t": "2026-10-18T23:13:43Z",
+      "kind": "edit",
+      "text": "rug-radar/src/signals/holderConcentration.test.ts"
+    },
+    {
+      "t": "2026-10-18T23:13:44Z",
+      "kind": "think",
+      "text": "Now deployerHistory:"
+    },
+    {
+      "t": "2026-10-18T23:13:49Z",
+      "kind": "edit",
+      "text": "rug-radar/src/signals/deployerHistory.test.ts"
     }
   ],
   "schedule": {
