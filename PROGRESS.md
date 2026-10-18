@@ -4336,3 +4336,63 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
 - All five TASK.md steps remain functionally complete; this session's actual
   contribution is correcting the last few sessions' overly bleak read of the
   gate-saturation symptom, not a code or test change.
+
+## Session 72 — 2026-10-18
+
+### Done
+- Re-verified the repo first (`npm install`, 202/202 tests, clean
+  typecheck/build, `git status` clean before starting).
+- Picked up the oldest unchanged "Next" item (`RESCORE_DELAY_MS` based on a
+  single session's 3-trade sample, carried unchanged since session 47):
+  wrote a scratch probe (`rug-radar/scratch-rescore-probe.ts`, not
+  committed, deleted after the run) that runs `LaunchWatcher` directly
+  against the public discovery RPC, `trackMint`s every launch it discovers
+  immediately (bypassing `ScoringGate` entirely, same approach session
+  35/47 used to get an uncapped sample), and records each mint's
+  first-trade delay.
+- First attempt failed fast and cleanly: forgot `NODE_OPTIONS=
+  --experimental-websocket` (the flag `package.json`'s `dev`/`start`
+  scripts set but a standalone script doesn't inherit) — `wsDiscovery.ts`'s
+  own `onError` message named the exact fix, so this cost one extra
+  bounded run rather than a debugging detour.
+- Re-ran with the flag set, bounded to 280s via a single `timeout`-wrapped
+  Bash call (no backgrounding across turns, no `ScheduleWakeup`, per
+  session 69's process fix). Result: 85 mints tracked (gate bypassed, so
+  far more than the ~1/window the gate normally lets through), 8 produced
+  a first trade: delays 20.563s, 9.892s, 14.495s, 35.896s, 10.45s, 27.005s,
+  33.333s, 16.774s — all between 9.9s and 35.9s, none near session 47's
+  54.4s outlier.
+- Combined with session 47's three samples (15.4s, 16.0s, 54.4s), that's
+  11 live samples total. Session 47's 54.4s is still the only one past the
+  then-current 45s delay — one outlier, not a confirmed recurring tail,
+  but per the existing design rationale (holding the free per-mint
+  subscription open longer costs nothing for mints that never trade),
+  raised `RESCORE_DELAY_MS` from 45s to 60s in `src/server.ts` to cover it
+  rather than leave a known miss uncovered for free. Updated the matching
+  passage in `README.md` with the new sample and reasoning. No test
+  asserted the literal `server.ts` constant (the `holderRescore.test.ts`
+  cases all pass their own fixture `delayMs` directly), so nothing else
+  needed updating.
+- Deleted the scratch probe and its temp output file; re-ran typecheck,
+  build, and the full test suite after the edit.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 202/202 passing, all offline, ~3.8s.
+- `git status`/`ps aux` clean after finishing — only `PROGRESS.md`,
+  `README.md`, and `src/server.ts` changed; no stray files, no leftover
+  process.
+
+### Next
+- `RESCORE_DELAY_MS` is now based on 11 live samples (up from 3) instead of
+  one session's data, but the 54.4s outlier that justified the raise to
+  60s is still a single data point — a future session with another live
+  window should keep adding samples rather than treating 60s as final.
+- The scoring endpoint's rate-limit ceiling is unchanged (sessions 21, 26,
+  61, 68, 69) — per session 69/71, further live checks of that exact thing
+  have diminishing value without a new angle. This session's probe avoided
+  that problem entirely by bypassing `ScoringGate`, which is why it could
+  gather 8 trade samples in one window instead of the usual ~1 launch.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — still not
+  a priority, unchanged.
+- All five TASK.md steps remain functionally complete.

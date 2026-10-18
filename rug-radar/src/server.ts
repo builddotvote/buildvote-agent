@@ -148,7 +148,14 @@ const watcher = new LaunchWatcher(wsUrl, watcherDiscoveryRpc, {
 // the 54.4s case entirely (1 of 3 observed, not a rare tail). Raised to 45s
 // to cover it, since holding the free per-mint websocket subscription open
 // longer costs nothing for the ~95% of mints that stay quiet regardless.
-const RESCORE_DELAY_MS = 45_000;
+// Session 72 grew the sample live (85 mints tracked over a single 280s
+// window, bypassing ScoringGate the same way session 47 did): 8 more
+// first-trade delays, all between 9.9s and 35.9s. Combined with session
+// 47's three, that's 11 samples total and session 47's 54.4s is still the
+// only one past 45s — one outlier, not confirmed as a recurring tail, but
+// since covering it is still free, raised to 60s so it's covered rather
+// than treated as noise.
+const RESCORE_DELAY_MS = 60_000;
 
 // Tracks the mint's own bonding-curve trades (see wsDiscovery.ts's
 // trackMint), waits RESCORE_DELAY_MS for BalanceIndex to accumulate some,
