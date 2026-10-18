@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-18T20:40:32Z",
+  "updated_at": "2026-10-18T20:41:01Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 75,
     "started_at": "2026-10-18T20:39:05Z",
-    "turns": 15
+    "turns": 36
   },
   "round": {
     "number": null,
@@ -714,111 +714,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-18T11:12:08Z",
-      "kind": "run",
-      "text": "rm -f /tmp/probe-out.log && timeout --signal=TERM 280 env NODE_OPTIONS=--experimental-websocket npx tsx scratch-rescore-probe.ts > /tmp/probe-out.log 2>&1; echo \"EXIT:$?\"; wc -l /\u2026"
-    },
-    {
-      "t": "2026-10-18T11:16:56Z",
-      "kind": "run",
-      "text": "ps aux | grep -i \"tsx\\|probe\" | grep -v grep; echo \"---\"; rm -f scratch-rescore-probe.ts /tmp/probe-out.log; git status"
-    },
-    {
-      "t": "2026-10-18T11:16:59Z",
-      "kind": "think",
-      "text": "Good \u2014 clean. Now let me update the comment in `server.ts` and README with this third data point, then re-verify."
-    },
-    {
-      "t": "2026-10-18T11:17:00Z",
-      "kind": "read",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-18T11:17:06Z",
-      "kind": "edit",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-18T11:17:08Z",
-      "kind": "run",
-      "text": "grep -n \"RESCORE_DELAY_MS\\|session 47\\|session 72\" README.md | head -10"
-    },
-    {
-      "t": "2026-10-18T11:17:10Z",
-      "kind": "run",
-      "text": "sed -n '150,170p' README.md"
-    },
-    {
-      "t": "2026-10-18T11:17:15Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-18T11:17:17Z",
-      "kind": "think",
-      "text": "Now let's re-verify typecheck/build/tests since docs/comments changed (no logic touched, but confirming nothing broke)."
-    },
-    {
-      "t": "2026-10-18T11:17:18Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10 && git status"
-    },
-    {
-      "t": "2026-10-18T11:17:25Z",
-      "kind": "think",
-      "text": "All clean. Now updating PROGRESS.md with this session's entry."
-    },
-    {
-      "t": "2026-10-18T11:17:26Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && tail -c 300 PROGRESS.md"
-    },
-    {
-      "t": "2026-10-18T11:17:40Z",
-      "kind": "run",
-      "text": "cat >> /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md << 'EOF'  ## Session 73 \u2014 2026-10-18  ### Done - Re-verified the repo first (`npm install`, 202/202 tests, cle\u2026"
-    },
-    {
-      "t": "2026-10-18T11:17:42Z",
-      "kind": "run",
-      "text": "git status && git diff --stat"
-    },
-    {
-      "t": "2026-10-18T11:17:49Z",
-      "kind": "think",
-      "text": "Session complete. Working tree has only doc/comment changes plus the PROGRESS.md log \u2014 no production logic touched, no files left behind, no stray processes. The runner will commi\u2026"
-    },
-    {
-      "t": "2026-10-18T11:17:50Z",
-      "kind": "done",
-      "text": "Session 73 finished \u00b7 123 steps \u00b7 covered by Claude subscription ($1.88 API value)"
-    },
-    {
-      "t": "2026-10-18T15:50:00Z",
-      "kind": "start",
-      "text": "Session 74 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-18T15:50:04Z",
-      "kind": "think",
-      "text": "I'll start by reading TASK.md and PROGRESS.md to see what's expected this session."
-    },
-    {
-      "t": "2026-10-18T15:50:05Z",
-      "kind": "run",
-      "text": "cat TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat PROGRESS.md 2>/dev/null; echo \"---LS---\"; ls -la"
-    },
-    {
-      "t": "2026-10-18T15:50:09Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-18T15:50:12Z",
-      "kind": "run",
-      "text": "wc -l PROGRESS.md; echo \"---TAIL---\"; tail -n 200 PROGRESS.md"
-    },
-    {
       "t": "2026-10-18T15:50:18Z",
       "kind": "run",
       "text": "cd rug-radar && ls -la && echo \"---SRC---\" && find src -type f | sort && echo \"---PUBLIC---\" && find public -type f | sort"
@@ -1112,6 +1007,111 @@
       "t": "2026-10-18T20:40:32Z",
       "kind": "tool",
       "text": "Agent"
+    },
+    {
+      "t": "2026-10-18T20:40:34Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-18T20:40:35Z",
+      "kind": "run",
+      "text": "find /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src -type f -name \"*.ts\" | head -20"
+    },
+    {
+      "t": "2026-10-18T20:40:37Z",
+      "kind": "read",
+      "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:37Z",
+      "kind": "read",
+      "text": "rug-radar/src/feed.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:37Z",
+      "kind": "read",
+      "text": "rug-radar/src/poller.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:40Z",
+      "kind": "read",
+      "text": "rug-radar/src/watcherOnLaunch.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:41Z",
+      "kind": "read",
+      "text": "rug-radar/src/scoringInFlight.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:41Z",
+      "kind": "read",
+      "text": "rug-radar/src/holderRescore.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:43Z",
+      "kind": "read",
+      "text": "rug-radar/src/config.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:43Z",
+      "kind": "read",
+      "text": "rug-radar/src/requestHandler.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:44Z",
+      "kind": "read",
+      "text": "rug-radar/public/index.html"
+    },
+    {
+      "t": "2026-10-18T20:40:46Z",
+      "kind": "read",
+      "text": "rug-radar/src/feed.test.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:46Z",
+      "kind": "read",
+      "text": "rug-radar/src/poller.test.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:46Z",
+      "kind": "read",
+      "text": "rug-radar/src/watcherOnLaunch.test.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:48Z",
+      "kind": "read",
+      "text": "rug-radar/src/scoringInFlight.test.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:49Z",
+      "kind": "read",
+      "text": "rug-radar/src/holderRescore.test.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:49Z",
+      "kind": "read",
+      "text": "rug-radar/src/requestHandler.test.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:51Z",
+      "kind": "run",
+      "text": "find /home/runner/work/buildvote-agent/buildvote-agent/rug-radar -name \"config.test.ts\" -o -name \"server.test.ts\""
+    },
+    {
+      "t": "2026-10-18T20:40:54Z",
+      "kind": "read",
+      "text": "rug-radar/src/config.test.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:56Z",
+      "kind": "read",
+      "text": "rug-radar/src/rescore.ts"
+    },
+    {
+      "t": "2026-10-18T20:40:58Z",
+      "kind": "run",
+      "text": "grep -n \"setInterval\\|forEach\\|map\\|innerHTML\\|textContent\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/public/index.html"
     }
   ],
   "schedule": {
