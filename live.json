@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-18T15:51:20Z",
+  "updated_at": "2026-10-18T15:51:59Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 74,
     "started_at": "2026-10-18T15:50:00Z",
-    "turns": 13
+    "turns": 19
   },
   "round": {
     "number": null,
@@ -705,46 +705,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-18T11:04:07Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e \" // Test the balanceIndex.recordTrade logic // Lines 39-62  // Scenario: mint1 has walletA, walletB, the\u2026"
-    },
-    {
-      "t": "2026-10-18T11:04:11Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e \" // Test the DeployerIndex.record logic // Lines 31-49  const byDeployer = new Map(); const order = []; \u2026"
-    },
-    {
-      "t": "2026-10-18T11:04:15Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e \" // Test potential issue with account index lookups // lines 111-114 in pumpfun.ts decodeCreateInstructi\u2026"
-    },
-    {
-      "t": "2026-10-18T11:04:21Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e \" // Looking at bundledBuys signal scoring again // What if we have exactly 50% share?  const early = [  \u2026"
-    },
-    {
-      "t": "2026-10-18T11:04:25Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e \" // Test ScoringGate logic - lines 8-25  class ScoringGate {   inFlight = 0;   constructor(maxConcurrent\u2026"
-    },
-    {
-      "t": "2026-10-18T11:04:28Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
-      "t": "2026-10-18T11:04:30Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e \" // Simulate pacer logic with fake time let fakeTime = 0; const sleep_records = [];  // RequestPacer buc\u2026"
-    },
-    {
-      "t": "2026-10-18T11:04:35Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e \" // Check the exact comparison logic in discovery.ts line 81 // const newestBlockTime = signatures.find(\u2026"
-    },
-    {
       "t": "2026-10-18T11:04:38Z",
       "kind": "read",
       "text": "rug-radar/src/data/bundledBuys.ts"
@@ -1103,6 +1063,46 @@
       "t": "2026-10-18T15:51:08Z",
       "kind": "run",
       "text": "cd rug-radar && sed -n '454,553p' README.md"
+    },
+    {
+      "t": "2026-10-18T15:51:25Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-18T15:51:26Z",
+      "kind": "think",
+      "text": "Now let me check the RESCORE_DELAY_MS comment to make sure I capture the current number accurately, then write the condensed section."
+    },
+    {
+      "t": "2026-10-18T15:51:27Z",
+      "kind": "run",
+      "text": "cd rug-radar && grep -n \"RESCORE_DELAY_MS\" -A3 -B3 src/server.ts | head -30"
+    },
+    {
+      "t": "2026-10-18T15:51:29Z",
+      "kind": "run",
+      "text": "pwd; grep -n \"RESCORE_DELAY_MS\" -A3 -B3 src/server.ts | head -30"
+    },
+    {
+      "t": "2026-10-18T15:51:32Z",
+      "kind": "think",
+      "text": "Good, that's current. Now let me write the condensed \"Known limitations\" section."
+    },
+    {
+      "t": "2026-10-18T15:51:33Z",
+      "kind": "read",
+      "text": ""
+    },
+    {
+      "t": "2026-10-18T15:51:39Z",
+      "kind": "run",
+      "text": "sed -n '1060,1069p' README.md | cat -A | head -20 | cut -c1-200"
+    },
+    {
+      "t": "2026-10-18T15:51:59Z",
+      "kind": "edit",
+      "text": "/tmp/known_limitations.md"
     }
   ],
   "schedule": {
