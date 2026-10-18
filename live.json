@@ -1,11 +1,10 @@
 {
-  "updated_at": "2026-10-18T23:14:43Z",
+  "updated_at": "2026-10-18T23:14:50Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 76,
-    "started_at": "2026-10-18T23:09:33Z",
-    "turns": 70
+    "turns": 71
   },
   "round": {
     "number": null,
@@ -718,25 +717,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 1.2954
+    },
+    {
+      "date": "2026-10-18T23:09:33Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 35,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0076.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 1.3546
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-18T23:09:42Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-18T23:09:45Z",
-      "kind": "run",
-      "text": "wc -l PROGRESS.md TASK.md; echo \"---\"; tail -c 4000 PROGRESS.md"
-    },
-    {
-      "t": "2026-10-18T23:09:49Z",
-      "kind": "run",
-      "text": "git status && echo \"---\" && git log --oneline -15 && echo \"---rug-radar ls---\" && ls -la rug-radar && echo \"---src---\" && find rug-radar/src rug-radar/public -name \"*.ts\" -o -name\u2026"
-    },
     {
       "t": "2026-10-18T23:09:52Z",
       "kind": "think",
@@ -1121,6 +1114,21 @@
       "t": "2026-10-18T23:14:43Z",
       "kind": "think",
       "text": "Final check that everything's clean before wrapping up."
+    },
+    {
+      "t": "2026-10-18T23:14:45Z",
+      "kind": "run",
+      "text": "git status --short && echo \"---\" && ps aux | grep -i \"node\\|tsx\" | grep -v grep"
+    },
+    {
+      "t": "2026-10-18T23:14:49Z",
+      "kind": "think",
+      "text": "Clean \u2014 only the intended files changed, no stray processes. No commits made, per CLAUDE.md the runner handles that."
+    },
+    {
+      "t": "2026-10-18T23:14:50Z",
+      "kind": "done",
+      "text": "Session 76 finished \u00b7 71 steps \u00b7 covered by Claude subscription ($1.35 API value)"
     }
   ],
   "schedule": {
