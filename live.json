@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-18T04:40:38Z",
+  "updated_at": "2026-10-18T04:41:05Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 72,
     "started_at": "2026-10-18T04:28:32Z",
-    "turns": 34
+    "turns": 39
   },
   "round": {
     "number": null,
@@ -687,51 +687,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-17T20:37:39Z",
-      "kind": "done",
-      "text": "Session 70 finished \u00b7 29 steps \u00b7 covered by Claude subscription ($1.37 API value)"
-    },
-    {
-      "t": "2026-10-17T23:06:48Z",
-      "kind": "start",
-      "text": "Session 71 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-17T23:06:53Z",
-      "kind": "run",
-      "text": "echo \"=== TASK.md ===\" && cat TASK.md 2>/dev/null && echo \"=== PROGRESS.md ===\" && cat PROGRESS.md 2>/dev/null && echo \"=== ls ===\" && ls -la"
-    },
-    {
-      "t": "2026-10-17T23:06:56Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-17T23:06:57Z",
-      "kind": "run",
-      "text": "find /home/runner/work/buildvote-agent/buildvote-agent/rug-radar -type f -not -path \"*/node_modules/*\" | sort"
-    },
-    {
-      "t": "2026-10-17T23:07:00Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-17T23:07:03Z",
-      "kind": "run",
-      "text": "wc -l /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
-    },
-    {
-      "t": "2026-10-17T23:07:05Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-17T23:07:14Z",
-      "kind": "think",
-      "text": "I'll start by reviewing where things stand: PROGRESS.md shows this is a mature project (70+ sessions) with all five TASK.md steps functionally complete. Let me re-verify the repo \u2026"
-    },
-    {
       "t": "2026-10-17T23:07:15Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && git status && echo \"---PS---\" && ps aux | grep -E \"tsx|node\" | grep -v grep"
@@ -1085,6 +1040,51 @@
       "t": "2026-10-18T04:40:38Z",
       "kind": "edit",
       "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-18T04:40:40Z",
+      "kind": "think",
+      "text": "Now update the README passage to match."
+    },
+    {
+      "t": "2026-10-18T04:40:41Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-18T04:40:43Z",
+      "kind": "run",
+      "text": "grep -n \"[Ss]ession 47\" README.md"
+    },
+    {
+      "t": "2026-10-18T04:40:45Z",
+      "kind": "think",
+      "text": "Just the one mention. I'll update it in place."
+    },
+    {
+      "t": "2026-10-18T04:40:51Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-18T04:40:53Z",
+      "kind": "think",
+      "text": "Now let's clean up: delete the scratch probe script, remove the temp output log, run tests/typecheck/build to confirm nothing broke, and check git status."
+    },
+    {
+      "t": "2026-10-18T04:40:54Z",
+      "kind": "run",
+      "text": "rm -f scratch-rescore-probe.ts /tmp/probe-output.log && npm run typecheck 2>&1 | tail -10 && npm test 2>&1 | tail -10"
+    },
+    {
+      "t": "2026-10-18T04:41:01Z",
+      "kind": "think",
+      "text": "Clean. Let me verify `npm run build` too and check git/process state before finalizing PROGRESS.md."
+    },
+    {
+      "t": "2026-10-18T04:41:02Z",
+      "kind": "run",
+      "text": "npm run build 2>&1 | tail -10 && echo \"---status---\" && cd /home/runner/work/buildvote-agent/buildvote-agent && git status && echo \"---ps---\" && ps aux | grep -i tsx | grep -v grep"
     }
   ],
   "schedule": {
