@@ -12,16 +12,26 @@ export interface RequestHandlerDeps {
   // Reads the index page HTML; injected so tests don't need a real file on
   // disk (server.ts passes a real fs readFile bound to publicDir).
   readIndexHtml: () => Promise<string>;
+  // Reads index.html's client-side rendering module (public/feed.js), same
+  // injected-reader pattern as readIndexHtml and for the same reason.
+  readFeedJs: () => Promise<string>;
 }
 
 export function createRequestHandler(deps: RequestHandlerDeps) {
-  const { feed, readIndexHtml } = deps;
+  const { feed, readIndexHtml, readFeedJs } = deps;
 
   return async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
     if (req.url === "/" || req.url === "/index.html") {
       const html = await readIndexHtml();
       res.writeHead(200, { "content-type": "text/html" });
       res.end(html);
+      return;
+    }
+
+    if (req.url === "/feed.js") {
+      const js = await readFeedJs();
+      res.writeHead(200, { "content-type": "text/javascript" });
+      res.end(js);
       return;
     }
 

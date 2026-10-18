@@ -207,6 +207,7 @@ function poll(): void {
 const handleRequest = createRequestHandler({
   feed,
   readIndexHtml: () => readFile(path.join(publicDir, "index.html"), "utf8"),
+  readFeedJs: () => readFile(path.join(publicDir, "feed.js"), "utf8"),
 });
 const server = createServer(handleRequest);
 

@@ -24,33 +24,8 @@
     <h1>rug radar</h1>
     <p>Live pump.fun launch risk scoring, from public on-chain data.</p>
     <div id="feed">Loading…</div>
-    <script>
-      function scoreClass(score) {
-        if (score >= 70) return "high";
-        if (score >= 40) return "medium";
-        return "low";
-      }
-
-      function renderLaunch(launch) {
-        const signalsHtml = launch.signals
-          .map(
-            (s) => `
-              <div class="signal">
-                <span class="signal-name">${s.name}</span>: ${s.score}
-                <ul>${s.reasons.map((r) => `<li>${r}</li>`).join("")}</ul>
-              </div>`,
-          )
-          .join("");
-
-        return `
-          <div class="launch">
-            <div class="launch-header">
-              <span class="mint">${launch.mint}</span>
-              <span class="score ${scoreClass(launch.score)}">${launch.score}</span>
-            </div>
-            ${signalsHtml}
-          </div>`;
-      }
+    <script type="module">
+      import { renderLaunch } from "/feed.js";
 
       async function refresh() {
         const feedEl = document.getElementById("feed");

@@ -32,7 +32,11 @@ const SCORE: LaunchScore = {
 
 test("createRequestHandler: GET / serves the index HTML", async () => {
   const feed = new LiveFeed();
-  const handle = createRequestHandler({ feed, readIndexHtml: async () => "<html>stub</html>" });
+  const handle = createRequestHandler({
+    feed,
+    readIndexHtml: async () => "<html>stub</html>",
+    readFeedJs: async () => "unused",
+  });
   const { res, calls } = fakeRes();
 
   await handle(fakeReq("/"), res);
@@ -44,7 +48,11 @@ test("createRequestHandler: GET / serves the index HTML", async () => {
 
 test("createRequestHandler: GET /index.html also serves the index HTML", async () => {
   const feed = new LiveFeed();
-  const handle = createRequestHandler({ feed, readIndexHtml: async () => "<html>stub</html>" });
+  const handle = createRequestHandler({
+    feed,
+    readIndexHtml: async () => "<html>stub</html>",
+    readFeedJs: async () => "unused",
+  });
   const { res, calls } = fakeRes();
 
   await handle(fakeReq("/index.html"), res);
@@ -53,10 +61,26 @@ test("createRequestHandler: GET /index.html also serves the index HTML", async (
   assert.equal(calls.body, "<html>stub</html>");
 });
 
+test("createRequestHandler: GET /feed.js serves the client rendering module", async () => {
+  const feed = new LiveFeed();
+  const handle = createRequestHandler({
+    feed,
+    readIndexHtml: async () => "unused",
+    readFeedJs: async () => "export function scoreClass() {}",
+  });
+  const { res, calls } = fakeRes();
+
+  await handle(fakeReq("/feed.js"), res);
+
+  assert.equal(calls.status, 200);
+  assert.equal(calls.headers?.["content-type"], "text/javascript");
+  assert.equal(calls.body, "export function scoreClass() {}");
+});
+
 test("createRequestHandler: GET /api/feed returns the feed as JSON", async () => {
   const feed = new LiveFeed();
   feed.add(SCORE);
-  const handle = createRequestHandler({ feed, readIndexHtml: async () => "unused" });
+  const handle = createRequestHandler({ feed, readIndexHtml: async () => "unused", readFeedJs: async () => "unused" });
   const { res, calls } = fakeRes();
 
   await handle(fakeReq("/api/feed"), res);
@@ -68,7 +92,7 @@ test("createRequestHandler: GET /api/feed returns the feed as JSON", async () =>
 
 test("createRequestHandler: GET /api/feed on an empty feed returns an empty list", async () => {
   const feed = new LiveFeed();
-  const handle = createRequestHandler({ feed, readIndexHtml: async () => "unused" });
+  const handle = createRequestHandler({ feed, readIndexHtml: async () => "unused", readFeedJs: async () => "unused" });
   const { res, calls } = fakeRes();
 
   await handle(fakeReq("/api/feed"), res);
@@ -78,7 +102,7 @@ test("createRequestHandler: GET /api/feed on an empty feed returns an empty list
 
 test("createRequestHandler: unknown routes get a 404", async () => {
   const feed = new LiveFeed();
-  const handle = createRequestHandler({ feed, readIndexHtml: async () => "unused" });
+  const handle = createRequestHandler({ feed, readIndexHtml: async () => "unused", readFeedJs: async () => "unused" });
   const { res, calls } = fakeRes();
 
   await handle(fakeReq("/nope"), res);

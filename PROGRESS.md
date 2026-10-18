@@ -4504,3 +4504,71 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   thing have diminishing value without a new angle.
 - All five TASK.md steps remain functionally complete; this session's
   contribution is documentation quality, not a behavior change.
+
+## Session 75 — 2026-10-18
+
+### Done
+- Re-verified the repo first: `npm install`, 202/202 tests, clean
+  typecheck/build, `git status` clean before starting.
+- Spawned an `Explore` agent for a fresh correctness read of the modules
+  session 73's review hadn't covered (`server.ts`, `feed.ts`, `poller.ts`,
+  `watcherOnLaunch.ts`, `scoringInFlight.ts`, `holderRescore.ts`,
+  `config.ts`, `requestHandler.ts`, `public/index.html`'s client JS).
+  Result: no real bugs found — consistent with every prior review.
+- Looked for a different angle than another live-sample/rate-limit probe
+  (72/73 both flagged diminishing returns there) and found one: the live
+  feed page's rendering logic (`scoreClass`, `renderLaunch` — step 4/5 of
+  TASK.md, "a score... with the reasons shown" and "a minimal live feed
+  page") lived entirely as untested inline `<script>` in
+  `public/index.html`. Every other piece of the score/feed path has
+  offline tests; this one didn't.
+- Extracted that logic into `public/feed.js`, a plain ES module (not
+  TypeScript — it's served to the browser as-is, same as `index.html`
+  already was, so no build step is needed for it either). `index.html`
+  now does `<script type="module">import { renderLaunch } from
+  "/feed.js"`, keeping its own `refresh()`/polling loop inline.
+- Added a `/feed.js` static route in `requestHandler.ts` via a new
+  injected `readFeedJs` dependency (same pattern `readIndexHtml` already
+  used, for the same testability reason) and wired it in `server.ts`.
+  Explicit `req.url === "/feed.js"` check only — not a general static
+  directory server, to avoid adding path-traversal surface for one file.
+- Added `public/feed.test.ts`: offline tests for `scoreClass`'s three
+  boundaries and `renderLaunch`'s HTML output (mint/score/class, signal
+  name/score/reasons, the no-signals case). Added a `requestHandler.test.ts`
+  case for the new `/feed.js` route and updated its other cases for the
+  new required `readFeedJs` dep.
+- `package.json`'s `test` script only globbed `src` for `*.test.ts`;
+  changed `find src -name` to `find src public -name` so the new
+  `public/feed.test.ts` actually runs under `npm test` (confirmed it
+  wasn't picked up before this change, then was after).
+- Smoke-tested the real server end to end (`PORT=8799 timeout 8 node
+  --import tsx src/server.ts` in the background, `curl` against `/`,
+  `/feed.js`, `/api/feed`): all three returned the expected status/body.
+  Killed the process and removed the temp log afterward.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 209/209 passing (202 prior + 7 new), all offline, ~2.6s.
+- Live feed page's rendering logic now has direct test coverage for the
+  first time; manually confirmed the real server serves `/feed.js` and
+  `index.html`'s import of it works.
+- `git status`/`ps aux` clean after finishing — only the files this
+  session touched changed; no stray files, no leftover process.
+
+### Next
+- `public/feed.js` is plain untyped JS by design (served to the browser
+  with no build step, matching how `index.html` already worked) — don't
+  "fix" this by moving it back under `tsc`'s `src` rootDir; that would
+  require a build step before `npm run dev` could serve it, which it
+  doesn't need today.
+- `RESCORE_DELAY_MS` (60s, 14 live samples as of session 73) and
+  `findFundingSource`'s ~2% unknown rate (session 39) are unchanged —
+  still not a priority on their own.
+- The scoring endpoint's rate-limit ceiling is unchanged (sessions 20-26,
+  61, 68, 69, 71) — per session 69/71, further live checks of that exact
+  thing have diminishing value without a new angle.
+- All five TASK.md steps remain functionally complete. A fresh
+  correctness review (this session, scoped to previously-unreviewed
+  modules) again found nothing — future sessions should keep looking for
+  genuinely new angles (as this session did) rather than re-running the
+  same review or the same live probe for its own sake.
