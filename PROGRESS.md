@@ -4451,3 +4451,56 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   that check is reasonable, but doing it every session is unlikely to find
   something a fresh read of unchanged code didn't already miss N times.
 - All five TASK.md steps remain functionally complete.
+
+## Session 74 — 2026-10-18
+
+### Done
+- Re-verified the repo first: `npm install` (fresh sandbox, `node_modules`
+  wasn't present yet), 202/202 tests, clean typecheck/build, `git status`
+  clean before starting.
+- Looked for a genuinely new angle rather than repeating the last several
+  sessions' live rate-limit/`RESCORE_DELAY_MS` checks (72/73 both flagged
+  diminishing returns on that specific repeat). Found one: `README.md`'s
+  "Known limitations" section had grown to ~515 lines (over half the
+  file's 1105 total) of session-by-session changelog narrative — the full
+  blow-by-blow of every endpoint search, pacing experiment, and fix,
+  already duplicated in `PROGRESS.md`. TASK.md's step 1 asks for "a
+  README with how to run it," and a 1105-line file with more changelog
+  than usage docs works against that.
+- Condensed "Known limitations" to a ~60-line current-state summary: what
+  is limited today, why, and what mitigates it (scoring-endpoint ceiling,
+  `getTokenLargestAccounts`'s ~100% 429 rate and the `BalanceIndex`
+  rescore mitigation, `getTransaction`'s dedicated slow pacer lane,
+  `ScoringGate`'s concurrency cap, the `signatureLimit` call-volume
+  tradeoffs, the old polling path's under-sampling, and
+  `findFundingSource`'s residual ~2% unknown rate) — with a pointer to
+  `PROGRESS.md` for the full session-by-session history instead of
+  repeating it. No technical fact was dropped, only the per-session
+  narration of how each one was found. Did not touch "Live feed" above it
+  (architecture description, not a changelog) or anything below "Setup."
+  README is now 656 lines, down from 1105.
+- Re-ran typecheck, build, and the full test suite after the doc-only
+  edit (no production code touched).
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 202/202 passing, all offline, ~4.2s.
+- `git status` clean after finishing — only `rug-radar/README.md` and this
+  file changed; no stray files, no leftover process (no live checks run
+  this session).
+
+### Next
+- `README.md`'s "Known limitations" section should stay a current-state
+  summary from here — when a future session changes one of these
+  mitigations (e.g. finds a new RPC endpoint, changes a `signatureLimit`,
+  or adjusts `RESCORE_DELAY_MS` again), update the relevant bullet in
+  place rather than appending a new dated paragraph; let `PROGRESS.md`
+  carry the per-session narrative as it already does.
+- `RESCORE_DELAY_MS` (60s, 14 live samples as of session 73) and
+  `findFundingSource`'s ~2% unknown rate (session 39) are unchanged —
+  still not a priority on their own.
+- The scoring endpoint's rate-limit ceiling is unchanged (sessions 20-26,
+  61, 68, 69, 71) — per session 69/71, further live checks of that exact
+  thing have diminishing value without a new angle.
+- All five TASK.md steps remain functionally complete; this session's
+  contribution is documentation quality, not a behavior change.

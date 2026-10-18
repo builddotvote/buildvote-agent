@@ -552,518 +552,69 @@ doesn't fix.
 
 ### Known limitations
 
-- **Discovery's rate-limit wall (sessions 8-19) is fixed by pointing
-  discovery at a different public endpoint (session 20); the scoring side's
-  bottleneck it exposed (session 20) now has backpressure (session 21), but
-  the underlying scoring-endpoint rate limit is still the binding
-  constraint.** The official endpoint (`api.mainnet-beta.solana.com`) was
-  confirmed live to resolve **zero** launches over a 3-minute `LaunchWatcher`
-  check (session 19) and a 90s re-check (172/172 `getTransaction` calls hit
-  429, session 20). Switching discovery's RPC to `solana-rpc.publicnode.com`
-  (see "Live feed" above) resolved 37-42 launches with zero 429s in the same
-  90s window — discovery now actually works. Booting the real server
-  end-to-end afterward (session 20), though, found that discovery *working*
-  now pushes far more launches into scoring than before, and scoring still
-  runs over the official, rate-limited endpoint (`rpcUrl`, needed for
-  `getTokenSupply`/`getTokenLargestAccounts` that the discovery endpoint
-  blocks — see "Live feed" above); a 100-second boot saw 18 signal failures
-  and zero launches land in `/api/feed`, not a hang but a queue of scoring
-  work arriving faster than `maxConcurrent: 2` can drain. **Session 21**
-  built the backpressure mechanism session 20 proposed:
-  `src/scoringGate.ts`'s `ScoringGate` caps how many launches can be scoring
-  at once (3, shared across both the websocket watcher and the backstop
-  poller in `src/server.ts`, since both hit the same scoring endpoint); a
-  launch beyond the cap is dropped immediately (logged, not queued) rather
-  than piling up. Live-confirmed this bounds the backlog as intended (a 60s
-  boot logged 23 clean "too many pending scores" skips instead of an
-  ever-growing queue, and 429s/signal-failures dropped from session 20's 18
-  in 100s to 17+3 in 60s) — but **did not** get a single launch to land in
-  `/api/feed` within that 60s window either. The gate fixes "the backlog
-  grows forever and nothing ever surfaces why," not "the official endpoint
-  can sustain enough throughput to finish scoring a launch." That remaining
-  gap needs the same kind of fix discovery got (session 20): a different
-  public endpoint for scoring's token methods, or accepting that free,
-  keyless scoring against the official endpoint may not keep up with
-  real-time discovery at all right now. **Session 22** parallelized the
-  independent RPC calls inside `src/data/bundledBuys.ts` and
-  `src/data/deployerHistory.ts` (`Promise.all` instead of sequential
-  `for`/`await` loops) on the theory that serialized retry/backoff delays
-  were compounding the rate limit. That change is real and harmless (tests
-  stay green, call order was never load-bearing), but **sessions 23-25 each
-  started a live re-check and lost the result to a session boundary before
-  reading it** — this repo's sessions run in a fresh sandbox each time, so a
-  backgrounded server process and its log file don't survive past the end of
-  the session that started them; scheduling a wakeup to "check back later"
-  doesn't work for that case here. **Session 26 ran the check synchronously
-  in the foreground instead** (85s live boot, parallelization included) and
-  got a conclusive answer: discovery still finds launches fine and the
-  scoring gate still caps cleanly, but scoring's `getTransaction`/
-  `getTokenLargestAccounts` calls against the official endpoint hit 429 on
-  nearly every attempt, and **zero launches landed in `/api/feed`** — the
-  same result as session 21, confirming the parallelization did not move the
-  needle. The bottleneck was never about call ordering; it's the official
-  endpoint's rate-limit ceiling itself. The real fix is still what session
-  20 used for discovery: a different public endpoint for scoring's
-  `getTokenSupply`/`getTokenLargestAccounts`/`getTransaction` calls (not yet
-  found — `solana-rpc.publicnode.com` itself blocks the indexed token
-  methods scoring needs without a signup, per session 20).
-  **Session 27** live-checked 9 more candidate free public endpoints
-  (`rpc.ankr.com/solana`, `endpoints.omniatech.io`, `solana.drpc.org`,
-  `solana-mainnet.rpc.extrnode.com`, `api.metaplex.solana.com`,
-  `solana-api.projectserum.com`, `free.rpcpool.com`, `solana.public-rpc.com`,
-  re-confirmed `solana-rpc.publicnode.com`) for `getTokenSupply` support
-  without a key or signup: all either require a key/plan upgrade, explicitly
-  block indexed token methods, or don't resolve/respond at all. No free,
-  keyless alternative to the official endpoint for these token methods was
-  found — this avenue looks exhausted for now, worth re-checking later rather
-  than repeating immediately. Instead, found and fixed a smaller, real win
-  on the call-count side: pump.fun's bonding curve account already carries
-  `token_total_supply` (confirmed against the program's public docs — it's
-  copied from the `Global` account at creation and never touched by
-  buy/sell), so holder concentration's `getTokenSupply` call was redundant
-  whenever liquidity's bonding-curve fetch for the same mint already ran.
-  `src/data/bondingCurve.ts` factors that fetch out so `pipeline.ts` can run
-  it once and hand the result to both signals, cutting one whole RPC call
-  per launch scored. Live-verified with a synchronous 85s boot (same
-  foreground pattern as session 26, public mainnet-beta, no keys): **one
-  launch landed in `/api/feed`** (score 40: deployer-history, bundled-buys,
-  and liquidity all present; holder-concentration still failed on a 429 from
-  the remaining `getTokenLargestAccounts` call, which this change doesn't
-  touch) — the first time since session 20 that a live-boot check in this
-  file recorded a non-zero feed. One fewer call per launch does not fix the
-  rate-limit ceiling itself (holder-concentration's other call and
-  deployer-history/bundled-buys' own scans still hit 429s in the same run),
-  but it is a measurable, verified improvement, not just a theoretical one.
-  **Session 28** checked the follow-up question session 27 left open —
-  whether `getTokenLargestAccounts` itself (the one remaining indexed call in
-  holder concentration) could be dropped the same way, approximated from data
-  already fetched elsewhere. Confirmed it cannot, from two angles: (1) the
-  bonding curve account (`pumpfun.ts`'s `decodeBondingCurve`) only carries
-  aggregate reserve totals and `tokenTotalSupply` — no per-holder breakdown
-  at all, so there is nothing in it to rank holders by; (2) the early-buy
-  data bundled-buys already gathers is a time-windowed, scan-limited *sample*
-  of buyers, not a complete, current holder list — using it as a stand-in
-  would silently change what the signal measures (who bought early) rather
-  than what it claims to measure (who holds the most right now, net of any
-  selling). Also live-checked whether `getProgramAccounts` with a `mint`
-  memcmp filter (the classic non-indexed way to enumerate a mint's holders)
-  could substitute: `solana-rpc.publicnode.com` returns an explicit
-  `"RPC call or parameters have been disabled"` (code 410) for it, and the
-  official endpoint didn't respond within 20s (consistent with its existing
-  severe throttling, not a new finding). **Conclusion: no free, keyless
-  substitute exists for this call** with data checked so far — this specific
-  avenue is closed, not just unexplored. The scoring-side rate-limit ceiling
-  itself (unchanged since sessions 20/21/26) remains the open item; a real
-  fix would need either a paid/less-restricted endpoint or a self-built
-  holder index from live buy/sell instruction data (a much bigger change,
-  same shape as `deployerIndex.ts` but tracking balances instead of launch
-  counts — not attempted, would need its own scoped session).
-  **Sessions 29-33** built that self-built holder index in pieces
-  (`decodeTradeInstruction`, `detectTradeInstruction`, `BalanceIndex`,
-  `LaunchWatcher.trackMint`/`untrackMint`) without wiring it in — see
-  "Live feed" above. **Session 34** wired it in (`src/rescore.ts`,
-  `src/server.ts`'s delayed re-score) and live-booted again (90s,
-  foreground, same pattern as sessions 26/27): still only **one** launch
-  landed in `/api/feed` in the window — the scoring-gate ceiling above is
-  unchanged by this session — and a new wrinkle showed up in that same run:
-  a visible rate of `getTransaction` 429s against the *discovery* endpoint
-  (`solana-rpc.publicnode.com`), which session 20 had found to be 429-free.
-  Only one launch ever reached the point where `trackMint` could run (the
-  scoring gate drops everything else before `scoreLaunch` is even called),
-  and that mint had very thin liquidity (0.16 SOL) — not enough of a sample
-  to tell whether the balance index got no trades because there weren't any,
-  or because trade resolution hit the same new 429s. If the discovery
-  endpoint's throttling has genuinely tightened since session 20 (rather
-  than being this run's point-in-time load, the same caveat raised about the
-  scoring endpoint in session 19), that would narrow the two endpoints' gap
-  and is worth checking on its own before trusting either endpoint's
-  behavior as fixed.
-  **Session 35** ran the isolated `trackMint`/`onTrade` check session 34 left
-  open and found the real reason the balance index had never observed a
-  trade: a dedup bug in `wsDiscovery.ts` (see "Live feed" above for the full
-  root cause and fix — a cross-subscription dedup collision, not a sample-
-  size problem) was silently dropping almost every trade notification before
-  it reached `onTrade`. Fixed and live-confirmed (5 trades resolved in a
-  75s isolated check, versus 0 before the fix in the same kind of check).
-  This does not touch the scoring-endpoint rate-limit ceiling itself — that
-  remains unchanged — but it does mean `BalanceIndex`/`rescore.ts`'s
-  mechanism, wired in session 34, can now actually receive data once a
-  mint is tracked for long enough to see real trading activity, which it
-  could not reliably do before this fix regardless of the scoring gate's
-  throughput.
-  **Session 36** closed the remaining open question (whether the mechanism
-  produces a *correct positive-balance* result, not just that trades reach
-  `BalanceIndex` at all). While investigating with an isolated probe, it
-  found the *real* reason every trade observed so far had been a sell, never
-  a buy (noted as an open mystery in the session 35 entry above): the dev's
-  own bundled buy, in the same transaction as the create, happens before
-  `trackMint` can possibly subscribe — so it was invisible to `BalanceIndex`
-  by construction, not by bad luck. Fixed in `src/discovery.ts`/`src/server.ts`
-  — see "Live feed" above for the mechanism — with 2 new offline tests in
-  `discovery.test.ts`. Re-ran the isolated probe after the fix and got a mint
-  with both buys and sells in its window, 2 positive-balance holders, and a
-  real `rescoreHolderConcentrationFromIndex` result — see "Live feed" above
-  for the numbers. The balance-index feature is now live-confirmed
-  end-to-end. **Correction:** the session that ran this live check (logged as
-  session-0037, written up above and in PROGRESS.md as part of "Session 36")
-  hit its step limit immediately after the fix and never documented it here
-  or in PROGRESS.md; the next session inherited the already-fixed code
-  without noticing the diff, and wrote up the live numbers as confirming the
-  *pre-existing* mechanism rather than this fix. Backfilled now — same
-  "step-limit interrupts documentation" pattern as sessions 6-9/17/20/22-25.
-  The scoring-endpoint rate-limit ceiling itself (the headline open item
-  below) is unchanged by this — the balance index is a workaround for one
-  signal's indexed RPC call, not a fix for the ceiling overall.
-  **Session 40** measured something none of sessions 20-39's endpoint
-  searches had directly checked: how many RPC calls one signal issues per
-  launch, not just whether the endpoint rate-limits them. Instrumented the
-  real (unmocked) `fetchDeployerHistoryInput`/`fetchBundledBuysInput`/
-  `fetchHolderConcentrationInput` against one real launch from a known
-  prolific deployer and counted calls directly. Result: deployer-history's
-  retroactive scan alone issued **54 `getTransaction` calls, 44 of them
-  429s, taking 113 seconds** for that one launch — by far the largest
-  contributor measured (bundled-buys: 28 calls/25 429s/88s; holder-
-  concentration: 1 call, failed immediately). The scoring gate (session 21)
-  bounds how many launches can score *concurrently*, but says nothing about
-  how many calls *one* launch's scoring costs — a single deployer-history
-  scan alone can cost more calls than the gate's entire concurrency budget,
-  which explains why even one launch getting through the gate so often
-  still failed to finish. Fixed by lowering `fetchDeployerHistoryInput`'s
-  default `signatureLimit` from 100 to 25 (`src/data/deployerHistory.ts`):
-  `DeployerIndex` (session 13) already covers the recall this scan would
-  otherwise lose for a deployer this process has seen create twice, so the
-  retroactive scan's main remaining job is a deployer's pre-existing
-  history, not the common repeat-offender case — trading some of that depth
-  for a ~4x cut in worst-case calls was the right side of the tradeoff.
-  Live-reverified with the same instrumented measurement against a fresh
-  launch after the fix: deployer-history dropped to **4 calls, 0 errors,
-  297ms**; bundled-buys to **2 calls, 0 errors, 2.5s** (same real deployer,
-  different mint, so not an apples-to-apples pair, but the call-count drop
-  is a direct, reproducible consequence of scanning fewer signatures, not
-  noise). Then live-booted the real server end-to-end (85s, foreground,
-  same pattern as sessions 26/27/34): **2 launches landed in `/api/feed`**
-  in the window, plus one successful holder-concentration rescore from
-  `BalanceIndex` logged — more launches landing in one run than any prior
-  session's live check on record (sessions 21/26 got zero; session 27 got
-  one). `getTokenLargestAccounts` (holder-concentration's remaining indexed
-  call, confirmed un-droppable in session 28) and bundled-buys' own window
-  scan still hit 429s in the same run, so the ceiling itself is not gone —
-  this is a measured reduction in how hard scoring pushes against it, not a
-  fix for the endpoint's own throughput.
-  **Session 41** applied the same instrumented-call-count measurement to
-  bundled-buys specifically, the item session 40 left open (its window-scan
-  `signatureLimit`, default 50, bounded by real early-buy activity rather
-  than the limit itself — not touched in session 40). Watched the real
-  websocket feed for 90s, then ran the real, unmodified
-  `fetchBundledBuysInput` against each discovered launch in turn (12
-  processed) with an instrumented scoring RPC counting calls per method.
-  Result: the outer bonding-curve scan reached **20, 25, and a full 50/50
-  signatures** across different launches in the same run (not bounded by low
-  activity the way session 40 speculated — a mint scored even ~90s after
-  discovery can already have accumulated enough bonding-curve traffic to hit
-  the cap), and the resulting concurrent `getTransaction` resolves against
-  the official scoring endpoint hit HTTP 429 on **648 of 658 calls (98.5%)**
-  across the 12 launches — worse than session 40's single-launch measurement
-  for this same signal (25/28, 89%). Fixed: lowered
-  `fetchBundledBuysInput`'s default `signatureLimit` from 50 to 20
-  (`src/data/bundledBuys.ts`) — the same tradeoff shape as session 40's
-  deployer-history cut, but **without** an equivalent index covering the
-  lost recall (there is no `BalanceIndex`-for-early-buyers), so this is a
-  real recall-vs-call-volume tradeoff, not a free win. Live-reverified with
-  the same instrumented probe after the fix (90s window, 21 launches
-  discovered, 12 processed): outer scans now cap at 20 as intended (several
-  launches showed exactly `20/20` instead of reaching 50), but the overall
-  429 rate was effectively unchanged (**741 of 751 calls, 98.7%**) — at this
-  level of endpoint saturation, nearly everything fails regardless of how
-  many signatures are requested, so the fix bounds worst-case request volume
-  per launch without measurably improving (or, within this sample,
-  measurably hurting) how much actually gets through. Honest conclusion:
-  this is the same class of fix as session 40 (reduce how hard one signal
-  pushes on an already-overwhelmed endpoint), but at this saturation level
-  the scoring endpoint's throughput — not any one signal's call count — is
-  now clearly the dominant constraint, more so than session 40's one-launch
-  sample suggested.
-- Previously documented here (session 19): a thrown 429 error (after
-  `rpc.ts`'s own 4 retries were exhausted) used to be swallowed by
-  `safeGetTransaction` to the same `null` as a genuine "not found yet"
-  result, so `resolveLaunchFromSignature`'s not-found retry loop retried a
-  rate-limit exhaustion exactly like replication lag — up to 5 more rounds,
-  each re-running `rpc.ts`'s own 4-retry backoff. Fixed in
-  `resolveLaunchFromSignature` (`src/discovery.ts`): a thrown error now gives
-  up immediately instead of entering the not-found retry loop (see
-  `src/discovery.test.ts`'s "does not retry a thrown error" test). Still
-  correct and unaffected by this session's endpoint split.
-- The old signature-polling path (`src/discovery.ts`) under-samples on its
-  own — confirmed live, the pump.fun program sees roughly 500 tx/second
-  across every instruction type combined, so 1000 signatures from
-  `getSignaturesForAddress` span only ~2 seconds. This is why it's now the
-  backstop rather than the primary path; the websocket watcher above doesn't
-  have this problem since it's push-based, not sampled.
-- **Deployer history's retroactive scan alone under-counted badly for the
-  exact wallets it most needs to catch** (confirmed live: a real deployer
-  creating a mint roughly every 1-2 seconds still showed only 0-1 "prior
-  launches" within `fetchDeployerHistoryInput`'s default 100-signature scan —
-  a false-negative scoring `0`, the lowest possible risk, for one of the most
-  prolific creators seen during testing). **Partially fixed:**
-  `src/deployerIndex.ts` now builds a running `deployer -> prior mints` index
-  from every launch either discovery path (websocket watcher or backstop
-  poller) observes live, and `fetchDeployerHistoryInput` merges it in
-  alongside the retroactive scan. This stops under-counting a repeat offender
-  *going forward* once the process has seen them create twice. It does not
-  help a deployer's pre-existing (pre-startup) history — that's still bounded
-  by the retroactive scan's lookback limit, which raising doesn't fix cheaply
-  (more signatures scanned means more `getTransaction` calls, i.e. worse
-  429s) since creates are such a small fraction of a prolific wallet's own
-  signature history. **Live-confirmed:** watching the same prolific deployer
-  (`4wTV1YmiEkRvAtNtsSGPtUrqRYQMe5SKy2uB4Jjaxnjf`) create several mints in a
-  row, the live-observed index caught the pattern the retroactive scan alone
-  missed — the signal's score rose from `40` ("too few prior tokens") to `90`
-  ("4 of 4 prior tokens from this deployer never migrated") by its 4th
-  observed launch in the same process, using only the index (a 1-signature
-  retroactive scan limit was used in the check, to isolate the index's
-  contribution from the scan's).
-- **`findFundingSource`'s lookback-limit — live-checked (session 37), real
-  bug root-caused and fixed (session 39).** Open since session 4, repeatedly
-  blocked (sessions 16/19/20/21) because discovery either couldn't resolve a
-  live launch at all, or the scoring endpoint's backlog never let one finish
-  scoring with early-buy data available. Session 37 unblocked the live check
-  by running `fetchBundledBuysInput` directly against
-  `solana-rpc.publicnode.com` (the discovery endpoint) instead of waiting on
-  the scoring endpoint, and measured **4 of 12 distinct early buyers (33%)
-  resolved to `fundedBy: null` ("unknown")** across 4 real mints — but didn't
-  dig into why.
-  Session 39 dug in with an instrumented probe that classified each miss, and
-  found it was overwhelmingly **one root cause, not signature-limit
-  exhaustion**: `findFundingSource` only ever checked the buyer's single
-  *oldest* visible signature for a SOL balance increase. Across a live sample
-  (24 mints, dozens of buyers), nearly every miss was a case where that oldest
-  transaction wasn't a funding transfer at all (some other, unrelated
-  activity, e.g. a failed tx) while a real funding transfer sat a few
-  signatures later, still well within `signatureLimit: 50` — the function
-  just never looked at it. Zero misses were attributable to the wallet
-  genuinely having no funding transaction within the limit.
-  Fixed in `src/data/bundledBuys.ts`: `findFundingSource` now walks every
-  signature within the limit oldest-to-newest and returns the first one that
-  actually shows a SOL balance increase for the buyer, instead of assuming
-  the single oldest signature is the funding transaction. Stops at the first
-  match, so the common case (a freshly-created wallet funded then immediately
-  used) still costs one extra `getTransaction` call; only a wallet with no
-  funding transaction anywhere in the window pays the full `signatureLimit`
-  cost, same worst case the old code already risked elsewhere. Regression
-  test added (confirmed it fails on the pre-fix code, passes on the fix).
-  **Live-reverified with the real, fixed `fetchBundledBuysInput`** over a
-  180s window (24 mints, public mainnet-beta, no keys): unknown rate dropped
-  from session 37's 33% to **2% (5 of 217 buyers)** — the remaining handful
-  are genuine "no funding transaction within `signatureLimit: 50`" cases, the
-  kind of miss this lookback limit was always expected to have.
-  **Session 42** tried a different angle on the scoring-endpoint ceiling
-  (sessions 20-41, above) than any prior session: proactive client-side
-  pacing instead of only reactive retry-after-429. Measured the official
-  endpoint's sustained safe rate directly with a throwaway paced probe
-  (`getSlot`, a non-indexed method, so the measurement isn't skewed by the
-  indexed-method throttling sessions 20/28 found separately): a steady
-  ~2.5 req/sec (400ms between request starts) ran 40s with zero 429s, while
-  5 req/sec degraded to ~27% 429 over a sustained 15s window and 7+ req/sec
-  was worse — the ceiling is a sustained average rate, not just burst size,
-  so spacing requests out should help where retry-after-the-fact alone
-  hadn't. Implemented `minIntervalMs` in `src/rpc.ts`: a chained pacer that
-  reserves each request's start time at least `minIntervalMs` after the
-  previous one, queued in call order so concurrent callers space out instead
-  of racing (disabled by default — `0` — so every existing caller/test is
-  unaffected; opt-in only). 2 new tests in `rpc.test.ts` (real-timer-based,
-  not the fake-clock pattern used elsewhere, after a fake-clock version hit a
-  microtask-ordering flake unrelated to the spacing guarantee itself — see
-  the test file's comment). Wired into `src/server.ts`'s two scoring clients
-  (`watcherScoringRpc`, `pollScoringRpc`) at `minIntervalMs: 400` each (not
-  800, after a first live check — see below). Live-checked twice, foreground,
-  same pattern as sessions 26/27/34/40/41: at 800ms the single
-  `getTransaction`-heavy deployer-history scan, paced one request at a time,
-  took long enough that an 85s window still logged zero new launches
-  landing; dropping to 400ms (matching the measured single-stream safe rate
-  directly, since each scoring client paces independently rather than
-  sharing one combined budget) and re-checking over 110s got **1 launch
-  landing in `/api/feed`**, plus a measurable drop in holder-concentration's
-  429 count (2 vs 3 in a comparable unpaced run). Honest read: this is a
-  small, verified improvement in the same direction as sessions 40-41
-  (reduce pressure on an overwhelmed endpoint), not a fix for the ceiling —
-  one launch in 110s is still far below real-time discovery's rate, and the
-  two scoring clients pace independently of each other, so their *combined*
-  request rate against the one shared endpoint is still roughly double the
-  single-stream-safe rate this session measured. A shared, cross-client
-  pacer (one `minIntervalMs` budget split across
-  `watcherScoringRpc`/`pollScoringRpc` rather than 400ms each) is the
-  logical next step and wasn't attempted this session.
-  **Session 43** closed that gap: extracted `RequestPacer` out of
-  `SolanaRpcClient` in `src/rpc.ts` (same reserve-a-slot chaining logic, now
-  a standalone class) so one instance can be shared between multiple
-  clients instead of each client pacing independently.
-  `watcherScoringRpc`/`pollScoringRpc` in `src/server.ts` now share one
-  `RequestPacer(400)` (via the new `pacer` option, which takes priority over
-  `minIntervalMs`) instead of each getting its own `minIntervalMs: 400` —
-  whichever one calls next waits for the shared slot, so the combined rate
-  against the one endpoint they both hit is held to the measured-safe
-  ~2.5 req/sec regardless of which client is busier. 1 new test in
-  `rpc.test.ts` (two clients sharing one pacer, asserted via combined
-  elapsed time the same way the original `minIntervalMs` test asserts a
-  single client's spacing). Live-checked (110s, foreground, same pattern as
-  prior sessions): **1 launch landed in `/api/feed`** — not more than
-  session 42's independently-paced check, so this is a correctness fix for
-  the double-rate gap rather than a throughput win on its own. A new,
-  more specific finding from this run: of 39 total 429s logged, 37 were on
-  `getTransaction` specifically and only 2 on `getTokenLargestAccounts` —
-  since session 42's rate measurement used `getSlot` (a cheap, non-indexed
-  method) to find the ~2.5 req/sec ceiling, it's possible the endpoint
-  throttles expensive calls like `getTransaction` more strictly than cheap
-  ones at the same request rate, which a flat combined-RPS pacer across all
-  methods wouldn't capture. Not confirmed with a dedicated measurement this
-  session — worth a `getTransaction`-specific paced probe before tuning
-  `minIntervalMs` further.
-  **Session 44** ran that `getTransaction`-specific probe (same shape as
-  session 42's `getSlot` measurement: a steady paced loop against the
-  official endpoint, this time using real recent signatures pulled from the
-  discovery endpoint instead of a cheap method). Confirmed the hypothesis
-  directly, and more severely than guessed: at 2.5 req/sec — the rate that
-  ran `getSlot` 40s with **zero** 429s (session 42) — `getTransaction` hit
-  **90% 429** (90 of 100 calls). Narrowing down: 1 req/sec still showed 6.7%
-  429, while 0.5 req/sec (2000ms spacing) ran 30s with **zero** 429s.
-  `getTransaction` needs roughly 5x more spacing than other calls on this
-  endpoint, confirming session 43's suspicion that one flat combined-RPS
-  pacer across every method can't serve both. Fixed by making `RequestPacer`
-  (`src/rpc.ts`) support per-method lanes: `reserve(method)` now checks an
-  optional `methodIntervalsMs` map; a method listed there gets its own
-  independent last-call timestamp and queue instead of sharing the default
-  lane every other method uses, so slowing down `getTransaction` doesn't
-  also slow down `getTokenLargestAccounts`/`getAccountInfo`/
-  `getSignaturesForAddress` (and vice versa). `SolanaRpcClient.request`
-  passes its own method name through to `reserve()`, so this needed no
-  caller-side changes beyond the one `server.ts` config. 1 new test in
-  `rpc.test.ts` (two methods on one shared pacer, one with its own slower
-  lane, asserted via elapsed time the same way the existing pacing tests
-  assert spacing). `src/server.ts`'s shared `scoringPacer` now reads
-  `new RequestPacer(400, { methodIntervalsMs: { getTransaction: 2000 } })` —
-  every other scoring call keeps the existing 400ms/2.5-req/sec lane,
-  `getTransaction` gets its own 2000ms/0.5-req/sec lane. Live-checked twice,
-  foreground, same pattern as every session since 26: a 112s run logged
-  **zero** `getTransaction` 429s and zero `getTransaction` failures (all 5
-  429s that run were on `getTokenLargestAccounts`, which has no dedicated
-  lane) — down from session 43's 37 of 39 429s on `getTransaction` at the
-  flat-rate pacer. A 100s run found 0 launches landed (the three that got
-  past `ScoringGate` were apparently still mid-score — the new 2000ms lane
-  serializes *every* `getTransaction` call across every signal and every
-  launch currently scoring, so a signal needing several sequential calls
-  — e.g. deployer-history's retroactive scan, bundled-buys' window scan and
-  per-buyer funding lookups — now takes noticeably longer wall-clock per
-  launch, even though each individual call succeeds). A longer 200s run
-  confirmed launches do land, just later: **2 launches** in `/api/feed`
-  (one with 3 signals present, one with all 4 including a successful
-  holder-concentration rescore from `BalanceIndex`), still zero
-  `getTransaction` 429s/failures across the whole window. Honest
-  conclusion: this trades per-launch latency for correctness on the
-  endpoint's most heavily-throttled call — a real, measured improvement
-  (zero `getTransaction` 429s, more launches landing in a comparable or
-  longer window than any single prior session's live check), not a full
-  fix for the rate-limit ceiling, which is still `getTokenLargestAccounts`'s
-  turn to be the dominant 429 source now that `getTransaction`'s own lane
-  mostly clears it.
-  **Session 45** picked up that exact follow-up — measuring
-  `getTokenLargestAccounts` the same paced-probe way sessions 42/44 measured
-  `getSlot`/`getTransaction` — and found something qualitatively different
-  from either of those: **100% 429, at every rate tried.** 2.5 req/sec (30s),
-  1 req/sec (20s), and 10 single isolated calls 10s apart after a 30s
-  cooldown wait all came back 429 — never once succeeded. A follow-up probe
-  ruled out a general IP block or a mint-specific issue in the same window:
-  `getSlot`/`getTokenSupply`/`getAccountInfo` on the same USDC mint all
-  returned 200 while `getTokenLargestAccounts` on that same mint, moments
-  later, still came back 429. Conclusion: this call is throttled far more
-  strictly than pacing can fix — no rate tried, including one far slower
-  than the 2.5 req/sec ceiling that works for every other measured method,
-  got a single success. Retrying it at the client's default `maxRetries`
-  (4, exponential backoff) therefore just burns ~4.5s per launch on a call
-  confirmed to never succeed in that window. Fixed by adding
-  `methodMaxRetries` to `RetryOptions`/`SolanaRpcClient` in `src/rpc.ts`: a
-  method listed there gets its own retry budget instead of the client-wide
-  default. `src/server.ts`'s scoring clients now set
-  `methodMaxRetries: { getTokenLargestAccounts: 1 }` — one quick retry
-  instead of four, failing fast so the slot frees up for the next launch
-  instead of holding it hostage on a call that's confirmed not to help.
-  1 new test in `rpc.test.ts`. Session 45 started a live check to confirm
-  this live but made the exact mistake its own README/PROGRESS history
-  warns against (documented since session 26): it backgrounded the server
-  and used `ScheduleWakeup` to check back later, then ended before the
-  wakeup fired — the result was never observed, same lost-result pattern as
-  sessions 24-25, just recurring again despite being on record as the
-  thing not to do.
-  **Session 46** picked up where 45 left off: deleted the 4 leftover
-  scratch probe files (`tmp-probe-getlargest-*.ts`, `tmp-probe-retry.ts`)
-  session 45 left committed, re-verified the suite (168/168, clean
-  typecheck/build — session 45's `methodMaxRetries` code was already
-  correct), then ran the live check **synchronously in the foreground**
-  (115s, public mainnet-beta, no keys, no `.env` — the pattern every
-  session since 26 is supposed to follow) instead of repeating session 45's
-  background/`ScheduleWakeup` mistake. Result: **1 launch landed in
-  `/api/feed` with all four signals present**
-  (`7huoQXwL7GAxAxi6FcKc3ayAMTiB74gSZ3BdcFgpump`, score 28) — notably,
-  holder-concentration's *direct* `getTokenLargestAccounts` call still
-  failed with a 429 three times during the run (now failing fast thanks to
-  session 45's fix, instead of burning retries), but the launch still ended
-  up with a real holder-concentration reading because `BalanceIndex`'s
-  delayed rescore (sessions 34-36) later supplied one from observed trades
-  ("top 1 non-program holder hold 4.2% of supply"). This is the first
-  documented live run where a launch's holder-concentration signal was
-  fully recovered by the rescore path after the direct RPC call failed,
-  rather than just being dropped. The scoring gate still logged dozens of
-  "too many pending scores" skips in the same window — `getTokenLargestAccounts`
-  itself is still 429'd on nearly every direct attempt, unchanged by this
-  session's fix or session 46's observation; what changed is that failing
-  fast plus the rescore workaround can now produce a complete score anyway.
-  **Session 48** tried a different angle than any prior session on this
-  bottleneck: TASK.md allows "public RPC endpoints, public APIs" (plural),
-  and every search so far (sessions 27-28) only checked alternative Solana
-  JSON-RPC endpoints, never a non-RPC public API for holder data. A web
-  search surfaced two keyless-sounding candidates: `rpc.magicblock.app/mainnet`
-  (named in a third-party open-source MCP server's README as "the only
-  keyless endpoint found that serves `getTokenLargestAccounts`") and
-  `solana.leorpc.com/?api_key=FREE` (a published shared demo key, not a
-  personal signup). Verified directly rather than trusting the README:
-  `rpc.magicblock.app` returned an "Access Restricted ... due to regulatory
-  requirements" page for both `getTokenLargestAccounts` and `getTokenSupply`
-  from this sandbox's IP — a geo-block, not a rate limit, and the same
-  README warns "the endpoint that works on your laptop is not the endpoint
-  that works in production," so this can't be confirmed usable from here and
-  may well be geo-blocked wherever this pipeline actually runs too (likely a
-  similar US-hosted cloud IP range). `leorpc.com`'s shared key returned a
-  JSON-RPC internal error (`-32603`) on the exact `getTokenLargestAccounts`
-  call needed, and it requires an explicit `api_key` URL parameter, which
-  this project has consistently avoided (sessions 20/27 rejected endpoints
-  needing any key/signup, even a published shared one). Separately
-  re-confirmed `solanatracker.io`'s data API and `solscan.io`'s v2 API both
-  return HTTP 401 without a real signup-issued key, consistent with
-  session 27's precedent. **No code changed this session** — like session
-  28, this is a bounded, negative-but-conclusive research finding: the
-  "try a public API instead of RPC" avenue doesn't currently have a working,
-  verifiable, genuinely keyless option either, at least not from this
-  sandbox. Worth re-checking from wherever this actually deploys if that
-  location differs from this sandbox's IP/region, since the magicblock block
-  was geographic rather than a hard "no."
-  **Session 49** tried a third angle: bypass `getTokenLargestAccounts`
-  entirely by computing holder concentration from `getProgramAccounts` on the
-  SPL Token program itself (filtered to the mint via `dataSize: 165` +
-  `memcmp` on the mint field, the standard way to list every token account
-  for a given mint). Verified live against `api.mainnet-beta.solana.com`
-  rather than assuming it would work: a sanity call against a small program
-  (the vote program, no filters) returned in well under a second, confirming
-  `getProgramAccounts` itself isn't disabled outright — but the same call
-  against the SPL Token program (`TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
-  filtered to USDC's mint timed out with zero bytes received after 20s. This
-  is consistent with the well-known operational cost of `getProgramAccounts`
-  against the token program without a secondary mint index enabled — the
-  node has to scan far more account data than the already-indexed
-  `getTokenLargestAccounts` call needs, so it's a strictly worse path on an
-  endpoint that already throttles the cheaper call. **No code changed this
-  session** — another bounded, negative-but-conclusive finding: this closes
-  the "avoid the method, not just the endpoint" angle, leaving the
-  balance-index rescore (sessions 29-36, 46) as the only working mitigation
-  for a dropped `getTokenLargestAccounts` call, not a replacement for it.
+- **The scoring-endpoint rate limit (`api.mainnet-beta.solana.com`) is the
+  binding constraint on throughput.** Discovery runs against a separate
+  endpoint (`solana-rpc.publicnode.com`, see "Live feed" above) that is
+  effectively 429-free for its own calls, but scoring's indexed token
+  methods (`getTokenSupply`, `getTokenLargestAccounts`) aren't available
+  keyless anywhere else found, so scoring stays on the official endpoint.
+  An exhaustive search for a free, keyless alternative — other RPC
+  providers, non-RPC public APIs, and `getProgramAccounts` as a substitute
+  for `getTokenLargestAccounts` — found none; this avenue is closed unless
+  TASK.md's "public, keyless only" constraint changes.
+- **`getTokenLargestAccounts` (holder concentration's direct call) 429s
+  essentially 100% of the time, at every request rate tried**, including
+  rates far below what every other method tolerates. It is configured with
+  `methodMaxRetries: 1` (`src/rpc.ts`/`src/server.ts`) so a launch fails
+  fast on this call instead of burning a full retry budget on a call
+  confirmed not to succeed. The working mitigation is `BalanceIndex`
+  (`src/balanceIndex.ts`) + a delayed rescore (`src/rescore.ts`,
+  `RESCORE_DELAY_MS` in `src/server.ts`, currently 60s based on 14 live
+  samples): each tracked mint's own buy/sell trades are observed directly
+  from its bonding-curve logs, and holder concentration is recomputed from
+  that balance snapshot when the direct RPC call fails. This recovers the
+  signal often, but not always — it depends on enough real trading volume
+  arriving before the rescore fires.
+- **`getTransaction` has its own, much slower pacer lane** (`RequestPacer`
+  in `src/rpc.ts`, configured in `src/server.ts` as
+  `methodIntervalsMs: { getTransaction: 2000 }`) because it 429s heavily at
+  the ~2.5 req/sec rate every other method tolerates. This eliminates
+  `getTransaction` 429s but adds per-launch latency, since every
+  `getTransaction` call across every signal and every in-flight launch
+  shares that one slow lane.
+- **`ScoringGate` (`src/scoringGate.ts`) caps concurrent scoring at 3**,
+  shared across both discovery paths since they hit the same scoring
+  endpoint. A launch beyond the cap is dropped immediately (logged, not
+  queued) rather than piling up a backlog that never drains. Net effect,
+  confirmed with a live `/api/feed` check: the feed does populate under
+  real load, but throughput is low and holder-concentration is frequently
+  missing from the direct call (recovered via rescore when it can be).
+- **Call volume per launch is bounded but not eliminated.** `deployerHistory`
+  and `bundledBuys`' retroactive/window scans (`signatureLimit: 25` and `20`
+  respectively, both lowered from higher defaults) are real
+  recall-vs-call-volume tradeoffs — `deployerIndex.ts`'s live-built
+  `deployer -> prior mints` index covers most of the recall lost by
+  deployer-history's lower limit for any deployer seen creating twice in
+  this process, but bundled-buys has no equivalent index, and a deployer's
+  pre-existing (pre-startup) history is still bounded by the scan limit
+  either way.
+- **The old signature-polling discovery path (`src/discovery.ts`)
+  under-samples on its own** — pump.fun sees roughly 500 tx/sec across all
+  instruction types, so `getSignaturesForAddress`'s 1000-signature page
+  spans only ~2 seconds. It's kept only as a backstop for a launch created
+  during startup or a websocket reconnect gap; the websocket watcher
+  (`src/wsDiscovery.ts`) is push-based and doesn't have this problem.
+- **`findFundingSource` (`src/data/bundledBuys.ts`) has a small residual
+  "unknown" rate (~2%, live-measured)** for early buyers whose funding
+  transaction genuinely doesn't appear within `signatureLimit: 50`
+  signatures. An earlier, larger miss rate (33%) was a real bug — the
+  function checked only the buyer's oldest visible signature instead of
+  walking forward to find the actual funding transfer — fixed, with a
+  regression test (`bundledBuys.test.ts`) confirming it fails pre-fix and
+  passes post-fix.
+
+See `PROGRESS.md` for the session-by-session history behind these
+findings (live measurements, rejected alternatives, and fixes).
 
 ## Setup
 
