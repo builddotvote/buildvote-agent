@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-18T11:16:48Z",
+  "updated_at": "2026-10-18T11:17:15Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 73,
     "started_at": "2026-10-18T11:00:42Z",
-    "turns": 113
+    "turns": 119
   },
   "round": {
     "number": null,
@@ -696,41 +696,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-18T11:02:54Z",
-      "kind": "read",
-      "text": "rug-radar/src/signals/liquidity.ts"
-    },
-    {
-      "t": "2026-10-18T11:02:55Z",
-      "kind": "read",
-      "text": "rug-radar/src/signals/deployerHistory.ts"
-    },
-    {
-      "t": "2026-10-18T11:02:55Z",
-      "kind": "read",
-      "text": "rug-radar/src/deployerIndex.ts"
-    },
-    {
-      "t": "2026-10-18T11:02:58Z",
-      "kind": "read",
-      "text": "rug-radar/src/pipeline.ts"
-    },
-    {
-      "t": "2026-10-18T11:02:58Z",
-      "kind": "read",
-      "text": "rug-radar/src/knownAccounts.ts"
-    },
-    {
-      "t": "2026-10-18T11:02:58Z",
-      "kind": "read",
-      "text": "rug-radar/src/scoringGate.ts"
-    },
-    {
-      "t": "2026-10-18T11:03:00Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/deployerHistory.ts"
-    },
-    {
       "t": "2026-10-18T11:03:00Z",
       "kind": "read",
       "text": "rug-radar/src/data/bundledBuys.ts"
@@ -1094,6 +1059,41 @@
       "t": "2026-10-18T11:12:08Z",
       "kind": "run",
       "text": "rm -f /tmp/probe-out.log && timeout --signal=TERM 280 env NODE_OPTIONS=--experimental-websocket npx tsx scratch-rescore-probe.ts > /tmp/probe-out.log 2>&1; echo \"EXIT:$?\"; wc -l /\u2026"
+    },
+    {
+      "t": "2026-10-18T11:16:56Z",
+      "kind": "run",
+      "text": "ps aux | grep -i \"tsx\\|probe\" | grep -v grep; echo \"---\"; rm -f scratch-rescore-probe.ts /tmp/probe-out.log; git status"
+    },
+    {
+      "t": "2026-10-18T11:16:59Z",
+      "kind": "think",
+      "text": "Good \u2014 clean. Now let me update the comment in `server.ts` and README with this third data point, then re-verify."
+    },
+    {
+      "t": "2026-10-18T11:17:00Z",
+      "kind": "read",
+      "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-18T11:17:06Z",
+      "kind": "edit",
+      "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-18T11:17:08Z",
+      "kind": "run",
+      "text": "grep -n \"RESCORE_DELAY_MS\\|session 47\\|session 72\" README.md | head -10"
+    },
+    {
+      "t": "2026-10-18T11:17:10Z",
+      "kind": "run",
+      "text": "sed -n '150,170p' README.md"
+    },
+    {
+      "t": "2026-10-18T11:17:15Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
     }
   ],
   "schedule": {
