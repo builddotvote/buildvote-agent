@@ -154,7 +154,10 @@ const watcher = new LaunchWatcher(wsUrl, watcherDiscoveryRpc, {
 // 47's three, that's 11 samples total and session 47's 54.4s is still the
 // only one past 45s — one outlier, not confirmed as a recurring tail, but
 // since covering it is still free, raised to 60s so it's covered rather
-// than treated as noise.
+// than treated as noise. Session 73 ran the same probe again (102 mints
+// tracked, 280s window): 3 more first-trade delays (23.3s, 21.6s, 22.6s),
+// all well under 60s. 14 samples total now; 54.4s is still the only one
+// above 45s, and 60s still covers it with room to spare.
 const RESCORE_DELAY_MS = 60_000;
 
 // Tracks the mint's own bonding-curve trades (see wsDiscovery.ts's

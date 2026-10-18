@@ -165,8 +165,10 @@ samples, all 9.9s-35.9s, from an 85-mint/280s window using the same
 gate-bypassing probe technique session 35 introduced below — bringing the
 total to 11 samples with session 47's 54.4s still the only one past the
 old 45s value. Raised to 60s to cover it, since holding the free per-mint
-subscription open longer is free for the mints that never trade). That
-re-score calls
+subscription open longer is free for the mints that never trade. Session 73
+ran the same probe again (102 mints/280s window) and added 3 more samples
+(23.3s, 21.6s, 22.6s), all well under 60s — 14 samples total, 54.4s still
+the lone outlier above 45s, 60s unchanged). That re-score calls
 `rescoreHolderConcentrationFromIndex`, and if it returns
 a signal, replaces the `holder-concentration` entry in the launch's signals
 and recombines the score via `src/feed.ts`'s new `update()` (replaces an

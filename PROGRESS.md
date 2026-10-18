@@ -4396,3 +4396,58 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
 - `findFundingSource`'s remaining ~2% unknown rate (session 39) — still not
   a priority, unchanged.
 - All five TASK.md steps remain functionally complete.
+
+## Session 73 — 2026-10-18
+
+### Done
+- Re-verified the repo first (`npm install`, 202/202 tests, clean
+  typecheck/build, `git status` clean before starting).
+- Spawned an `Explore` agent to do a correctness-focused read-through of
+  the core data/signal/discovery modules (base58, rpc, pumpfun, wsLogParser,
+  wsDiscovery, discovery, balanceIndex, rescore, scoringGate, all four
+  signal pairs, scorer, pipeline, deployerIndex, knownAccounts), explicitly
+  scoped to real bugs (not style/perf, not the documented rate-limit
+  limitation). Result: no new findings — consistent with 72 prior sessions'
+  worth of review, but worth confirming rather than assuming.
+- Picked up session 72's still-open item instead: grew the live sample for
+  `RESCORE_DELAY_MS`. Re-wrote the same scratch probe technique (sessions
+  35/47/72 — `LaunchWatcher` against the public discovery RPC,
+  `trackMint`s every launch immediately, bypassing `ScoringGate`), ran it
+  bounded via a single `timeout`-wrapped foreground call (280s, redirected
+  to a log file rather than piped through `tail` after a first attempt
+  piped through `tail` lost output to the pipe's buffering on SIGTERM —
+  worth remembering: redirect long bounded probes to a file, don't pipe
+  live output through another process you expect to flush on kill).
+- Result: 102 mints tracked, 3 produced a first trade: 23.261s, 21.563s,
+  22.551s — all well under the current 60s delay. Combined with the 11
+  prior live samples (sessions 47/72), that's 14 total; session 47's 54.4s
+  outlier is still the only one above 45s, so 60s (set last session)
+  stands unchanged. Updated the matching comments in `src/server.ts` and
+  `README.md` with the new sample. Deleted the scratch probe and its log
+  file afterward.
+- Re-ran typecheck, build, and the full test suite after the doc/comment
+  edits (no production logic changed, only comments).
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 202/202 passing, all offline, ~2.3s.
+- `git status`/`ps aux` clean after finishing — only `PROGRESS.md`,
+  `README.md`, and `src/server.ts` (comment-only) changed; no stray files,
+  no leftover process.
+
+### Next
+- `RESCORE_DELAY_MS` now rests on 14 live samples (up from 11); 60s still
+  has headroom over every sample but the single 54.4s outlier. A future
+  session with another live window should keep adding samples the same
+  way, but each additional run has diminishing value for actually changing
+  the constant unless a new outlier appears above 60s.
+- The scoring endpoint's rate-limit ceiling is unchanged (sessions 20-26,
+  61, 68, 69, 71) — per session 69/71, further live checks of that exact
+  thing have diminishing value without a new angle.
+- `findFundingSource`'s remaining ~2% unknown rate (session 39) — still not
+  a priority, unchanged.
+- The correctness-review pass this session ran (Explore agent over core
+  data/discovery/signal modules) found nothing — a periodic version of
+  that check is reasonable, but doing it every session is unlikely to find
+  something a fresh read of unchanged code didn't already miss N times.
+- All five TASK.md steps remain functionally complete.

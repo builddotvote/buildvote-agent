@@ -1,0 +1,149 @@
+# Session 73: Rug radar: live launch scoring
+
+- Started: 2026-10-18T11:00:42Z
+- Ended: 2026-10-18T11:17:49Z
+- Steps: 123
+- Model turns: 42
+- Billing: Claude subscription (API value $1.8839, not billed)
+- Outcome: ok
+
+## Summary
+
+Session complete. Working tree has only doc/comment changes plus the PROGRESS.md log — no production logic touched, no files left behind, no stray processes. The runner will commit this.  Summary of session 73: - Ran a correctness-focused review (via Explore agent) over the core data/discovery/signal modules — no bugs found, consistent with 72 prior sessions of scrutiny. - Picked up the open `RESCORE_DELAY_MS` item: reran the live sampling probe (bypassing `ScoringGate`, same technique as sessions 35/47/72), bounded to 280s. Got 3 new first-trade-delay samples (23.3s, 21.6s, 22.6s), bringing …
+
+## Steps
+
+- `run` cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md 2>/dev/null; echo "---PROGRESS---"; cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md 2>/dev/null
+- `read` PROGRESS.md
+- `run` wc -l PROGRESS.md && echo --- && tail -c 6000 PROGRESS.md
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && find src -type f -name "*.ts" | sort && echo "---" && cat package.json
+- `think` The project is mature (72 sessions, all 5 TASK.md steps complete, 202 passing tests). Let me verify the current state is clean before deciding what to work on this session.
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent && git status && echo "---" && cd rug-radar && npm install --silent 2>&1 | tail -5 && echo "---typecheck---" && npm run typecheck 2>&1 | tail -20
+- `run` npm run build 2>&1 | tail -20 && echo "---test---" && npm test 2>&1 | tail -30
+- `run` grep -rn "TODO\|FIXME\|XXX" src/ README.md 2>/dev/null; echo "---readme---"; wc -l README.md; echo "---index.html---"; cat public/index.html | head -80
+- `run` cat src/types.ts
+- `run` grep -n "^#\|^##" README.md | head -80
+- `run` sed -n '551,700p' README.md
+- `run` grep -n "findFundingSource" -r src | head -20
+- `read` rug-radar/src/data/bundledBuys.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent && git log --oneline | wc -l && git log --oneline -15
+- `run` find . -iname "CLAUDE.md"; cat rug-radar/CLAUDE.md 2>/dev/null
+- `read` rug-radar/src/scorer.ts
+- `think` That logic looks fine. Let me check the pipeline and gate/rescore files for the actual plumbing, since those are most central and most likely to harbor subtle bugs after many edits across 72 sessions.
+- `read` rug-radar/src/pipeline.ts
+- `think` This all looks solid and well-reasoned already. Given the depth of prior review, let me check holderConcentration and liquidity signals plus their data fetchers for correctness, since those carry the heaviest weight in scoring.
+- `read` rug-radar/src/signals/holderConcentration.ts
+- `think` I'll do a correctness-focused review of the core data/signal modules to find any real bugs worth fixing this session, since the live-RPC avenues are already flagged as diminishing-return.
+- `tool` Agent
+- `run` find /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src -type f -name "*.ts" | head -30
+- `read` rug-radar/src/base58.ts
+- `read` rug-radar/src/base58.test.ts
+- `read` rug-radar/src/rpc.ts
+- `read` rug-radar/src/rpc.test.ts
+- `read` rug-radar/src/pumpfun.ts
+- `read` rug-radar/src/wsLogParser.ts
+- `read` rug-radar/src/wsLogParser.test.ts
+- `read` rug-radar/src/balanceIndex.ts
+- `read` rug-radar/src/wsDiscovery.ts
+- `read` rug-radar/src/wsDiscovery.ts
+- `read` rug-radar/src/discovery.ts
+- `read` rug-radar/src/signals/bundledBuys.ts
+- `read` rug-radar/src/signals/holderConcentration.ts
+- `read` rug-radar/src/scorer.ts
+- `read` rug-radar/src/data/holderConcentration.ts
+- `read` rug-radar/src/data/liquidity.ts
+- `read` rug-radar/src/rescore.ts
+- `read` rug-radar/src/signals/liquidity.ts
+- `read` rug-radar/src/signals/deployerHistory.ts
+- `read` rug-radar/src/deployerIndex.ts
+- `read` rug-radar/src/pipeline.ts
+- `read` rug-radar/src/knownAccounts.ts
+- `read` rug-radar/src/scoringGate.ts
+- `read` rug-radar/src/data/deployerHistory.ts
+- `read` rug-radar/src/data/bundledBuys.ts
+- `read` rug-radar/src/data/bondingCurve.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm test 2>&1 | head -50
+- `read` rug-radar/src/signals/bundledBuys.test.ts
+- `read` rug-radar/src/signals/holderConcentration.test.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && grep -n "slice()" src/signals/holderConcentration.ts src/balanceIndex.ts src/deployerIndex.ts
+- `read` rug-radar/src/signals/holderConcentration.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test case: what if we have 15 holders but slice(0, 10)? const holders = Array.from({length: 15}, (_, i) => ({address: \`H\${i}\`, amount: 10n})); const sorted = holders.slice().sort((a,b) => a.amount < b.amount ? 1 : a.amount > b.amount ? -1 : 0); console.log('Holders:', holders.length); console.log('Sorted:', sorted.l…
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test Number conversion for precision loss const lamports = 123456789012345n; const LAMPORTS_PER_SOL = 1_000_000_000n; const result = (Number(lamports) / Number(LAMPORTS_PER_SOL)).toFixed(2); console.log('Result:', result); // This is used only for display label, not for scoring, so not a bug // Let's verify the thresho…
+- `read` rug-radar/src/signals/bundledBuys.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test: 2 early buys from same funder, 1 from another, 1 null const earlyBuys = [   {buyer: 'buyerA', fundedBy: 'funder1', secondsAfterLaunch: 10},   {buyer: 'buyerB', fundedBy: 'funder1', secondsAfterLaunch: 20},   {buyer: 'buyerC', fundedBy: 'funder2', secondsAfterLaunch: 30},   {buyer: 'buyerD', fundedBy: null, second…
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Check the sort comparator in holderConcentration.ts line 33 const holders = [   {address: 'A', amount: 100n},   {address: 'B', amount: 300n},   {address: 'C', amount: 200n} ];  // The comparator is: (a, b) => (a.amount < b.amount ? 1 : a.amount > b.amount ? -1 : 0) // If a.amount < b.amount return 1 -> a comes after b …
+- `read` rug-radar/src/data/bundledBuys.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm test -- --grep "finds a buyer" 2>&1 | tail -20
+- `read` rug-radar/src/data/bundledBuys.test.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test case: what if pre-entry doesn't exist in the postTokenBalances search? // Line 101: const preEntry = pre.find((e) => e.accountIndex === entry.accountIndex);  const postTokenBalances = [   { accountIndex: 0, mint: 'MINT', owner: 'BuyerA', uiTokenAmount: { amount: '1000' } } ];  const preTokenBalances = [   { accoun…
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test the wasMigrated logic at line 104-113 // If account exists but data isn't parseable, it returns false (not migrated) // This seems reasonable - if bonding curve is closed/unreadable, assume it didn't graduate  // But let's check: could there be a false negative? // If account data is corrupt/unparseable, returning…
+- `read` rug-radar/src/discovery.ts
+- `read` rug-radar/src/discovery.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test the bundledBuy logic from line 186-188 // bundledTrade can be buy/sell // bundledBuy = bundledTrade?.kind === 'buy' ? bundledTrade : undefined  // Case 1: bundledTrade is null let bundledTrade = null; let bundledBuy = bundledTrade?.kind === 'buy' ? bundledTrade : undefined; console.log('bundledTrade=null:', bundle…
+- `read` rug-radar/src/wsDiscovery.ts
+- `read` rug-radar/src/wsDiscovery.ts
+- `read` rug-radar/src/wsDiscovery.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test the markSeen logic at lines 396-406 const seen = new Set(); const seenOrder = []; const max = 500;  function markSeen(signature) {   if (seen.has(signature)) return false;   seen.add(signature);   seenOrder.push(signature);   if (seenOrder.length > max) {     const oldest = seenOrder.shift();     console.log('Shif…
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test the balanceIndex.recordTrade logic // Lines 39-62  // Scenario: mint1 has walletA, walletB, then eviction happens const byMint = new Map(); const order = []; const maxEntries = 2;  function recordTrade(trade) {   let wallets = byMint.get(trade.mint);   if (!wallets) {     wallets = new Map();     byMint.set(trade.…
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test the DeployerIndex.record logic // Lines 31-49  const byDeployer = new Map(); const order = []; const maxEntries = 2;  function record(launch) {   let mints = byDeployer.get(launch.deployer);   if (!mints) {     mints = new Map();     byDeployer.set(launch.deployer, mints);   }   if (mints.has(launch.mint)) return;…
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test potential issue with account index lookups // lines 111-114 in pumpfun.ts decodeCreateInstruction  const accounts = ['mint', 'other', 'bondingCurve']; // array with 3 items const layout = { mint: 0, bondingCurve: 2, user: 7 }; // user at index 7  const mint = accounts[layout.mint]; const bondingCurve = accounts[la…
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Looking at bundledBuys signal scoring again // What if we have exactly 50% share?  const early = [   {buyer: 'A', fundedBy: 'funder1', secondsAfterLaunch: 10},   {buyer: 'B', fundedBy: 'funder1', secondsAfterLaunch: 20},   {buyer: 'C', fundedBy: 'funder2', secondsAfterLaunch: 30},   {buyer: 'D', fundedBy: 'funder2', se…
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test ScoringGate logic - lines 8-25  class ScoringGate {   inFlight = 0;   constructor(maxConcurrent) { this.maxConcurrent = maxConcurrent; }      tryAcquire() {     if (this.inFlight >= this.maxConcurrent) return false;     this.inFlight++;     return true;   }      release() {     this.inFlight--;   } }  const gate =…
+- `read` rug-radar/src/rpc.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Simulate pacer logic with fake time let fakeTime = 0; const sleep_records = [];  // RequestPacer bucket let bucket = {lastRequestStartedAt: -Infinity, chain: Promise.resolve()}; const intervalMs = 100;  async function reserve() {   const wait = bucket.lastRequestStartedAt + intervalMs - fakeTime;   console.log('At time…
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Check the exact comparison logic in discovery.ts line 81 // const newestBlockTime = signatures.find((s) => s.blockTime !== null)?.blockTime ?? sinceBlockTime;  // What if all signatures have blockTime null? const signatures = [   {blockTime: null},   {blockTime: null} ]; const sinceBlockTime = 1000;  const newestBlockT…
+- `read` rug-radar/src/data/bundledBuys.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test findSolSender logic // What if preBalances[i] is smaller than postBalances[i]? // Then decrease = preBalance - postBalance would be negative  const preBalance = 100; const postBalance = 150; const decrease = BigInt(preBalance) - BigInt(postBalance); console.log('decrease when balance went up:', decrease); console.…
+- `read` rug-radar/src/data/bondingCurve.ts
+- `read` rug-radar/src/rpc.ts
+- `read` rug-radar/src/rpc.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test the decodeBondingCurve logic for buffer length // Lines 28-36 in pumpfun.ts  const DISCRIMINATOR_BYTES = 8; const U64_BYTES = 8; const BOOL_BYTES = 1; const PUBKEY_BYTES = 32;  const minLength = DISCRIMINATOR_BYTES + 5 * U64_BYTES + BOOL_BYTES + PUBKEY_BYTES; console.log('minLength:', minLength); console.log('Expe…
+- `read` rug-radar/src/data/bundledBuys.ts
+- `read` rug-radar/src/data/bundledBuys.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Check the deployer-history score calculation at line 41 // Math.min(THIN_HISTORY_SCORE_CAP, Math.round(deadShare * 100))  const THIN_HISTORY_SCORE_CAP = 40;  // Case: 1 prior dead token, 2 prior live tokens = 1 dead, 3 total const deadShare = 1 / 3; const score = Math.min(THIN_HISTORY_SCORE_CAP, Math.round(deadShare * …
+- `read` rug-radar/src/discovery.test.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Check resolveWithRetry logic (lines 155-168) // Scenario: attempt = 0, retries = 5  // The loop is: for (let attempt = 0; ; attempt++) // On each iteration it tries getTransaction // If success and blockTime is not null, returns the decode result // If attempt >= retries, returns null // Otherwise sleeps and continues …
+- `read` rug-radar/src/rpc.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // RPC retry with maxRetries = 4 const maxRetries = 4;  // Attempt 0: 0 < 4? YES, retry (after sleep) // Attempt 1: 1 < 4? YES, retry (after sleep) // Attempt 2: 2 < 4? YES, retry (after sleep) // Attempt 3: 3 < 4? YES, retry (after sleep) // Attempt 4: 4 < 4? NO, give up  // Total attempts: 5 (initial attempt 0 + 4 retri…
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test the signature filtering and reversing logic (lines 88-95) // getSignaturesForAddress returns newest-first // We want to process oldest-first to fill the feed in launch order  const signatures = [   {blockTime: 1000, err: null},   {blockTime: 900, err: null},   {blockTime: 800, err: null}, ];  const sinceBlockTime …
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Check bundledBuys logic at lines 71-72 // if (knownBundledBuy) { //   found.push({ buyer: knownBundledBuy.buyer, secondsAfterLaunch: 0 }); // }  // The knownBundledBuy comes from discovery.ts DiscoveredLaunch.bundledBuy // which can be undefined  // So this logic: // 1. Process early signatures // 2. If there's a known…
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm test 2>&1 | tail -100
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && grep -n "??\|?." src/signals/*.ts src/data/*.ts | head -30
+- `read` rug-radar/src/rpc.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test balanceIndex with the clamping logic // Line 50: wallets.set(trade.user, next < 0n ? 0n : next);  // Test: balance goes negative due to sell without prior buy let balance = 0n; const delta = -100n; // sell 100 const next = balance + delta; const clamped = next < 0n ? 0n : next; console.log('balance:', balance); co…
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && grep -n "BigInt" src/data/bundledBuys.ts src/signals/*.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e " // Test slice with fewer than 10 items const holders = [{amount: 100n}, {amount: 50n}, {amount: 25n}]; const top10 = holders.slice().sort((a,b) => a.amount < b.amount ? 1 : -1).slice(0, 10);  console.log('Holders count:', holders.length); console.log('top10.length:', top10.length); console.log('top10 content:', top10.map(…
+- `read` rug-radar/src/signals/holderConcentration.ts
+- `read` rug-radar/src/signals/holderConcentration.ts
+- `run` node -e " // Check if JavaScript number can be incremented indefinitely let id = 1; for (let i = 0; i < 100; i++) {   id = id + 1; } console.log('id after 100 increments:', id); console.log('Max safe integer:', Number.MAX_SAFE_INTEGER); console.log('Can we increment 9007199254740991 times? Only once before losing precision'); "
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && grep -n "< .*\|> .*\|<= .*\|>= .*" src/signals/*.ts src/data/*.ts | grep -E "score|risk|HIGH|MODERATE" | head -20
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && sed -n '551,1065p' README.md | wc -l && sed -n '1,20p' README.md
+- `run` grep -n "^  \*\*Session [0-9]*\*\*" README.md | tail -20
+- `run` grep -n "RESCORE_DELAY_MS" -r src README.md
+- `read` rug-radar/src/server.ts
+- `run` sed -n '1,60p' src/wsDiscovery.ts
+- `run` grep -n "class LaunchWatcher\|trackMint\|onLaunch\|onTrade\|constructor" src/wsDiscovery.ts | head -40
+- `run` sed -n '60,200p' src/wsDiscovery.ts
+- `think` Now let me check config.ts for the discovery RPC URL to use, and write the probe script.
+- `run` cat src/config.ts
+- `run` grep -n "deriveWsUrl\|createRpcClient\|export function\|export class" src/rpc.ts src/wsDiscovery.ts src/server.ts | head -30
+- `think` Now let me write the scratch probe, mirroring session 72's approach.
+- `edit` rug-radar/scratch-rescore-probe.ts
+- `run` grep -n "interface TradeInstruction" -A 10 src/pumpfun.ts
+- `think` Good, field names match. Let's run the probe in a bounded foreground window, matching session 69's safety pattern (single `timeout`-wrapped call, no backgrounding).
+- `run` timeout 290 env NODE_OPTIONS=--experimental-websocket npx tsx scratch-rescore-probe.ts 2>&1 | tail -60; echo "EXIT:$?"
+- `run` rm -f /tmp/probe-out.log && timeout --signal=TERM 280 env NODE_OPTIONS=--experimental-websocket npx tsx scratch-rescore-probe.ts > /tmp/probe-out.log 2>&1; echo "EXIT:$?"; wc -l /tmp/probe-out.log; cat /tmp/probe-out.log
+- `run` ps aux | grep -i "tsx\|probe" | grep -v grep; echo "---"; rm -f scratch-rescore-probe.ts /tmp/probe-out.log; git status
+- `think` Good — clean. Now let me update the comment in `server.ts` and README with this third data point, then re-verify.
+- `read` rug-radar/src/server.ts
+- `edit` rug-radar/src/server.ts
+- `run` grep -n "RESCORE_DELAY_MS\|session 47\|session 72" README.md | head -10
+- `run` sed -n '150,170p' README.md
+- `edit` rug-radar/README.md
+- `think` Now let's re-verify typecheck/build/tests since docs/comments changed (no logic touched, but confirming nothing broke).
+- `run` npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10 && git status
+- `think` All clean. Now updating PROGRESS.md with this session's entry.
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent && tail -c 300 PROGRESS.md
+- `run` cat >> /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md << 'EOF'  ## Session 73 — 2026-10-18  ### Done - Re-verified the repo first (`npm install`, 202/202 tests, clean   typecheck/build, `git status` clean before starting). - Spawned an `Explore` agent to do a correctness-focused read-through of   the core data/signal/discovery modules (base58, rpc, pumpfun, wsLogParser,   wsDiscove…
+- `run` git status && git diff --stat
+- `think` Session complete. Working tree has only doc/comment changes plus the PROGRESS.md log — no production logic touched, no files left behind, no stray processes. The runner will commit this.
