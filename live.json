@@ -1,10 +1,9 @@
 {
-  "updated_at": "2026-10-18T11:17:42Z",
+  "updated_at": "2026-10-18T11:17:50Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 73,
-    "started_at": "2026-10-18T11:00:42Z",
     "turns": 123
   },
   "round": {
@@ -691,20 +690,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 1.3001
+    },
+    {
+      "date": "2026-10-18T11:00:42Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 42,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0073.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 1.8839
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-18T11:03:11Z",
-      "kind": "read",
-      "text": "rug-radar/src/signals/holderConcentration.ts"
-    },
-    {
-      "t": "2026-10-18T11:03:14Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node -e \" // Test case: what if we have 15 holders but slice(0, 10)? const holders = Array.from({length: 15}, (_,\u2026"
-    },
     {
       "t": "2026-10-18T11:03:18Z",
       "kind": "run",
@@ -1094,6 +1092,16 @@
       "t": "2026-10-18T11:17:42Z",
       "kind": "run",
       "text": "git status && git diff --stat"
+    },
+    {
+      "t": "2026-10-18T11:17:49Z",
+      "kind": "think",
+      "text": "Session complete. Working tree has only doc/comment changes plus the PROGRESS.md log \u2014 no production logic touched, no files left behind, no stray processes. The runner will commi\u2026"
+    },
+    {
+      "t": "2026-10-18T11:17:50Z",
+      "kind": "done",
+      "text": "Session 73 finished \u00b7 123 steps \u00b7 covered by Claude subscription ($1.88 API value)"
     }
   ],
   "schedule": {
