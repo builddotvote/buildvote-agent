@@ -1,10 +1,9 @@
 {
-  "updated_at": "2026-10-18T20:44:47Z",
+  "updated_at": "2026-10-18T20:44:54Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 75,
-    "started_at": "2026-10-18T20:39:05Z",
     "turns": 61
   },
   "round": {
@@ -709,20 +708,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 1.1544
+    },
+    {
+      "date": "2026-10-18T20:39:05Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 35,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0075.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 1.2954
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-18T15:52:59Z",
-      "kind": "think",
-      "text": "Now the Edit should work since the file content is loaded."
-    },
-    {
-      "t": "2026-10-18T15:53:10Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
     {
       "t": "2026-10-18T15:53:12Z",
       "kind": "think",
@@ -1112,6 +1110,16 @@
       "t": "2026-10-18T20:44:45Z",
       "kind": "run",
       "text": "cd rug-radar && npm test 2>&1 | tail -n 6 && git -C .. status --short"
+    },
+    {
+      "t": "2026-10-18T20:44:52Z",
+      "kind": "think",
+      "text": "209/209 tests pass, typecheck/build clean, and the real server was smoke-tested end to end."
+    },
+    {
+      "t": "2026-10-18T20:44:54Z",
+      "kind": "done",
+      "text": "Session 75 finished \u00b7 61 steps \u00b7 covered by Claude subscription ($1.30 API value)"
     }
   ],
   "schedule": {
