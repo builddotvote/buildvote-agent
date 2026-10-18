@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-18T11:01:09Z",
+  "updated_at": "2026-10-18T11:01:36Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 73,
     "started_at": "2026-10-18T11:00:42Z",
-    "turns": 6
+    "turns": 10
   },
   "round": {
     "number": null,
@@ -696,26 +696,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-17T23:10:23Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && NODE_OPTIONS=--experimental-websocket timeout 100 npx tsx src/server.ts > /tmp/live-check.log 2>&1; echo \"EXIT:$?\u2026"
-    },
-    {
-      "t": "2026-10-17T23:12:11Z",
-      "kind": "run",
-      "text": "echo \"total lines:\"; wc -l /tmp/live-check.log; echo \"--- unique message types ---\"; grep -oE \"^[a-zA-Z].*?:\" /tmp/live-check.log | sed -E 's/[A-Za-z0-9]{20,}//g' | sort | uniq -c\u2026"
-    },
-    {
-      "t": "2026-10-17T23:12:26Z",
-      "kind": "think",
-      "text": "The log shows no \"dropping launch\" or \"failed to score\" lines for the ~4 launches that got past the gate \u2014 only a holder-concentration 429. That suggests those launches may have a\u2026"
-    },
-    {
-      "t": "2026-10-17T23:12:29Z",
-      "kind": "run",
-      "text": "\\ (NODE_OPTIONS=--experimental-websocket npx tsx src/server.ts > /tmp/live-check2.log 2>&1 &) ; \\ sleep 70 ; \\ echo \"--- /api/feed ---\" ; \\ curl -s http://localhost:8787/api/feed \u2026"
-    },
-    {
       "t": "2026-10-17T23:13:49Z",
       "kind": "think",
       "text": "This directly contradicts the \"zero launches ever land in `/api/feed`\" conclusion from recent sessions \u2014 a launch landed with 3 of 4 signals (holder-concentration dropped due to t\u2026"
@@ -1094,6 +1074,26 @@
       "t": "2026-10-18T11:01:09Z",
       "kind": "run",
       "text": "npm run build 2>&1 | tail -20 && echo \"---test---\" && npm test 2>&1 | tail -30"
+    },
+    {
+      "t": "2026-10-18T11:01:20Z",
+      "kind": "run",
+      "text": "grep -rn \"TODO\\|FIXME\\|XXX\" src/ README.md 2>/dev/null; echo \"---readme---\"; wc -l README.md; echo \"---index.html---\"; cat public/index.html | head -80"
+    },
+    {
+      "t": "2026-10-18T11:01:25Z",
+      "kind": "run",
+      "text": "cat src/types.ts"
+    },
+    {
+      "t": "2026-10-18T11:01:31Z",
+      "kind": "run",
+      "text": "grep -n \"^#\\|^##\" README.md | head -80"
+    },
+    {
+      "t": "2026-10-18T11:01:33Z",
+      "kind": "run",
+      "text": "sed -n '551,700p' README.md"
     }
   ],
   "schedule": {
