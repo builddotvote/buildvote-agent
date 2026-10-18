@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-18T20:43:28Z",
+  "updated_at": "2026-10-18T20:43:55Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 75,
     "started_at": "2026-10-18T20:39:05Z",
-    "turns": 52
+    "turns": 55
   },
   "round": {
     "number": null,
@@ -714,36 +714,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-18T15:52:05Z",
-      "kind": "think",
-      "text": "Missing blank line after the header. Let me fix that and verify the tail joins correctly into \"## Setup\"."
-    },
-    {
-      "t": "2026-10-18T15:52:07Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-18T15:52:09Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-18T15:52:11Z",
-      "kind": "think",
-      "text": "Good, splice joined cleanly. Now just fix the missing blank line after the \"### Known limitations\" heading."
-    },
-    {
-      "t": "2026-10-18T15:52:12Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-18T15:52:15Z",
-      "kind": "think",
-      "text": "README trimmed from 1105 to 656 lines (74625\u2192much smaller). Now let's run the full verification suite to confirm nothing broke."
-    },
-    {
       "t": "2026-10-18T15:52:16Z",
       "kind": "run",
       "text": "npm run typecheck && npm run build && npm test 2>&1 | tail -30"
@@ -1112,6 +1082,36 @@
       "t": "2026-10-18T20:43:26Z",
       "kind": "read",
       "text": "rug-radar/src/requestHandler.test.ts"
+    },
+    {
+      "t": "2026-10-18T20:43:42Z",
+      "kind": "edit",
+      "text": "rug-radar/src/requestHandler.test.ts"
+    },
+    {
+      "t": "2026-10-18T20:43:44Z",
+      "kind": "think",
+      "text": "Now add offline tests for `public/feed.js`'s rendering logic:"
+    },
+    {
+      "t": "2026-10-18T20:43:49Z",
+      "kind": "edit",
+      "text": "rug-radar/public/feed.test.ts"
+    },
+    {
+      "t": "2026-10-18T20:43:51Z",
+      "kind": "think",
+      "text": "Now update the test script glob to pick up test files under `public/` too:"
+    },
+    {
+      "t": "2026-10-18T20:43:53Z",
+      "kind": "edit",
+      "text": "rug-radar/package.json"
+    },
+    {
+      "t": "2026-10-18T20:43:55Z",
+      "kind": "think",
+      "text": "Now run typecheck, build, and the full test suite to confirm everything works:"
     }
   ],
   "schedule": {
