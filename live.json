@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-18T11:06:44Z",
+  "updated_at": "2026-10-18T11:07:12Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 73,
     "started_at": "2026-10-18T11:00:42Z",
-    "turns": 105
+    "turns": 112
   },
   "round": {
     "number": null,
@@ -696,56 +696,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-18T11:02:44Z",
-      "kind": "read",
-      "text": "rug-radar/src/wsLogParser.test.ts"
-    },
-    {
-      "t": "2026-10-18T11:02:46Z",
-      "kind": "read",
-      "text": "rug-radar/src/balanceIndex.ts"
-    },
-    {
-      "t": "2026-10-18T11:02:46Z",
-      "kind": "read",
-      "text": "rug-radar/src/wsDiscovery.ts"
-    },
-    {
-      "t": "2026-10-18T11:02:48Z",
-      "kind": "read",
-      "text": "rug-radar/src/wsDiscovery.ts"
-    },
-    {
-      "t": "2026-10-18T11:02:48Z",
-      "kind": "read",
-      "text": "rug-radar/src/discovery.ts"
-    },
-    {
-      "t": "2026-10-18T11:02:50Z",
-      "kind": "read",
-      "text": "rug-radar/src/signals/bundledBuys.ts"
-    },
-    {
-      "t": "2026-10-18T11:02:50Z",
-      "kind": "read",
-      "text": "rug-radar/src/signals/holderConcentration.ts"
-    },
-    {
-      "t": "2026-10-18T11:02:50Z",
-      "kind": "read",
-      "text": "rug-radar/src/scorer.ts"
-    },
-    {
-      "t": "2026-10-18T11:02:52Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/holderConcentration.ts"
-    },
-    {
-      "t": "2026-10-18T11:02:52Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/liquidity.ts"
-    },
-    {
       "t": "2026-10-18T11:02:53Z",
       "kind": "read",
       "text": "rug-radar/src/rescore.ts"
@@ -1094,6 +1044,56 @@
       "t": "2026-10-18T11:06:44Z",
       "kind": "run",
       "text": "sed -n '1,60p' src/wsDiscovery.ts"
+    },
+    {
+      "t": "2026-10-18T11:06:46Z",
+      "kind": "run",
+      "text": "grep -n \"class LaunchWatcher\\|trackMint\\|onLaunch\\|onTrade\\|constructor\" src/wsDiscovery.ts | head -40"
+    },
+    {
+      "t": "2026-10-18T11:06:49Z",
+      "kind": "run",
+      "text": "sed -n '60,200p' src/wsDiscovery.ts"
+    },
+    {
+      "t": "2026-10-18T11:06:51Z",
+      "kind": "think",
+      "text": "Now let me check config.ts for the discovery RPC URL to use, and write the probe script."
+    },
+    {
+      "t": "2026-10-18T11:06:51Z",
+      "kind": "run",
+      "text": "cat src/config.ts"
+    },
+    {
+      "t": "2026-10-18T11:06:53Z",
+      "kind": "run",
+      "text": "grep -n \"deriveWsUrl\\|createRpcClient\\|export function\\|export class\" src/rpc.ts src/wsDiscovery.ts src/server.ts | head -30"
+    },
+    {
+      "t": "2026-10-18T11:06:56Z",
+      "kind": "think",
+      "text": "Now let me write the scratch probe, mirroring session 72's approach."
+    },
+    {
+      "t": "2026-10-18T11:07:02Z",
+      "kind": "edit",
+      "text": "rug-radar/scratch-rescore-probe.ts"
+    },
+    {
+      "t": "2026-10-18T11:07:05Z",
+      "kind": "run",
+      "text": "grep -n \"interface TradeInstruction\" -A 10 src/pumpfun.ts"
+    },
+    {
+      "t": "2026-10-18T11:07:07Z",
+      "kind": "think",
+      "text": "Good, field names match. Let's run the probe in a bounded foreground window, matching session 69's safety pattern (single `timeout`-wrapped call, no backgrounding)."
+    },
+    {
+      "t": "2026-10-18T11:07:09Z",
+      "kind": "run",
+      "text": "timeout 290 env NODE_OPTIONS=--experimental-websocket npx tsx scratch-rescore-probe.ts 2>&1 | tail -60; echo \"EXIT:$?\""
     }
   ],
   "schedule": {
