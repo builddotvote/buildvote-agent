@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-18T11:01:36Z",
+  "updated_at": "2026-10-18T11:02:03Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 73,
     "started_at": "2026-10-18T11:00:42Z",
-    "turns": 10
+    "turns": 14
   },
   "round": {
     "number": null,
@@ -696,26 +696,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-17T23:13:49Z",
-      "kind": "think",
-      "text": "This directly contradicts the \"zero launches ever land in `/api/feed`\" conclusion from recent sessions \u2014 a launch landed with 3 of 4 signals (holder-concentration dropped due to t\u2026"
-    },
-    {
-      "t": "2026-10-17T23:13:51Z",
-      "kind": "run",
-      "text": "ps aux | grep -i \"tsx\\|server.ts\\|node \" | grep -v grep; echo \"---\"; curl -s --max-time 2 http://localhost:8787/api/feed; echo; echo \"---git status---\"; git status; rm -f /tmp/liv\u2026"
-    },
-    {
-      "t": "2026-10-17T23:13:54Z",
-      "kind": "think",
-      "text": "Process confirmed stopped (curl now fails to connect), repo clean. Now let me write up this session's findings in PROGRESS.md."
-    },
-    {
-      "t": "2026-10-17T23:13:54Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
       "t": "2026-10-17T23:14:24Z",
       "kind": "edit",
       "text": "PROGRESS.md"
@@ -1094,6 +1074,26 @@
       "t": "2026-10-18T11:01:33Z",
       "kind": "run",
       "text": "sed -n '551,700p' README.md"
+    },
+    {
+      "t": "2026-10-18T11:01:40Z",
+      "kind": "run",
+      "text": "grep -n \"findFundingSource\" -r src | head -20"
+    },
+    {
+      "t": "2026-10-18T11:01:42Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/bundledBuys.ts"
+    },
+    {
+      "t": "2026-10-18T11:01:52Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git log --oneline | wc -l && git log --oneline -15"
+    },
+    {
+      "t": "2026-10-18T11:01:59Z",
+      "kind": "run",
+      "text": "find . -iname \"CLAUDE.md\"; cat rug-radar/CLAUDE.md 2>/dev/null"
     }
   ],
   "schedule": {
