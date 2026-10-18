@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-18T23:10:34Z",
+  "updated_at": "2026-10-18T23:11:01Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 76,
     "started_at": "2026-10-18T23:09:33Z",
-    "turns": 12
+    "turns": 28
   },
   "round": {
     "number": null,
@@ -723,86 +723,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-18T20:40:06Z",
-      "kind": "read",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-18T20:40:09Z",
-      "kind": "read",
-      "text": "rug-radar/src/feed.ts"
-    },
-    {
-      "t": "2026-10-18T20:40:23Z",
-      "kind": "think",
-      "text": "I've confirmed the repo is clean and healthy (202/202 tests, clean typecheck/build). Given 74 prior sessions already covered the core data/signal modules and flagged diminishing r\u2026"
-    },
-    {
-      "t": "2026-10-18T20:40:32Z",
-      "kind": "tool",
-      "text": "Agent"
-    },
-    {
-      "t": "2026-10-18T20:40:34Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-18T20:40:35Z",
-      "kind": "run",
-      "text": "find /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src -type f -name \"*.ts\" | head -20"
-    },
-    {
-      "t": "2026-10-18T20:40:37Z",
-      "kind": "read",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-18T20:40:37Z",
-      "kind": "read",
-      "text": "rug-radar/src/feed.ts"
-    },
-    {
-      "t": "2026-10-18T20:40:37Z",
-      "kind": "read",
-      "text": "rug-radar/src/poller.ts"
-    },
-    {
-      "t": "2026-10-18T20:40:40Z",
-      "kind": "read",
-      "text": "rug-radar/src/watcherOnLaunch.ts"
-    },
-    {
-      "t": "2026-10-18T20:40:41Z",
-      "kind": "read",
-      "text": "rug-radar/src/scoringInFlight.ts"
-    },
-    {
-      "t": "2026-10-18T20:40:41Z",
-      "kind": "read",
-      "text": "rug-radar/src/holderRescore.ts"
-    },
-    {
-      "t": "2026-10-18T20:40:43Z",
-      "kind": "read",
-      "text": "rug-radar/src/config.ts"
-    },
-    {
-      "t": "2026-10-18T20:40:43Z",
-      "kind": "read",
-      "text": "rug-radar/src/requestHandler.ts"
-    },
-    {
-      "t": "2026-10-18T20:40:44Z",
-      "kind": "read",
-      "text": "rug-radar/public/index.html"
-    },
-    {
-      "t": "2026-10-18T20:40:46Z",
-      "kind": "read",
-      "text": "rug-radar/src/feed.test.ts"
-    },
-    {
       "t": "2026-10-18T20:40:46Z",
       "kind": "read",
       "text": "rug-radar/src/poller.test.ts"
@@ -1121,6 +1041,86 @@
       "t": "2026-10-18T23:10:34Z",
       "kind": "tool",
       "text": "Agent"
+    },
+    {
+      "t": "2026-10-18T23:10:36Z",
+      "kind": "run",
+      "text": "find /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src -type f -name \"*.ts\" | grep -E \"(signals|data)\" | head -20"
+    },
+    {
+      "t": "2026-10-18T23:10:38Z",
+      "kind": "run",
+      "text": "grep -r \"from ['\\\"].*/(signals|data)/\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src --include=\"*.ts\" | grep -v test | cut -d: -f2 | sort | uniq"
+    },
+    {
+      "t": "2026-10-18T23:10:39Z",
+      "kind": "run",
+      "text": "grep -r \"from.*signals\\|from.*data\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src --include=\"*.ts\" | grep -v \".test.ts\""
+    },
+    {
+      "t": "2026-10-18T23:10:41Z",
+      "kind": "run",
+      "text": "for f in /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/signals/*.test.ts; do echo \"$f: $(wc -l < \"$f\") lines\"; done"
+    },
+    {
+      "t": "2026-10-18T23:10:42Z",
+      "kind": "run",
+      "text": "for f in /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/data/*.test.ts; do echo \"$f: $(wc -l < \"$f\") lines\"; done"
+    },
+    {
+      "t": "2026-10-18T23:10:44Z",
+      "kind": "run",
+      "text": "grep -n \"\\.catch\\|catch\\|try\\|Promise\\|async\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/*.ts | head -30"
+    },
+    {
+      "t": "2026-10-18T23:10:46Z",
+      "kind": "run",
+      "text": "grep -n \"\\.catch\\|} catch\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/*.ts /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/signals/*.ts /home/\u2026"
+    },
+    {
+      "t": "2026-10-18T23:10:48Z",
+      "kind": "read",
+      "text": "rug-radar/src/rescore.ts"
+    },
+    {
+      "t": "2026-10-18T23:10:49Z",
+      "kind": "read",
+      "text": "rug-radar/src/holderRescore.ts"
+    },
+    {
+      "t": "2026-10-18T23:10:50Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/deployerHistory.ts"
+    },
+    {
+      "t": "2026-10-18T23:10:52Z",
+      "kind": "read",
+      "text": "rug-radar/src/signals/liquidity.test.ts"
+    },
+    {
+      "t": "2026-10-18T23:10:53Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/liquidity.test.ts"
+    },
+    {
+      "t": "2026-10-18T23:10:55Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-18T23:10:57Z",
+      "kind": "read",
+      "text": "rug-radar/src/discovery.ts"
+    },
+    {
+      "t": "2026-10-18T23:10:59Z",
+      "kind": "read",
+      "text": "rug-radar/src/discovery.ts"
+    },
+    {
+      "t": "2026-10-18T23:11:00Z",
+      "kind": "run",
+      "text": "grep -r \"^export\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src --include=\"*.ts\" | grep -v \".test.ts\" | cut -d: -f2 | sort"
     }
   ],
   "schedule": {
