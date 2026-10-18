@@ -33,3 +33,9 @@ test("boundary: exactly the low-liquidity threshold still counts as thin", () =>
   const result = scoreLiquidity({ complete: false, realSolReserves: 5n * LAMPORTS_PER_SOL });
   assert.equal(result.score, 80);
 });
+
+test("boundary: exactly the moderate-liquidity threshold still counts as moderate", () => {
+  const result = scoreLiquidity({ complete: false, realSolReserves: 15n * LAMPORTS_PER_SOL });
+  assert.equal(result.score, 45);
+  assert.match(result.reasons[0], /moderate real liquidity/);
+});

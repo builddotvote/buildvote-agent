@@ -80,3 +80,44 @@ test("the same buyer address funded twice by the same source only counts once", 
   // distinct buyers: buyerA, buyerB -> largest bundle is 1 (funder1 has only buyerA)
   assert.equal(result.score, 0);
 });
+
+test("boundary: a buy exactly at the window edge still counts as early", () => {
+  const result = scoreBundledBuys({
+    earlyBuys: [buy("buyerA", "funder1", 300), buy("buyerB", "funder1", 50)],
+  });
+  // default window is 300s; secondsAfterLaunch === 300 should still be included.
+  assert.equal(result.score, 90);
+  assert.match(result.reasons[0], /2 of 2 early buyers/);
+});
+
+test("boundary: exactly 50% share counts as high risk", () => {
+  const result = scoreBundledBuys({
+    earlyBuys: [
+      buy("buyerA", "funder1", 10),
+      buy("buyerB", "funder1", 20),
+      buy("buyerC", "funder2", 30),
+      buy("buyerD", "funder3", 40),
+    ],
+  });
+  assert.equal(result.score, 90);
+  assert.match(result.reasons[0], /2 of 4 early buyers.*>= 50%/);
+});
+
+test("boundary: exactly 30% share counts as moderate risk", () => {
+  const result = scoreBundledBuys({
+    earlyBuys: [
+      buy("buyerA", "funder1", 10),
+      buy("buyerB", "funder1", 20),
+      buy("buyerC", "funder1", 30),
+      buy("buyerD", "funder2", 40),
+      buy("buyerE", "funder3", 50),
+      buy("buyerF", "funder4", 60),
+      buy("buyerG", "funder5", 70),
+      buy("buyerH", "funder6", 80),
+      buy("buyerI", "funder7", 90),
+      buy("buyerJ", "funder8", 100),
+    ],
+  });
+  assert.equal(result.score, 55);
+  assert.match(result.reasons[0], /3 of 10 early buyers.*30-50%/);
+});

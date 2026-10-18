@@ -70,3 +70,25 @@ test("returns a zero score with a reason when total supply is zero", () => {
   assert.equal(result.score, 0);
   assert.match(result.reasons[0], /zero/);
 });
+
+test("boundary: exactly 50% share counts as high risk", () => {
+  const result = scoreHolderConcentration(
+    baseInput({
+      totalSupply: 1_000_000_000n,
+      holders: [{ address: "H1", amount: 500_000_000n }],
+    }),
+  );
+  assert.equal(result.score, 90);
+  assert.match(result.reasons[0], />= 50%/);
+});
+
+test("boundary: exactly 30% share counts as moderate risk", () => {
+  const result = scoreHolderConcentration(
+    baseInput({
+      totalSupply: 1_000_000_000n,
+      holders: [{ address: "H1", amount: 300_000_000n }],
+    }),
+  );
+  assert.equal(result.score, 55);
+  assert.match(result.reasons[0], /30-50%/);
+});

@@ -4572,3 +4572,66 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   modules) again found nothing — future sessions should keep looking for
   genuinely new angles (as this session did) rather than re-running the
   same review or the same live probe for its own sake.
+
+
+## Session 76 — 2026-10-18
+
+### Done
+- Re-verified the repo first: `npm install`, 209/209 tests, clean
+  typecheck/build, `git status` clean before starting.
+- Spawned an `Explore` agent for a fresh angle, explicitly told not to
+  repeat prior general correctness re-reads, live rate-limit probes, or
+  README's already-documented "Known limitations." It raised three leads:
+  (1) test-count disparity between `src/signals/*.test.ts` and
+  `src/data/*.test.ts`, (2) a theoretical `onScored` double-fire via
+  `watcherOnLaunch.ts`/`feed.ts`, (3) a logging nit in `discovery.ts`.
+- Checked each by hand. (2) turns out not reachable in production: both
+  discovery paths always share one `ScoringInFlight` (wired in
+  `server.ts`), which exclusively claims a mint before either path's first
+  RPC call for it, so the same mint can never be mid-score on two paths at
+  once — the scenario only arises if a caller omits `scoringInFlight`,
+  which only unit tests do, not `server.ts`. (3) is a cosmetic suggestion,
+  not a bug. (1) is comparing two different kinds of module (pure scoring
+  logic vs. RPC-fetch logic) so raw line-count isn't a fair signal — but
+  looking at the *scoring* modules specifically turned up a real, narrow
+  gap: each of the four signal scorers (`src/signals/{liquidity,
+  holderConcentration,deployerHistory,bundledBuys}.ts`) has 2-3 risk-band
+  thresholds (e.g. `>= 0.5`, `>= 0.3`), and boundary-value tests for those
+  exact thresholds were present for *some* thresholds in some files but
+  missing for others — an inconsistency, not something any single prior
+  session had set out to audit across all four at once.
+- Added the missing boundary tests, matching the existing "boundary: ..."
+  naming convention (already used in `liquidity.test.ts` and
+  `deployerHistory.test.ts`):
+  - `liquidity.test.ts`: exactly 15 SOL (the moderate-liquidity threshold).
+  - `holderConcentration.test.ts`: exactly 50% and exactly 30% share.
+  - `deployerHistory.test.ts`: exactly 80% dead, and exactly
+    `MIN_HISTORY_FOR_PATTERN` (3) prior launches — confirming 3 is *not*
+    thin-capped (contrast with the existing 2-launch capped case).
+  - `bundledBuys.test.ts`: a buy exactly at the window edge (300s, the
+    `<=` boundary) still counts as early; exactly 50% and exactly 30%
+    share.
+- Ran the full suite after each file's edits, not just at the end.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 217/217 passing (209 prior + 8 new boundary tests), all
+  offline, ~3.8s.
+- Every risk-band threshold across all four signal scorers now has an
+  exact-boundary test, not just some of them.
+
+### Next
+- The `Explore` agent's `onScored`/`ScoringInFlight` lead (see "Done")
+  isn't a real bug given current `server.ts` wiring, but if a future
+  session ever adds a third discovery path or a caller that skips
+  `scoringInFlight`, re-check whether `watcherOnLaunch.ts`/`poller.ts`'s
+  `if (feed.has(launch.mint)) onScored?.(launch);` check after
+  `feed.add()` can still fire for a mint *this* call didn't actually add
+  (currently prevented only by `ScoringInFlight` always being shared, not
+  by anything in `feed.ts`/`watcherOnLaunch.ts` themselves).
+- All five TASK.md steps remain functionally complete. Everything noted
+  in sessions 69-75 (rate-limit ceiling, `RESCORE_DELAY_MS`,
+  `findFundingSource`'s ~2% unknown rate) is unchanged and still not a
+  priority on its own. Keep favoring genuinely new angles — this session's
+  cross-module boundary-test audit is an example of the kind of angle
+  that's still available even after 75 "no bugs found" reviews.

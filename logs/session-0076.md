@@ -1,0 +1,98 @@
+# Session 76: Rug radar: live launch scoring
+
+- Started: 2026-10-18T23:09:33Z
+- Ended: 2026-10-18T23:14:49Z
+- Steps: 71
+- Model turns: 35
+- Billing: Claude subscription (API value $1.3546, not billed)
+- Outcome: ok
+
+## Summary
+
+Clean — only the intended files changed, no stray processes. No commits made, per CLAUDE.md the runner handles that.  **Summary:** Session 76 found a fresh angle after 75 prior "no bugs" reviews: boundary-value test coverage across the four signal scorers (`liquidity`, `holderConcentration`, `deployerHistory`, `bundledBuys`) was inconsistent — some risk-band thresholds had exact-boundary tests, others didn't. Added the 8 missing ones, matching the existing naming convention. All 217/217 tests pass, typecheck and build are clean. Also checked out two other leads from an Explore agent (a theore…
+
+## Steps
+
+- `run` cat TASK.md 2>/dev/null; echo "---PROGRESS---"; cat PROGRESS.md 2>/dev/null; echo "---LS---"; ls -la
+- `read` PROGRESS.md
+- `run` wc -l PROGRESS.md TASK.md; echo "---"; tail -c 4000 PROGRESS.md
+- `run` git status && echo "---" && git log --oneline -15 && echo "---rug-radar ls---" && ls -la rug-radar && echo "---src---" && find rug-radar/src rug-radar/public -name "*.ts" -o -name "*.js" -o -name "*.html" | sort
+- `think` This project is extensive and 75 prior sessions have thoroughly covered it. Let me verify the baseline is still healthy before deciding what to do this session.
+- `run` cd rug-radar && npm install --silent 2>&1 | tail -5 && echo "---typecheck---" && npm run typecheck 2>&1 | tail -20 && echo "---build---" && npm run build 2>&1 | tail -20 && echo "---test---" && npm test 2>&1 | tail -30
+- `think` Baseline is clean: 209/209 tests pass, typecheck and build succeed. Now let me look for a genuinely new angle, per session 75's note to avoid repeating prior reviews/probes. Let me spawn an Explore agent to survey what's never been reviewed or is thin.
+- `run` cd rug-radar && tail -c 8000 README.md
+- `run` pwd
+- `run` tail -c 6000 README.md
+- `run` sed -n '1,200p' src/data/liquidity.ts
+- `think` Good, migration status (`complete` flag) is handled. Let me check git log in rug-radar's PROGRESS history for the most recent "Next" sections across last several sessions to see what's genuinely outstanding, and check if there's anything in the codebase that looks thin (e.g., missing tests, TODOs).
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n "^## Session" PROGRESS.md | tail -15
+- `run` cd rug-radar && grep -rn "TODO\|FIXME\|XXX" src public --include=*.ts --include=*.js --include=*.html 2>/dev/null; echo "done"
+- `think` No TODOs left. Let me dispatch an Explore agent to scan for any real gaps—thin test coverage, dead code, or unaddressed edge cases—since 75 sessions of manual review suggest I need fresh eyes rather than re-treading.
+- `tool` Agent
+- `run` find /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src -type f -name "*.ts" | grep -E "(signals|data)" | head -20
+- `run` grep -r "from ['\"].*/(signals|data)/" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src --include="*.ts" | grep -v test | cut -d: -f2 | sort | uniq
+- `run` grep -r "from.*signals\|from.*data" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src --include="*.ts" | grep -v ".test.ts"
+- `run` for f in /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/signals/*.test.ts; do echo "$f: $(wc -l < "$f") lines"; done
+- `run` for f in /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/data/*.test.ts; do echo "$f: $(wc -l < "$f") lines"; done
+- `run` grep -n "\.catch\|catch\|try\|Promise\|async" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/*.ts | head -30
+- `run` grep -n "\.catch\|} catch" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/*.ts /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/signals/*.ts /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/data/*.ts 2>/dev/null | grep -v ".test.ts"
+- `read` rug-radar/src/rescore.ts
+- `read` rug-radar/src/holderRescore.ts
+- `read` rug-radar/src/data/deployerHistory.ts
+- `read` rug-radar/src/signals/liquidity.test.ts
+- `read` rug-radar/src/data/liquidity.test.ts
+- `read` rug-radar/README.md
+- `read` rug-radar/src/discovery.ts
+- `read` rug-radar/src/discovery.ts
+- `run` grep -r "^export" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src --include="*.ts" | grep -v ".test.ts" | cut -d: -f2 | sort
+- `run` grep -r "detectCreateInstruction\|detectTradeInstruction" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src --include="*.ts" | grep -v "export\|\.test\.ts"
+- `read` rug-radar/src/signals/liquidity.ts
+- `read` rug-radar/src/data/liquidity.ts
+- `read` rug-radar/src/watcherOnLaunch.ts
+- `read` rug-radar/src/server.ts
+- `read` rug-radar/src/signals/deployerHistory.test.ts
+- `run` grep -n "findFundingSource" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/data/bundledBuys.ts | head -5
+- `read` rug-radar/src/data/bundledBuys.ts
+- `run` ls -la /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/signals/ | grep -E "\.ts$"
+- `run` ls -la /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/data/ | grep -E "\.ts$"
+- `run` grep -n "\.catch\|\.then\|Promise\|async" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/watcherOnLaunch.ts
+- `read` rug-radar/src/watcherOnLaunch.ts
+- `run` grep -n "onScored\|scheduleHolderRescore\|scheduleHolderRescoreFromIndex" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/watcherOnLaunch.ts
+- `read` rug-radar/src/holderRescore.ts
+- `run` grep -n "trackMint\|recordTrade" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/wsDiscovery.ts | head -10
+- `read` rug-radar/src/wsDiscovery.ts
+- `run` grep -n "recordTrade" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/balanceIndex.ts
+- `read` rug-radar/src/balanceIndex.ts
+- `read` rug-radar/src/feed.ts
+- `run` grep -n "already in feed\|already scored\|duplicate" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/watcherOnLaunch.test.ts
+- `read` rug-radar/src/watcherOnLaunch.test.ts
+- `run` cat -n src/watcherOnLaunch.ts
+- `run` cat -n src/feed.ts
+- `run` grep -n "onScored\|scheduleRescore\|RESCORE_DELAY_MS\|setTimeout" src/server.ts | head -50
+- `run` sed -n '1,220p' src/server.ts
+- `run` cat -n src/poller.ts
+- `run` echo "=== src/signals/liquidity.ts ==="; cat -n src/signals/liquidity.ts; echo; echo "=== src/data/liquidity.ts ==="; cat -n src/data/liquidity.ts
+- `run` cat -n src/signals/liquidity.test.ts
+- `run` cat -n src/signals/holderConcentration.test.ts
+- `run` cat -n src/signals/holderConcentration.ts
+- `run` cat -n src/signals/deployerHistory.ts; echo "=== TEST ==="; cat -n src/signals/deployerHistory.test.ts
+- `run` cat -n src/signals/bundledBuys.ts; echo "=== TEST ==="; cat -n src/signals/bundledBuys.test.ts
+- `think` Found a genuine, fresh gap: boundary-value test coverage for the four signal scorers' risk-band thresholds is inconsistent (some exact thresholds tested, others not). I'll fill in the missing ones — small, test-only, zero-risk work in the project's established style.
+- `read` rug-radar/src/signals/liquidity.test.ts
+- `edit` rug-radar/src/signals/liquidity.test.ts
+- `think` Now holderConcentration:
+- `read` rug-radar/src/signals/holderConcentration.test.ts
+- `edit` rug-radar/src/signals/holderConcentration.test.ts
+- `think` Now deployerHistory:
+- `edit` rug-radar/src/signals/deployerHistory.test.ts
+- `think` Now bundledBuys:
+- `edit` rug-radar/src/signals/bundledBuys.test.ts
+- `think` Now let's run the full test suite, typecheck, and build to confirm everything's green.
+- `run` npm run typecheck 2>&1 | tail -20 && echo "---test---" && npm test 2>&1 | tail -40
+- `run` npm run build 2>&1 | tail -20 && echo "---git status---" && git status
+- `think` All green: 217/217 tests, clean typecheck and build. Now let me update PROGRESS.md with this session's entry.
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent && tail -5 PROGRESS.md | cat -A | head -5
+- `run` cat >> PROGRESS.md << 'EOF'   ## Session 76 — 2026-10-18  ### Done - Re-verified the repo first: `npm install`, 209/209 tests, clean   typecheck/build, `git status` clean before starting. - Spawned an `Explore` agent for a fresh angle, explicitly told not to   repeat prior general correctness re-reads, live rate-limit probes, or   README's already-documented "Known limitations." It raised three l…
+- `think` Final check that everything's clean before wrapping up.
+- `run` git status --short && echo "---" && ps aux | grep -i "node\|tsx" | grep -v grep
+- `think` Clean — only the intended files changed, no stray processes. No commits made, per CLAUDE.md the runner handles that.

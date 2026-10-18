@@ -57,3 +57,24 @@ test("boundary: exactly 50% dead counts as moderate risk", () => {
   assert.equal(result.score, 55);
   assert.match(result.reasons[0], /50-80%/);
 });
+
+test("boundary: exactly 80% dead counts as high risk", () => {
+  const result = scoreDeployerHistory({
+    deployer: "Deployer1",
+    priorLaunches: launches([false, false, false, false, true]),
+  });
+  assert.equal(result.score, 90);
+  assert.match(result.reasons[0], />= 80%/);
+});
+
+test("boundary: exactly MIN_HISTORY_FOR_PATTERN prior launches is not thin-capped", () => {
+  // 3 prior launches, all dead -> 100% dead share. If this were still under
+  // the thin-history cap (like the 2-launch case above) it would be capped
+  // at 40; at exactly 3 it should score the full 90 instead.
+  const result = scoreDeployerHistory({
+    deployer: "Deployer1",
+    priorLaunches: launches([false, false, false]),
+  });
+  assert.equal(result.score, 90);
+  assert.doesNotMatch(result.reasons[0], /too few prior tokens/);
+});
