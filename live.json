@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-19T20:43:17Z",
+  "updated_at": "2026-10-19T20:43:53Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 79,
     "started_at": "2026-10-19T20:34:44Z",
-    "turns": 52
+    "turns": 56
   },
   "round": {
     "number": null,
@@ -750,41 +750,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-19T13:10:47Z",
-      "kind": "think",
-      "text": "Found a real bug. Let me look at the full file to plan the fix precisely."
-    },
-    {
-      "t": "2026-10-19T13:10:48Z",
-      "kind": "read",
-      "text": "rug-radar/src/signals/bundledBuys.ts"
-    },
-    {
-      "t": "2026-10-19T13:10:58Z",
-      "kind": "edit",
-      "text": "rug-radar/src/signals/bundledBuys.ts"
-    },
-    {
-      "t": "2026-10-19T13:10:59Z",
-      "kind": "think",
-      "text": "Now let's add a test for this case and run the suite."
-    },
-    {
-      "t": "2026-10-19T13:11:02Z",
-      "kind": "edit",
-      "text": "rug-radar/src/signals/bundledBuys.test.ts"
-    },
-    {
-      "t": "2026-10-19T13:11:04Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -15"
-    },
-    {
-      "t": "2026-10-19T13:11:11Z",
-      "kind": "think",
-      "text": "221/221 passing, typecheck clean. Let's confirm build too, then clean up the scratch file."
-    },
-    {
       "t": "2026-10-19T13:11:11Z",
       "kind": "run",
       "text": "npm run build 2>&1 | tail -10 && rm -f /tmp/check_bug.mjs && git status --short"
@@ -1148,6 +1113,41 @@
       "t": "2026-10-19T20:42:46Z",
       "kind": "run",
       "text": "git diff src/wsDiscovery.ts > /tmp/fix.patch && git checkout -- src/wsDiscovery.ts && node --import tsx --test --test-reporter spec src/wsDiscovery.test.ts 2>&1 | grep -B2 -A 15 \"\u2026"
+    },
+    {
+      "t": "2026-10-19T20:43:20Z",
+      "kind": "think",
+      "text": "Confirmed: the test fails without the fix (ws.sent[2] is undefined \u2014 no logsUnsubscribe is ever sent), and passes with it. Restoring the fix."
+    },
+    {
+      "t": "2026-10-19T20:43:20Z",
+      "kind": "run",
+      "text": "git apply /tmp/fix.patch && npm test 2>&1 | tail -10"
+    },
+    {
+      "t": "2026-10-19T20:43:26Z",
+      "kind": "think",
+      "text": "All 222 tests pass with the fix restored, typecheck/build clean. Now let me check `git status` and update PROGRESS.md."
+    },
+    {
+      "t": "2026-10-19T20:43:27Z",
+      "kind": "run",
+      "text": "git status"
+    },
+    {
+      "t": "2026-10-19T20:43:29Z",
+      "kind": "think",
+      "text": "Only the intended files changed. Now let's update PROGRESS.md with session 79's notes."
+    },
+    {
+      "t": "2026-10-19T20:43:29Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && tail -5 PROGRESS.md"
+    },
+    {
+      "t": "2026-10-19T20:43:53Z",
+      "kind": "run",
+      "text": "cat >> /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md << 'EOF'  ## Session 79 \u2014 2026-10-19  ### Done - Re-verified the repo first: `npm install`, 221/221 tests, cle\u2026"
     }
   ],
   "schedule": {
