@@ -4717,3 +4717,69 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   genuinely new angles over re-running prior reviews — this session's
   base58 edge case is an example of one still being findable after 76
   "no bugs found" sessions.
+
+## Session 78 — 2026-10-19
+
+### Done
+- Re-verified the repo first: `npm install`, 220/220 tests, clean
+  typecheck/build, `git status` clean before starting.
+- Looked for an angle not covered by sessions 69-77's repeated "core
+  modules" sweeps (which had settled on `pipeline.ts`, `scorer.ts`,
+  `deployerIndex.ts`, `knownAccounts.ts` as reviewed-clean). Manually
+  re-read those four plus `public/feed.js`'s unescaped-HTML rendering
+  (safe: `reasons` strings are all built from numeric labels, never raw
+  on-chain metadata like a token name, and `launch.mint` is a decoded
+  base58 pubkey — no XSS angle there) before landing on
+  `src/signals/bundledBuys.ts`, which hadn't had its share-ratio math
+  itself re-derived from scratch since session 76's audit only added
+  boundary tests at the existing thresholds.
+- Found a real bug: `scoreBundledBuys`'s share calculation divided
+  `largestCount` (a count of *distinct buyers* in the largest funding
+  bundle, via a `Set`) by `early.length` (a count of *buy events*, not
+  distinct buyers). Any wallet in the bundle that bought more than once
+  inside the early window inflated the denominator without inflating the
+  numerator, diluting the computed share — confirmed live with
+  `node --import tsx`: 4 distinct buyers (A, B, C, D) where A and B share
+  one funding source (a true 2-of-4 = 50% bundle, which should score 90,
+  "high risk") scored only 25 ("low risk") once buyer A was given 5 early
+  buy events instead of 1, because the denominator became 8 (buy events)
+  instead of 4 (buyers). The emitted reason text was also wrong in the
+  same way ("2 of 8 early buyers" when there were only 4 early buyers).
+  This isn't just a cosmetic miscount: it's a way for a real bundler to
+  defeat this exact detector — split one bundled wallet's early buy into
+  several smaller early buys and the signal's own share math reports a
+  lower, safer-looking number for the same underlying bundle.
+- Fixed by computing `uniqueBuyerCount = new Set(early.map(b => b.buyer)).size`
+  once and using it everywhere `early.length` previously stood in for
+  "number of early buyers" (the share denominator, the label, and the
+  "no common funding source among N early buyer(s)" message) — matching
+  the units `largestCount` was already using. Added a test reproducing
+  the exact scenario above (one buyer with 5 early buy events alongside 3
+  single-buy buyers) asserting the fixed 2-of-4 = 50% outcome.
+- Ran the full suite after the fix, not just at the end.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 221/221 passing (220 prior + 1 new), all offline, ~3.9s.
+- `scoreBundledBuys` now measures share as distinct-buyers-in-bundle over
+  distinct-early-buyers, consistent in both numerator and denominator;
+  repeat early buys by one wallet in the bundle no longer dilute its own
+  detected share.
+
+### Next
+- This bug predates session 78 (present since the signal was first
+  written with the `Set`-based bundle-size count) and was reachable any
+  time a bundled wallet made more than one early buy — worth noting in
+  case a future session wants to check whether any currently-tracked live
+  launch's past `bundled-buys` score changes meaningfully now that it's
+  fixed (no live check was run this session; the fix was verified with
+  synthetic data only, per the project's offline-test rule).
+- `RESCORE_DELAY_MS` (60s, 14 live samples as of session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71) are all
+  unchanged — still not a priority on their own.
+- All five TASK.md steps remain functionally complete. This session is a
+  reminder that "no bugs found" sweeps of the same files can still miss a
+  bug in math that wasn't re-derived from first principles — re-deriving
+  a formula's units (what each term actually counts) found this one where
+  reading the code for plausibility hadn't.

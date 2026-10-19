@@ -31,6 +31,11 @@ export function scoreBundledBuys(input: BundledBuysInput): SignalResult {
     };
   }
 
+  // Distinct buyers, not buy events: a single wallet buying early more than
+  // once must not inflate the denominator below (that would let a bundled
+  // wallet dilute its own detected share just by repeat-buying small amounts).
+  const uniqueBuyerCount = new Set(early.map((b) => b.buyer)).size;
+
   const bySource = new Map<string, Set<string>>();
   for (const buy of early) {
     if (!buy.fundedBy) continue;
@@ -52,13 +57,13 @@ export function scoreBundledBuys(input: BundledBuysInput): SignalResult {
     return {
       name: "bundled-buys",
       score: 0,
-      reasons: [`no common funding source among ${early.length} early buyer(s)`],
+      reasons: [`no common funding source among ${uniqueBuyerCount} early buyer(s)`],
     };
   }
 
-  const share = largestCount / early.length;
+  const share = largestCount / uniqueBuyerCount;
   const sharePct = (share * 100).toFixed(1);
-  const label = `${largestCount} of ${early.length} early buyers were funded from one wallet (${sharePct}%) within ${windowSeconds}s of launch`;
+  const label = `${largestCount} of ${uniqueBuyerCount} early buyers were funded from one wallet (${sharePct}%) within ${windowSeconds}s of launch`;
 
   if (share >= HIGH_RISK_SHARE) {
     return { name: "bundled-buys", score: 90, reasons: [`${label} (>= 50%)`] };

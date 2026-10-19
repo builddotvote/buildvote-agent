@@ -103,6 +103,25 @@ test("boundary: exactly 50% share counts as high risk", () => {
   assert.match(result.reasons[0], /2 of 4 early buyers.*>= 50%/);
 });
 
+test("a buyer repeat-buying early does not dilute the share via buy-event count", () => {
+  const result = scoreBundledBuys({
+    earlyBuys: [
+      buy("buyerA", "funder1", 10),
+      buy("buyerA", "funder1", 11),
+      buy("buyerA", "funder1", 12),
+      buy("buyerA", "funder1", 13),
+      buy("buyerA", "funder1", 14),
+      buy("buyerB", "funder1", 20),
+      buy("buyerC", "funder2", 30),
+      buy("buyerD", "funder2", 40),
+    ],
+  });
+  // 4 distinct buyers (A, B, C, D); 2 of them (A, B) share funder1 -> 50%,
+  // not diluted down by buyerA's 5 separate early buy events.
+  assert.equal(result.score, 90);
+  assert.match(result.reasons[0], /2 of 4 early buyers.*>= 50%/);
+});
+
 test("boundary: exactly 30% share counts as moderate risk", () => {
   const result = scoreBundledBuys({
     earlyBuys: [
