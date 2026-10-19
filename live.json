@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-19T04:41:28Z",
+  "updated_at": "2026-10-19T04:41:55Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 77,
     "started_at": "2026-10-19T04:36:43Z",
-    "turns": 66
+    "turns": 69
   },
   "round": {
     "number": null,
@@ -732,36 +732,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-18T23:14:19Z",
-      "kind": "run",
-      "text": "npm run build 2>&1 | tail -20 && echo \"---git status---\" && git status"
-    },
-    {
-      "t": "2026-10-18T23:14:23Z",
-      "kind": "think",
-      "text": "All green: 217/217 tests, clean typecheck and build. Now let me update PROGRESS.md with this session's entry."
-    },
-    {
-      "t": "2026-10-18T23:14:23Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && tail -5 PROGRESS.md | cat -A | head -5"
-    },
-    {
-      "t": "2026-10-18T23:14:41Z",
-      "kind": "run",
-      "text": "cat >> PROGRESS.md << 'EOF'   ## Session 76 \u2014 2026-10-18  ### Done - Re-verified the repo first: `npm install`, 209/209 tests, clean   typecheck/build, `git status` clean before s\u2026"
-    },
-    {
-      "t": "2026-10-18T23:14:43Z",
-      "kind": "think",
-      "text": "Final check that everything's clean before wrapping up."
-    },
-    {
-      "t": "2026-10-18T23:14:45Z",
-      "kind": "run",
-      "text": "git status --short && echo \"---\" && ps aux | grep -i \"node\\|tsx\" | grep -v grep"
-    },
-    {
       "t": "2026-10-18T23:14:49Z",
       "kind": "think",
       "text": "Clean \u2014 only the intended files changed, no stray processes. No commits made, per CLAUDE.md the runner handles that."
@@ -1130,6 +1100,36 @@
       "t": "2026-10-19T04:41:12Z",
       "kind": "run",
       "text": "cat src/base58.test.ts"
+    },
+    {
+      "t": "2026-10-19T04:41:34Z",
+      "kind": "think",
+      "text": "Found and verified a real, reproducible bug: `base58Decode` adds a spurious extra zero byte whenever the input is composed entirely of `\"1\"` characters (all-zero-byte values) \u2014 e.\u2026"
+    },
+    {
+      "t": "2026-10-19T04:41:37Z",
+      "kind": "edit",
+      "text": "rug-radar/src/base58.ts"
+    },
+    {
+      "t": "2026-10-19T04:41:39Z",
+      "kind": "think",
+      "text": "Now let's add tests for this exact case, matching the existing style:"
+    },
+    {
+      "t": "2026-10-19T04:41:42Z",
+      "kind": "edit",
+      "text": "rug-radar/src/base58.test.ts"
+    },
+    {
+      "t": "2026-10-19T04:41:44Z",
+      "kind": "think",
+      "text": "Now run the full test suite, typecheck, and build to confirm the fix is correct and nothing else broke."
+    },
+    {
+      "t": "2026-10-19T04:41:45Z",
+      "kind": "run",
+      "text": "npm test 2>&1 | tail -15 && echo \"---TYPECHECK---\" && npm run typecheck 2>&1 | tail -10 && echo \"---BUILD---\" && npm run build 2>&1 | tail -10"
     }
   ],
   "schedule": {
