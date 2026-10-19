@@ -321,9 +321,26 @@ export class LaunchWatcher {
       this.pendingRequests.delete(msg.id);
       if (pending.type === "program") {
         this.programSubscriptionId = msg.result;
-      } else {
+      } else if (this.trackedMints.has(pending.mint)) {
         this.mintSubscriptions.set(msg.result, { mint: pending.mint, bondingCurve: pending.bondingCurve });
         this.subscriptionIdByMint.set(pending.mint, msg.result);
+      } else {
+        // untrackMint() ran before this ack arrived, so at that time there was
+        // no known subscription id yet to send logsUnsubscribe for — it
+        // could only remove the pending request's bookkeeping, not the
+        // subscription itself (see untrackMint). Without this, the ack would
+        // instead resurrect the mint into mintSubscriptions/subscriptionIdByMint,
+        // making onTrade fire again for a mint the caller already untracked,
+        // and leaving the subscription open server-side for the rest of this
+        // connection with nothing ever unsubscribing it.
+        this.ws?.send(
+          JSON.stringify({
+            jsonrpc: "2.0",
+            id: this.nextRequestId++,
+            method: "logsUnsubscribe",
+            params: [msg.result],
+          }),
+        );
       }
       return;
     }

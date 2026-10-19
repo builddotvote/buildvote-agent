@@ -577,6 +577,51 @@ test("untrackMint unsubscribes and stops routing further notifications for that 
   watcher.stop();
 });
 
+test("untrackMint before its subscribe ack arrives still unsubscribes once the ack lands, and does not route trades for it", async () => {
+  const sockets: FakeWebSocket[] = [];
+  const trades: unknown[] = [];
+  const mint = "Mint11111111111111111111111111111111111111";
+  const bondingCurve = "BondingCurve111111111111111111111111111111";
+  const watcher = new LaunchWatcher(
+    "wss://fake",
+    fakeRpc(async (sig) => tradeFixtureTx(sig, mint, bondingCurve, "User1", 1n)),
+    {
+      onLaunch: () => {},
+      onTrade: (t) => trades.push(t),
+      wsFactory: (url) => {
+        const ws = new FakeWebSocket();
+        sockets.push(ws);
+        return ws;
+      },
+    },
+  );
+
+  watcher.start();
+  const ws = sockets[0];
+  ws.emitOpen();
+  ws.emitMessage(JSON.stringify(subscribeAckFor(ws, 0, 12345)));
+  watcher.trackMint(mint, bondingCurve);
+
+  // untrackMint runs before the mint subscribe's ack has arrived, so at this
+  // point there's no known subscription id yet for it to send
+  // logsUnsubscribe for.
+  watcher.untrackMint(mint);
+  assert.equal(ws.sent.length, 2, "no logsUnsubscribe yet — the subscription id isn't known until the ack arrives");
+
+  // The ack arrives late, after the mint was already untracked.
+  ws.emitMessage(JSON.stringify(subscribeAckFor(ws, 1, 67890)));
+
+  const unsubReq = JSON.parse(ws.sent[2]);
+  assert.equal(unsubReq.method, "logsUnsubscribe", "the late ack must still trigger logsUnsubscribe, not get silently absorbed");
+  assert.deepEqual(unsubReq.params, [67890]);
+
+  ws.emitMessage(JSON.stringify(logsNotification("sig-after-untrack", BUY_ONLY_LOGS, null, 67890)));
+  await flushMicrotasks();
+
+  assert.equal(trades.length, 0, "a mint untracked before its ack arrived must not be resurrected into routing trades");
+  watcher.stop();
+});
+
 test("resubscribes tracked mints after a reconnect", async () => {
   const sockets: FakeWebSocket[] = [];
   const watcher = new LaunchWatcher("wss://fake", fakeRpc(async () => null), {

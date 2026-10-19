@@ -4783,3 +4783,90 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   bug in math that wasn't re-derived from first principles — re-deriving
   a formula's units (what each term actually counts) found this one where
   reading the code for plausibility hadn't.
+
+## Session 79 — 2026-10-19
+
+### Done
+- Re-verified the repo first: `npm install`, 221/221 tests, clean
+  typecheck/build, `git status` clean before starting.
+- Read through the signal scorers (`liquidity.ts`, `holderConcentration.ts`,
+  `deployerHistory.ts`, `bundledBuys.ts`) re-deriving each one's share/ratio
+  math from scratch (same technique that found session 78's bug) — all four
+  check out: numerator and denominator consistently count the same unit in
+  each.
+- Also re-read `pumpfun.ts`'s decoders, `balanceIndex.ts`, `deployerIndex.ts`,
+  `pipeline.ts`, `scorer.ts`, `feed.ts`, `rescore.ts`, `holderRescore.ts`,
+  `scoringGate.ts`, `scoringInFlight.ts`, `rpc.ts` (including its
+  `RequestPacer`/semaphore `acquireSlot`/`releaseSlot` logic) and `data/*.ts` —
+  no new issues; these match prior sessions' "reviewed clean" conclusions.
+- Found a real bug in `src/wsDiscovery.ts`'s `trackMint`/`untrackMint` pair:
+  if `untrackMint(mint)` is called after `trackMint`'s `logsSubscribe`
+  request was sent but *before* its ack arrives, `untrackMint` has no
+  subscription id yet to send `logsUnsubscribe` for (only
+  `subscriptionIdByMint` is checked, and it's empty at that point) — it could
+  only remove the mint from `trackedMints`. The ack handler
+  (`handleMessage`'s `isSubscribeAck` branch) didn't check whether the mint
+  was still tracked before processing a late "mint"-type ack: it
+  unconditionally added the subscription into `mintSubscriptions` /
+  `subscriptionIdByMint`, resurrecting a mint the caller had explicitly
+  untracked. Confirmed live with a throwaway probe script (deleted before
+  finishing, same habit as session 34's `tmp-probe-rescore.ts`): trackMint →
+  untrackMint (before the ack) → the late ack arrives → a trade notification
+  on that subscription still called `onTrade` and triggered a
+  `getTransaction` call for a mint that was supposed to be untracked, and no
+  `logsUnsubscribe` was ever sent, leaving the stray subscription open
+  server-side for the rest of that connection.
+- Checked reachability: the only current caller is `holderRescore.ts`,
+  which calls `untrackMint` either after `RESCORE_DELAY_MS` (60s) or after an
+  RPC round-trip — both far longer than a websocket ack normally takes, so
+  this isn't expected to fire under normal conditions today. But unlike
+  session 77's base58 case, the trigger here is exactly the kind of
+  "ack arrives slower than usual" condition this whole project exists to
+  handle (a congested/rate-limited public endpoint), so it's a real risk,
+  not just a hypothetical one — and it's a correctness bug in the class's
+  own public contract (`untrackMint` is documented as stopping further
+  `onTrade` calls for a mint) regardless of today's one caller's timing.
+- Fixed in `src/wsDiscovery.ts`'s ack handler: a "mint"-type ack is only
+  applied (added to `mintSubscriptions`/`subscriptionIdByMint`) if
+  `trackedMints.has(pending.mint)` is still true. If the mint was untracked
+  in the meantime, the handler now sends `logsUnsubscribe` for the
+  newly-learned subscription id immediately instead of silently dropping it
+  — closing both the stray-subscription leak and the resurrected-routing bug
+  in one place. Scoped to this one race (untrack-then-late-ack, no retrack in
+  between); a rapid untrack-then-retrack of the exact same mint before the
+  ack arrives is a narrower case not exercised by any current caller and
+  wasn't addressed here.
+- Added a regression test to `wsDiscovery.test.ts` reproducing the exact
+  sequence (track → untrack before ack → late ack arrives → trade
+  notification on that subscription), asserting both that `logsUnsubscribe`
+  is sent once the late ack lands and that no `onTrade` fires. Verified the
+  test actually catches the bug: reverted the fix locally, confirmed the new
+  test fails (no `logsUnsubscribe` ever sent), then restored the fix and
+  confirmed it passes.
+- Ran the full suite after the fix, not just at the end.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 222/222 passing (221 prior + 1 new), all offline, ~4s.
+- `untrackMint` now reliably stops routing for a mint even if called before
+  its subscribe ack arrives, and the stray subscription is unsubscribed as
+  soon as its id becomes known instead of leaking for the rest of the
+  connection.
+
+### Next
+- The narrower untrack-then-retrack-the-same-mint-before-the-ack case
+  (mentioned in "Done") isn't handled and isn't exercised by
+  `holderRescore.ts`'s current usage (it never retracks a mint it just
+  untracked) — would need per-request staleness tracking (e.g. the latest
+  pending request id per mint) if a future caller ever does that.
+- `RESCORE_DELAY_MS` (60s, 14 live samples as of session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71) are all
+  unchanged — still not a priority on their own.
+- All five TASK.md steps remain functionally complete. Another reminder
+  (after session 78's share-math bug) that re-deriving a module's actual
+  state machine/invariants by hand — not just reading for plausibility —
+  keeps finding real bugs well past 78 prior "looks fine" sessions; worth
+  applying the same treatment to modules not yet done this way (e.g.
+  `discovery.ts`'s cursor/backstop logic, `server.ts`'s wiring as a whole)
+  in a future session.
