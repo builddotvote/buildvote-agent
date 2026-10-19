@@ -1,0 +1,98 @@
+# Session 77: Rug radar: live launch scoring
+
+- Started: 2026-10-19T04:36:43Z
+- Ended: 2026-10-19T04:42:39Z
+- Steps: 72
+- Model turns: 33
+- Billing: Claude subscription (API value $1.2343, not billed)
+- Outcome: ok
+
+## Summary
+
+Clean — only the files this session touched are modified, and no stray processes left running.  **Summary:** Found and fixed a real bug in `rug-radar/src/base58.ts` — `base58Decode` returned a spurious extra zero byte for any input consisting entirely of `"1"` characters, including the Solana System Program address (`11111...1`, 32 ones), which decoded to 33 bytes instead of 32. Added a guard for the all-leading-zeros case plus 3 regression tests. It's not reachable through today's only call sites (`pumpfun.ts` instruction-data decoding, which always starts with a nonzero discriminator byte),…
+
+## Steps
+
+- `run` cat TASK.md 2>/dev/null; echo "---PROGRESS---"; cat PROGRESS.md 2>/dev/null
+- `read` PROGRESS.md
+- `run` wc -l PROGRESS.md; echo "---"; tail -n 150 PROGRESS.md
+- `run` cat "/home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/MEMORY.md" 2>/dev/null
+- `run` ls -la "/home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/" 2>/dev/null
+- `run` ls -la "/home/runner/.claude/projects/" 2>/dev/null; echo "---"; find /home/runner/.claude/projects -maxdepth 1 -iname "*buildvote*" 2>/dev/null
+- `run` find /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent -maxdepth 2
+- `think` No memory directory exists yet (this appears to be a fresh environment for this repo). I'll proceed with the task directly; memory isn't critical here since PROGRESS.md already carries full session history. Let me check the current repo state.
+- `run` git status && echo "---" && ls rug-radar && echo "---src---" && ls rug-radar/src && echo "---signals---" && ls rug-radar/src/signals
+- `run` cd rug-radar && npm install --silent 2>&1 | tail -20 && echo "---TEST---" && npm test 2>&1 | tail -40 && echo "---TYPECHECK---" && npm run typecheck 2>&1 | tail -20 && echo "---BUILD---" && npm run build 2>&1 | tail -20
+- `think` All 217 tests pass, typecheck and build clean. The repo is in a healthy, fully working state. Now let me find a genuinely new angle for this session, per the pattern of the last several sessions.
+- `tool` Agent
+- `run` find /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src -type f -name "*.ts" | grep -E "(discovery|pumpfun|rpc|pipeline|rescore|scoringGate|balanceIndex|deployerIndex|knownAccounts|base58|wsDiscovery|wsLogParser)" | head -20
+- `read` rug-radar/src/base58.ts
+- `read` rug-radar/src/balanceIndex.ts
+- `read` rug-radar/src/deployerIndex.ts
+- `read` rug-radar/src/wsDiscovery.ts
+- `read` rug-radar/src/wsLogParser.ts
+- `read` rug-radar/src/discovery.ts
+- `read` rug-radar/src/pumpfun.ts
+- `read` rug-radar/src/pumpfun.ts
+- `read` rug-radar/src/rpc.ts
+- `read` rug-radar/src/rpc.ts
+- `read` rug-radar/README.md
+- `read` rug-radar/src/pipeline.ts
+- `read` rug-radar/src/scoringGate.ts
+- `read` rug-radar/src/knownAccounts.ts
+- `run` grep -n "slice\|subarray\|substring\|buffer\|Buffer\|ReadOnly\|reverse\|shift" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/*.ts | head -40
+- `run` grep -A 30 "function ownLogLines" src/wsLogParser.ts
+- `read` rug-radar/src/wsLogParser.test.ts
+- `run` cat > /tmp/test_stack_bug.js << 'EOF' // Simulate the ownLogLines function with an off-by-one bug test case function ownLogLines(programId, logs) {   const stack = [];   const own = [];    for (const line of logs) {     const invokeRe = /^Program (\S+) invoke \[\d+\]$/;     const returnRe = /^Program \S+ (success|failed)/;          const invoke = invokeRe.exec(line);     if (invoke) {       stack…
+- `run` cat > /tmp/test_stack_underflow.js << 'EOF' // Test: what if we get a "success" before any "invoke"? function ownLogLines(programId, logs) {   const stack = [];   const own = [];    for (const line of logs) {     const invokeRe = /^Program (\S+) invoke \[\d+\]$/;     const returnRe = /^Program \S+ (success|failed)/;          const invoke = invokeRe.exec(line);     if (invoke) {       stack.push(i…
+- `run` cat > /tmp/test_account_bounds.js << 'EOF' // Test: what if accounts array is shorter than expected? const CREATE_ACCOUNT_INDEX = { mint: 0, bondingCurve: 2, user: 7 };  function decodeCreateInstruction(dataBase58, accounts) {   // Assume data validates fine, focus on accounts bounds check   const layout = CREATE_ACCOUNT_INDEX;      const mint = accounts[layout.mint];   const bondingCurve = accou…
+- `run` grep -n "release\|tryAcquire\|inFlight" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/scoringGate.ts /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/server.ts /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/scoringInFlight.ts 2>/dev/null
+- `read` rug-radar/src/scoringGate.test.ts
+- `run` cat > /tmp/test_gate_underflow.js << 'EOF' class ScoringGate {   constructor(maxConcurrent) {     this.inFlight = 0;     this.maxConcurrent = maxConcurrent;   }    tryAcquire() {     if (this.inFlight >= this.maxConcurrent) return false;     this.inFlight++;     return true;   }    release() {     this.inFlight--;  // BUG: no guard against underflow!   } }  // Test: release without acquire const …
+- `read` rug-radar/src/scoringInFlight.ts
+- `run` grep -A 20 "scoringGate\|scoringInFlight" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/server.ts | head -80
+- `read` rug-radar/src/watcherOnLaunch.ts
+- `run` cat > /tmp/test_actual_bug.js << 'EOF' class ScoringGate {   constructor(maxConcurrent) {     this.inFlight = 0;     this.maxConcurrent = maxConcurrent;   }    tryAcquire() {     if (this.inFlight >= this.maxConcurrent) return false;     this.inFlight++;     return true;   }    release() {     this.inFlight--;  // Can go negative!   } }  // Scenario from watcherOnLaunch.ts: // 1. scoringGate.tryA…
+- `run` cat > /tmp/test_gate_vulnerability.js << 'EOF' class ScoringGate {   constructor(maxConcurrent) {     this.inFlight = 0;     this.maxConcurrent = maxConcurrent;   }    tryAcquire() {     if (this.inFlight >= this.maxConcurrent) return false;     this.inFlight++;     return true;   }    release() {     // BUG: No guard!     this.inFlight--;   } }  // Test: what if a Promise rejects and finally run…
+- `run` grep -B 5 -A 15 "scoringGate\|release()" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/poller.ts | head -60
+- `read` rug-radar/src/poller.ts
+- `run` grep -i "maxConcurrent\|maxEntries\|DEFAULT" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md | head -20
+- `run` grep -n "DEFAULT.*= " /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/*.ts | grep -E "(LIMIT|ENTRIES|CONCURRENT|SIZE|DELAY|TIMEOUT|INTERVAL)" | head -30
+- `run` grep -A 5 "DEFAULT_LIMIT\|signature-limit default" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md | head -20
+- `read` rug-radar/src/discovery.ts
+- `run` git log --oneline --all -S "DEFAULT_LIMIT" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/discovery.ts 2>/dev/null | head -10
+- `run` git log --all --oneline -- src/discovery.ts | head -20
+- `run` grep -n "findNewLaunches\|limit.*:" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/server.ts | head -20
+- `run` grep -n "limit" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/poller.ts
+- `run` grep -A 5 "findNewLaunches" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/poller.ts
+- `run` cd rug-radar && grep -n "DEFAULT_LIMIT\|limit" src/discovery.ts | head -30
+- `run` grep -n "DEFAULT_LIMIT\|limit" src/discovery.ts
+- `run` pwd
+- `think` Good, I'm already inside rug-radar. Now let's check the README for the "20" / "25" claims.
+- `run` grep -n "20\|25\|signatureLimit\|limit" README.md | head -40
+- `run` sed -n '240,280,' README.md; echo "---deployerHistory---"; grep -n "signatureLimit\|DEFAULT" src/signals/deployerHistory.ts src/signals/bundledBuys.ts src/data/*.ts 2>/dev/null
+- `think` Finding 1 turned out to be a false positive — the agent confused `discovery.ts`'s unrelated `DEFAULT_LIMIT=50` (new-launch scanning) with the per-signal `signatureLimit` in `src/data/deployerHistory.ts` (25) and `src/data/bundledBuys.ts` (20), which actually match the README exactly. Let me verify finding 2 instead.
+- `read` rug-radar/src/scoringGate.ts
+- `run` grep -rn "scoringGate\|ScoringGate\|tryAcquire\|\.release(" src/*.ts | grep -v "\.test\.ts"
+- `read` rug-radar/src/poller.ts
+- `think` Neither of the agent's findings holds up as a real bug — the signature-limit "drift" compared the wrong constants, and the ScoringGate release is always paired correctly by the existing call sites. Let me dig into unbounded-growth risk in the long-lived caches, since that's a real angle no prior session has checked.
+- `read` rug-radar/src/balanceIndex.ts
+- `read` rug-radar/package.json
+- `read` rug-radar/src/base58.ts
+- `run` node --import tsx -e ' import { base58Decode, base58Encode } from "./src/base58.ts"; const sys = "11111111111111111111111111111111"; console.log("len", sys.length); const decoded = base58Decode(sys); console.log("decoded length", decoded.length, decoded); console.log("re-encoded", base58Encode(decoded)); console.log("roundtrip single 1", base58Decode("1"), base58Encode(base58Decode("1"))); consol…
+- `run` grep -rn "base58Decode" src/*.ts src/**/*.ts 2>/dev/null | grep -v test
+- `run` sed -n '1,40p' src/pumpfun.ts
+- `run` sed -n '70,180p' src/pumpfun.ts
+- `run` cat src/base58.test.ts
+- `think` Found and verified a real, reproducible bug: `base58Decode` adds a spurious extra zero byte whenever the input is composed entirely of `"1"` characters (all-zero-byte values) — e.g. `base58Decode("1")` returns 2 bytes instead of 1, and decoding the Solana System Program address (`11111111111111111111111111111111`, 32 "1"s) yields 33 bytes instead of 32. The existing test file even has a tell: it …
+- `edit` rug-radar/src/base58.ts
+- `think` Now let's add tests for this exact case, matching the existing style:
+- `edit` rug-radar/src/base58.test.ts
+- `think` Now run the full test suite, typecheck, and build to confirm the fix is correct and nothing else broke.
+- `run` npm test 2>&1 | tail -15 && echo "---TYPECHECK---" && npm run typecheck 2>&1 | tail -10 && echo "---BUILD---" && npm run build 2>&1 | tail -10
+- `think` Fixed and verified — 220/220 tests pass, typecheck and build clean. Now updating PROGRESS.md with session 77's record.
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent && tail -5 PROGRESS.md
+- `run` cat >> /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md << 'EOF'   ## Session 77 — 2026-10-19  ### Done - Re-verified the repo first: `npm install`, 217/217 tests, clean   typecheck/build, `git status` clean before starting. - Spawned an `Explore` agent for a fresh angle on the data-layer/discovery   modules not already covered by sessions 75-76's general re-reads. Its   two leads (a…
+- `think` Let's do a final sanity check on repo state before wrapping up.
+- `run` git status --short && echo "---" && ps aux | grep -i "node\|tsx" | grep -v grep
+- `think` Clean — only the files this session touched are modified, and no stray processes left running.

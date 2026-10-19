@@ -4635,3 +4635,85 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   priority on its own. Keep favoring genuinely new angles — this session's
   cross-module boundary-test audit is an example of the kind of angle
   that's still available even after 75 "no bugs found" reviews.
+
+
+## Session 77 — 2026-10-19
+
+### Done
+- Re-verified the repo first: `npm install`, 217/217 tests, clean
+  typecheck/build, `git status` clean before starting.
+- Spawned an `Explore` agent for a fresh angle on the data-layer/discovery
+  modules not already covered by sessions 75-76's general re-reads. Its
+  two leads (a README/`DEFAULT_LIMIT` "drift" in `discovery.ts`, and a
+  missing underflow guard in `scoringGate.ts`'s `release()`) both turned
+  out to be false positives on manual verification: the discovery-limit
+  constant it flagged is unrelated to the per-signal `signatureLimit`
+  values the README actually documents (those match exactly, 20 and 25),
+  and every current call site pairs `release()` with a prior successful
+  `tryAcquire()`, so the "guard" would be dead defensive code for a
+  scenario that can't happen today.
+- Kept looking myself and found a real one in `src/base58.ts`:
+  `base58Decode` returns one spurious extra zero byte whenever the input
+  is composed entirely of `"1"` characters (i.e. decodes to all zero
+  bytes with no other digits) — confirmed live with `node --import tsx`:
+  `base58Decode("1")` returned 2 bytes instead of 1, and
+  `base58Decode("11111111111111111111111111111111")` (the Solana System
+  Program address, 32 "1"s) returned 33 bytes instead of 32. Root cause:
+  the function seeds its big-number accumulator with `[0]` to handle the
+  normal case, but when every character is a leading "1" the digit-processing
+  loop never runs, so that seed byte gets emitted as if it were a real
+  decoded digit on top of the leading zeros already accounted for.
+  `base58Encode` already has an explicit workaround for the same seed
+  artifact (the "trim a possible extra leading 1" comment) but `decode`
+  had no equivalent. `base58.test.ts` had a tell: it tested
+  `base58Encode(32 zero bytes) → "111...1"` but never round-tripped that
+  exact address back through `decode`, and the separate round-trip test
+  listed four other real program addresses, none starting with "1" (so
+  none would have exposed this).
+- Checked where this is actually reachable: `base58Decode` is only called
+  from `src/pumpfun.ts`'s `decodeCreateInstruction`/`decodeTradeInstruction`,
+  decoding instruction *data* (not the account addresses, which arrive
+  pre-decoded as strings) — and every real discriminator
+  (`CREATE_DISCRIMINATOR`, `BUY_DISCRIMINATOR`, etc.) starts with a nonzero
+  byte, so no currently-possible instruction-data input triggers this bug
+  today. It's still a real, verified correctness bug in a general-purpose,
+  tested utility module that `base58.ts`'s own header comment says is for
+  "Solana addresses and account data fields" generally — the System
+  Program address is about as common a Solana address as exists, so it's
+  worth fixing regardless of today's narrow call sites.
+- Fixed `base58Decode` with an early return when `leadingZeros === text.length`
+  (nothing but leading-zero characters, including the empty string),
+  returning exactly that many zero bytes instead of falling through to the
+  seed-byte path. Added three tests to `base58.test.ts`: the System Program
+  address round-trips to exactly 32 zero bytes, `base58Decode("1")` is a
+  single zero byte (not two), and `base58Decode("")` is empty (not one
+  byte) — this last case was also wrong before the fix, same root cause.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 220/220 passing (217 prior + 3 new), all offline, ~3.9s.
+- `base58Decode`/`base58Encode` now round-trip correctly for the
+  all-zero-byte case, including the Solana System Program address.
+
+### Next
+- The two `Explore`-agent leads from this session (discovery.ts limit
+  "drift", scoringGate.ts release() guard) were checked and are not real —
+  don't re-raise them without new evidence.
+- `base58Decode`'s fixed case (all-leading-"1" input) isn't reachable from
+  any current call site (`pumpfun.ts`'s two callers only ever decode
+  instruction data, which always starts with a nonzero discriminator byte)
+  — this was a latent correctness fix in a shared utility, not a live-bug
+  fix for an observed failure. If a future session adds a caller that
+  decodes raw account addresses through `base58Decode` (rather than using
+  the pre-decoded address strings already in `accounts[]`), this is now
+  safe to rely on.
+- `RESCORE_DELAY_MS` (60s, 14 live samples as of session 73) and
+  `findFundingSource`'s ~2% unknown rate (session 39) are unchanged —
+  still not a priority on their own.
+- The scoring endpoint's rate-limit ceiling is unchanged (sessions 20-26,
+  61, 68, 69, 71) — per session 69/71, further live checks of that exact
+  thing have diminishing value without a new angle.
+- All five TASK.md steps remain functionally complete. Keep favoring
+  genuinely new angles over re-running prior reviews — this session's
+  base58 edge case is an example of one still being findable after 76
+  "no bugs found" sessions.

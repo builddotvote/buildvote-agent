@@ -43,6 +43,14 @@ export function base58Decode(text: string): Uint8Array {
     leadingZeros++;
   }
 
+  // Nothing left to decode but leading zeros (e.g. the all-"1" system
+  // program address, or ""): the loop below never runs, so the [0] seed
+  // below would otherwise be emitted as a spurious extra byte on top of
+  // the leading zeros already accounted for.
+  if (leadingZeros === text.length) {
+    return new Uint8Array(leadingZeros);
+  }
+
   const bytes: number[] = [0];
   for (let i = leadingZeros; i < text.length; i++) {
     const value = ALPHABET_MAP.get(text[i]);
