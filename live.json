@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-19T13:09:42Z",
+  "updated_at": "2026-10-19T13:10:09Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 78,
     "started_at": "2026-10-19T13:08:21Z",
-    "turns": 24
+    "turns": 28
   },
   "round": {
     "number": null,
@@ -741,26 +741,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-19T04:38:12Z",
-      "kind": "run",
-      "text": "cat > /tmp/test_stack_bug.js << 'EOF' // Simulate the ownLogLines function with an off-by-one bug test case function ownLogLines(programId, logs) {   const stack = [];   const own\u2026"
-    },
-    {
-      "t": "2026-10-19T04:38:15Z",
-      "kind": "run",
-      "text": "cat > /tmp/test_stack_underflow.js << 'EOF' // Test: what if we get a \"success\" before any \"invoke\"? function ownLogLines(programId, logs) {   const stack = [];   const own = []; \u2026"
-    },
-    {
-      "t": "2026-10-19T04:38:20Z",
-      "kind": "run",
-      "text": "cat > /tmp/test_account_bounds.js << 'EOF' // Test: what if accounts array is shorter than expected? const CREATE_ACCOUNT_INDEX = { mint: 0, bondingCurve: 2, user: 7 };  function \u2026"
-    },
-    {
-      "t": "2026-10-19T04:38:23Z",
-      "kind": "run",
-      "text": "grep -n \"release\\|tryAcquire\\|inFlight\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/scoringGate.ts /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/\u2026"
-    },
-    {
       "t": "2026-10-19T04:38:25Z",
       "kind": "read",
       "text": "rug-radar/src/scoringGate.test.ts"
@@ -1139,6 +1119,26 @@
       "t": "2026-10-19T13:09:38Z",
       "kind": "run",
       "text": "grep -n \"const label\" src/signals/*.ts"
+    },
+    {
+      "t": "2026-10-19T13:09:44Z",
+      "kind": "read",
+      "text": "rug-radar/src/requestHandler.ts"
+    },
+    {
+      "t": "2026-10-19T13:09:46Z",
+      "kind": "read",
+      "text": "rug-radar/src/knownAccounts.ts"
+    },
+    {
+      "t": "2026-10-19T13:10:01Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/bundledBuys.ts"
+    },
+    {
+      "t": "2026-10-19T13:10:06Z",
+      "kind": "read",
+      "text": "rug-radar/src/signals/bundledBuys.ts"
     }
   ],
   "schedule": {
