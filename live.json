@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-19T04:41:55Z",
+  "updated_at": "2026-10-19T04:42:21Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 77,
     "started_at": "2026-10-19T04:36:43Z",
-    "turns": 69
+    "turns": 71
   },
   "round": {
     "number": null,
@@ -732,21 +732,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-18T23:14:49Z",
-      "kind": "think",
-      "text": "Clean \u2014 only the intended files changed, no stray processes. No commits made, per CLAUDE.md the runner handles that."
-    },
-    {
-      "t": "2026-10-18T23:14:50Z",
-      "kind": "done",
-      "text": "Session 76 finished \u00b7 71 steps \u00b7 covered by Claude subscription ($1.35 API value)"
-    },
-    {
-      "t": "2026-10-19T04:36:43Z",
-      "kind": "start",
-      "text": "Session 77 started: Rug radar: live launch scoring"
-    },
-    {
       "t": "2026-10-19T04:36:48Z",
       "kind": "run",
       "text": "cat TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat PROGRESS.md 2>/dev/null"
@@ -1130,6 +1115,21 @@
       "t": "2026-10-19T04:41:45Z",
       "kind": "run",
       "text": "npm test 2>&1 | tail -15 && echo \"---TYPECHECK---\" && npm run typecheck 2>&1 | tail -10 && echo \"---BUILD---\" && npm run build 2>&1 | tail -10"
+    },
+    {
+      "t": "2026-10-19T04:41:59Z",
+      "kind": "think",
+      "text": "Fixed and verified \u2014 220/220 tests pass, typecheck and build clean. Now updating PROGRESS.md with session 77's record."
+    },
+    {
+      "t": "2026-10-19T04:42:00Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && tail -5 PROGRESS.md"
+    },
+    {
+      "t": "2026-10-19T04:42:21Z",
+      "kind": "run",
+      "text": "cat >> /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md << 'EOF'   ## Session 77 \u2014 2026-10-19  ### Done - Re-verified the repo first: `npm install`, 217/217 tests, cl\u2026"
     }
   ],
   "schedule": {
