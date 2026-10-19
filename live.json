@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-19T04:39:42Z",
+  "updated_at": "2026-10-19T04:40:08Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 77,
     "started_at": "2026-10-19T04:36:43Z",
-    "turns": 52
+    "turns": 59
   },
   "round": {
     "number": null,
@@ -732,56 +732,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-18T23:12:39Z",
-      "kind": "run",
-      "text": "cat -n src/signals/liquidity.test.ts"
-    },
-    {
-      "t": "2026-10-18T23:12:44Z",
-      "kind": "run",
-      "text": "cat -n src/signals/holderConcentration.test.ts"
-    },
-    {
-      "t": "2026-10-18T23:12:47Z",
-      "kind": "run",
-      "text": "cat -n src/signals/holderConcentration.ts"
-    },
-    {
-      "t": "2026-10-18T23:12:52Z",
-      "kind": "run",
-      "text": "cat -n src/signals/deployerHistory.ts; echo \"=== TEST ===\"; cat -n src/signals/deployerHistory.test.ts"
-    },
-    {
-      "t": "2026-10-18T23:12:59Z",
-      "kind": "run",
-      "text": "cat -n src/signals/bundledBuys.ts; echo \"=== TEST ===\"; cat -n src/signals/bundledBuys.test.ts"
-    },
-    {
-      "t": "2026-10-18T23:13:28Z",
-      "kind": "think",
-      "text": "Found a genuine, fresh gap: boundary-value test coverage for the four signal scorers' risk-band thresholds is inconsistent (some exact thresholds tested, others not). I'll fill in\u2026"
-    },
-    {
-      "t": "2026-10-18T23:13:29Z",
-      "kind": "read",
-      "text": "rug-radar/src/signals/liquidity.test.ts"
-    },
-    {
-      "t": "2026-10-18T23:13:34Z",
-      "kind": "edit",
-      "text": "rug-radar/src/signals/liquidity.test.ts"
-    },
-    {
-      "t": "2026-10-18T23:13:36Z",
-      "kind": "think",
-      "text": "Now holderConcentration:"
-    },
-    {
-      "t": "2026-10-18T23:13:36Z",
-      "kind": "read",
-      "text": "rug-radar/src/signals/holderConcentration.test.ts"
-    },
-    {
       "t": "2026-10-18T23:13:43Z",
       "kind": "edit",
       "text": "rug-radar/src/signals/holderConcentration.test.ts"
@@ -1130,6 +1080,56 @@
       "t": "2026-10-19T04:39:40Z",
       "kind": "run",
       "text": "grep -n \"DEFAULT_LIMIT\\|limit\" src/discovery.ts"
+    },
+    {
+      "t": "2026-10-19T04:39:43Z",
+      "kind": "run",
+      "text": "pwd"
+    },
+    {
+      "t": "2026-10-19T04:39:45Z",
+      "kind": "think",
+      "text": "Good, I'm already inside rug-radar. Now let's check the README for the \"20\" / \"25\" claims."
+    },
+    {
+      "t": "2026-10-19T04:39:45Z",
+      "kind": "run",
+      "text": "grep -n \"20\\|25\\|signatureLimit\\|limit\" README.md | head -40"
+    },
+    {
+      "t": "2026-10-19T04:39:50Z",
+      "kind": "run",
+      "text": "sed -n '240,280,' README.md; echo \"---deployerHistory---\"; grep -n \"signatureLimit\\|DEFAULT\" src/signals/deployerHistory.ts src/signals/bundledBuys.ts src/data/*.ts 2>/dev/null"
+    },
+    {
+      "t": "2026-10-19T04:39:55Z",
+      "kind": "think",
+      "text": "Finding 1 turned out to be a false positive \u2014 the agent confused `discovery.ts`'s unrelated `DEFAULT_LIMIT=50` (new-launch scanning) with the per-signal `signatureLimit` in `src/d\u2026"
+    },
+    {
+      "t": "2026-10-19T04:39:56Z",
+      "kind": "read",
+      "text": "rug-radar/src/scoringGate.ts"
+    },
+    {
+      "t": "2026-10-19T04:39:58Z",
+      "kind": "run",
+      "text": "grep -rn \"scoringGate\\|ScoringGate\\|tryAcquire\\|\\.release(\" src/*.ts | grep -v \"\\.test\\.ts\""
+    },
+    {
+      "t": "2026-10-19T04:40:01Z",
+      "kind": "read",
+      "text": "rug-radar/src/poller.ts"
+    },
+    {
+      "t": "2026-10-19T04:40:07Z",
+      "kind": "think",
+      "text": "Neither of the agent's findings holds up as a real bug \u2014 the signature-limit \"drift\" compared the wrong constants, and the ScoringGate release is always paired correctly by the ex\u2026"
+    },
+    {
+      "t": "2026-10-19T04:40:08Z",
+      "kind": "read",
+      "text": "rug-radar/src/balanceIndex.ts"
     }
   ],
   "schedule": {
