@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T00:22:25Z",
+  "updated_at": "2026-10-20T00:22:52Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 80,
     "started_at": "2026-10-20T00:18:50Z",
-    "turns": 29
+    "turns": 37
   },
   "round": {
     "number": null,
@@ -759,61 +759,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-19T20:36:53Z",
-      "kind": "run",
-      "text": "cat src/data/holderConcentration.ts; echo \"=== liquidity ===\"; cat src/data/liquidity.ts"
-    },
-    {
-      "t": "2026-10-19T20:36:57Z",
-      "kind": "run",
-      "text": "cat src/rpc.ts"
-    },
-    {
-      "t": "2026-10-19T20:37:10Z",
-      "kind": "run",
-      "text": "cat src/wsLogParser.ts"
-    },
-    {
-      "t": "2026-10-19T20:37:14Z",
-      "kind": "run",
-      "text": "cat src/wsDiscovery.ts"
-    },
-    {
-      "t": "2026-10-19T20:37:34Z",
-      "kind": "run",
-      "text": "grep -n \"untrackMint\\|trackMint\" src/wsDiscovery.test.ts | head -60"
-    },
-    {
-      "t": "2026-10-19T20:37:43Z",
-      "kind": "run",
-      "text": "cat > /tmp/probe-race.ts << 'EOF' import { LaunchWatcher } from \"./src/wsDiscovery.js\";  let sentMessages: string[] = []; const fakeWs: any = {   onopen: null, onmessage: null, on\u2026"
-    },
-    {
-      "t": "2026-10-19T20:37:47Z",
-      "kind": "think",
-      "text": "Needs to be run from inside rug-radar with relative path. Let me place it in that directory as a tmp file (deleting before finishing, matching project convention)."
-    },
-    {
-      "t": "2026-10-19T20:37:51Z",
-      "kind": "run",
-      "text": "cat > tmp-probe-race.ts << 'EOF' import { LaunchWatcher } from \"./src/wsDiscovery.js\";  let sentMessages: string[] = []; const fakeWs: any = {   onopen: null, onmessage: null, onc\u2026"
-    },
-    {
-      "t": "2026-10-19T20:40:05Z",
-      "kind": "run",
-      "text": "cat > tmp-probe-race.ts << 'EOF' import { LaunchWatcher } from \"./src/wsDiscovery.js\";  let sentMessages: string[] = []; const fakeWs: any = {   onopen: null, onmessage: null, onc\u2026"
-    },
-    {
-      "t": "2026-10-19T20:40:10Z",
-      "kind": "run",
-      "text": "timeout 20 node --import tsx tmp-probe-race.ts; echo \"EXIT CODE: $?\""
-    },
-    {
-      "t": "2026-10-19T20:40:26Z",
-      "kind": "run",
-      "text": "cat > tmp-probe-race.ts << 'EOF' import { LaunchWatcher } from \"./src/wsDiscovery.js\";  const fakeWs: any = {   onopen: null, onmessage: null, onclose: null, onerror: null,   send\u2026"
-    },
-    {
       "t": "2026-10-19T20:40:36Z",
       "kind": "run",
       "text": "sed -i 's/logs: \\[\"Program log: Instruction: Buy\"\\]/logs: [\"Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [1]\", \"Program log: Instruction: Buy\", \"Program 6EF8rrecthR5\u2026"
@@ -1157,6 +1102,61 @@
       "t": "2026-10-20T00:22:22Z",
       "kind": "run",
       "text": "npm test 2>&1 | tail -40"
+    },
+    {
+      "t": "2026-10-20T00:22:29Z",
+      "kind": "edit",
+      "text": "rug-radar/src/discovery.test.ts"
+    },
+    {
+      "t": "2026-10-20T00:22:30Z",
+      "kind": "run",
+      "text": "npm test 2>&1 | tail -20"
+    },
+    {
+      "t": "2026-10-20T00:22:35Z",
+      "kind": "think",
+      "text": "All 224 pass. Now let's verify the new regression test actually catches the original bug by reverting the fix temporarily."
+    },
+    {
+      "t": "2026-10-20T00:22:36Z",
+      "kind": "run",
+      "text": "cp src/discovery.ts /tmp/discovery.ts.fixed sed -i 's/sig.blockTime < sinceBlockTime) continue;/sig.blockTime <= sinceBlockTime) continue;/' src/discovery.ts npx tsx --test src/di\u2026"
+    },
+    {
+      "t": "2026-10-20T00:22:38Z",
+      "kind": "think",
+      "text": "Both new tests correctly fail without the fix (2 failures). Restored the fix \u2014 let's confirm the full suite is green again."
+    },
+    {
+      "t": "2026-10-20T00:22:39Z",
+      "kind": "run",
+      "text": "npm test 2>&1 | tail -10 && echo \"---typecheck---\" && npm run typecheck 2>&1 | tail -20 && echo \"---build---\" && npm run build 2>&1 | tail -20"
+    },
+    {
+      "t": "2026-10-20T00:22:46Z",
+      "kind": "think",
+      "text": "All green. Let's clean up the probe script and double-check nothing else references it."
+    },
+    {
+      "t": "2026-10-20T00:22:46Z",
+      "kind": "run",
+      "text": "rm -f tmp-probe-tie.ts git status --short"
+    },
+    {
+      "t": "2026-10-20T00:22:48Z",
+      "kind": "run",
+      "text": "grep -n \"findNewLaunches\\|watermark\\|sinceBlockTime\" README.md"
+    },
+    {
+      "t": "2026-10-20T00:22:51Z",
+      "kind": "run",
+      "text": "grep -n \"^#\\|^##\" README.md | head -60"
+    },
+    {
+      "t": "2026-10-20T00:22:52Z",
+      "kind": "run",
+      "text": "sed -n '300,330p' README.md"
     }
   ],
   "schedule": {
