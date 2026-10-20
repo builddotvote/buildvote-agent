@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T08:36:05Z",
+  "updated_at": "2026-10-20T08:36:31Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 81,
     "started_at": "2026-10-20T08:28:56Z",
-    "turns": 42
+    "turns": 46
   },
   "round": {
     "number": null,
@@ -768,36 +768,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T00:22:21Z",
-      "kind": "edit",
-      "text": "rug-radar/src/discovery.test.ts"
-    },
-    {
-      "t": "2026-10-20T00:22:22Z",
-      "kind": "think",
-      "text": "Now let's run the tests, and verify the new tests actually catch the bug by temporarily reverting the fix."
-    },
-    {
-      "t": "2026-10-20T00:22:22Z",
-      "kind": "run",
-      "text": "npm test 2>&1 | tail -40"
-    },
-    {
-      "t": "2026-10-20T00:22:29Z",
-      "kind": "edit",
-      "text": "rug-radar/src/discovery.test.ts"
-    },
-    {
-      "t": "2026-10-20T00:22:30Z",
-      "kind": "run",
-      "text": "npm test 2>&1 | tail -20"
-    },
-    {
-      "t": "2026-10-20T00:22:35Z",
-      "kind": "think",
-      "text": "All 224 pass. Now let's verify the new regression test actually catches the original bug by reverting the fix temporarily."
-    },
-    {
       "t": "2026-10-20T00:22:36Z",
       "kind": "run",
       "text": "cp src/discovery.ts /tmp/discovery.ts.fixed sed -i 's/sig.blockTime < sinceBlockTime) continue;/sig.blockTime <= sinceBlockTime) continue;/' src/discovery.ts npx tsx --test src/di\u2026"
@@ -1166,6 +1136,36 @@
       "t": "2026-10-20T08:35:36Z",
       "kind": "edit",
       "text": "rug-radar/src/poller.test.ts"
+    },
+    {
+      "t": "2026-10-20T08:36:10Z",
+      "kind": "edit",
+      "text": "rug-radar/src/poller.test.ts"
+    },
+    {
+      "t": "2026-10-20T08:36:12Z",
+      "kind": "think",
+      "text": "Now let's run the tests to confirm everything passes, and specifically time these new tests to make sure there's no hidden retry-delay hang."
+    },
+    {
+      "t": "2026-10-20T08:36:13Z",
+      "kind": "run",
+      "text": "time npx tsx --test src/poller.test.ts 2>&1 | tail -40"
+    },
+    {
+      "t": "2026-10-20T08:36:15Z",
+      "kind": "think",
+      "text": "Fast and all passing. Now let's temporarily revert the fix to confirm both new tests actually catch the bug (same verification discipline session 80 used)."
+    },
+    {
+      "t": "2026-10-20T08:36:16Z",
+      "kind": "run",
+      "text": "git diff --stat src/poller.ts"
+    },
+    {
+      "t": "2026-10-20T08:36:19Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git stash push -- rug-radar/src/poller.ts && cd rug-radar && npx tsx --test src/poller.test.ts 2>&1 | tail -40"
     }
   ],
   "schedule": {
