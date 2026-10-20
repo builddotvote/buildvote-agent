@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T08:34:14Z",
+  "updated_at": "2026-10-20T08:34:45Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 81,
     "started_at": "2026-10-20T08:28:56Z",
-    "turns": 33
+    "turns": 37
   },
   "round": {
     "number": null,
@@ -768,36 +768,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T00:20:27Z",
-      "kind": "run",
-      "text": "node --import tsx tmp-probe-tie.ts"
-    },
-    {
-      "t": "2026-10-20T00:20:32Z",
-      "kind": "run",
-      "text": "grep -rn \"findNewLaunches\\|sinceBlockTime\\|newestBlockTime\" --include=\"*.ts\" src | grep -v \".test.ts\""
-    },
-    {
-      "t": "2026-10-20T00:20:44Z",
-      "kind": "read",
-      "text": "rug-radar/src/poller.ts"
-    },
-    {
-      "t": "2026-10-20T00:20:58Z",
-      "kind": "run",
-      "text": "grep -rn \"sinceBlockTime\\|newestBlockTime\\|PollState\" --include=\"*.ts\" src"
-    },
-    {
-      "t": "2026-10-20T00:21:35Z",
-      "kind": "read",
-      "text": "rug-radar/src/discovery.ts"
-    },
-    {
-      "t": "2026-10-20T00:21:44Z",
-      "kind": "edit",
-      "text": "rug-radar/src/discovery.ts"
-    },
-    {
       "t": "2026-10-20T00:21:46Z",
       "kind": "read",
       "text": "rug-radar/src/discovery.ts"
@@ -1166,6 +1136,36 @@
       "t": "2026-10-20T08:33:27Z",
       "kind": "run",
       "text": "npx tsx src/_probe_overlap.ts"
+    },
+    {
+      "t": "2026-10-20T08:34:21Z",
+      "kind": "run",
+      "text": "grep -n \"deepEqual\\|deepStrictEqual\\|PollState\" src/*.ts"
+    },
+    {
+      "t": "2026-10-20T08:34:25Z",
+      "kind": "think",
+      "text": "Bug confirmed. Now let's remove the probe and implement the fix: add an in-flight guard directly to `PollState` so a second overlapping `pollOnce` call is dropped rather than raci\u2026"
+    },
+    {
+      "t": "2026-10-20T08:34:26Z",
+      "kind": "run",
+      "text": "rm /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/_probe_overlap.ts"
+    },
+    {
+      "t": "2026-10-20T08:34:39Z",
+      "kind": "edit",
+      "text": "rug-radar/src/poller.ts"
+    },
+    {
+      "t": "2026-10-20T08:34:40Z",
+      "kind": "think",
+      "text": "Now update `pollOnce` itself to check and set this guard:"
+    },
+    {
+      "t": "2026-10-20T08:34:45Z",
+      "kind": "edit",
+      "text": "rug-radar/src/poller.ts"
     }
   ],
   "schedule": {
