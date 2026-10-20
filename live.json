@@ -1,11 +1,10 @@
 {
-  "updated_at": "2026-10-20T08:37:28Z",
+  "updated_at": "2026-10-20T08:37:46Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 81,
-    "started_at": "2026-10-20T08:28:56Z",
-    "turns": 53
+    "turns": 54
   },
   "round": {
     "number": null,
@@ -763,30 +762,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 1.6245
+    },
+    {
+      "date": "2026-10-20T08:28:56Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 55,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0081.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 2.5555
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-20T00:23:00Z",
-      "kind": "think",
-      "text": "I'll insert a new paragraph documenting this fix right after the backstop bullet, following the established style."
-    },
-    {
-      "t": "2026-10-20T00:23:07Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-20T00:23:08Z",
-      "kind": "think",
-      "text": "Now let's re-run the full suite once more as a final check, then update PROGRESS.md."
-    },
-    {
-      "t": "2026-10-20T00:23:08Z",
-      "kind": "run",
-      "text": "npm test 2>&1 | tail -10 && npm run typecheck 2>&1 | tail -5 && npm run build 2>&1 | tail -5 && git status --short"
-    },
     {
       "t": "2026-10-20T00:23:16Z",
       "kind": "think",
@@ -1166,6 +1154,26 @@
       "t": "2026-10-20T08:37:28Z",
       "kind": "edit",
       "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-20T08:37:32Z",
+      "kind": "think",
+      "text": "Now let's do a final full verification pass and check for stray files before finishing."
+    },
+    {
+      "t": "2026-10-20T08:37:33Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -12 && git status"
+    },
+    {
+      "t": "2026-10-20T08:37:45Z",
+      "kind": "think",
+      "text": "Everything is clean: typecheck/build pass, 226/226 tests pass, only the intended files changed, no stray scratch files or `.env`."
+    },
+    {
+      "t": "2026-10-20T08:37:46Z",
+      "kind": "done",
+      "text": "Session 81 finished \u00b7 54 steps \u00b7 covered by Claude subscription ($2.56 API value)"
     }
   ],
   "schedule": {
