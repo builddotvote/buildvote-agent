@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T00:19:43Z",
+  "updated_at": "2026-10-20T00:20:10Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 80,
     "started_at": "2026-10-20T00:18:50Z",
-    "turns": 11
+    "turns": 14
   },
   "round": {
     "number": null,
@@ -759,21 +759,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-19T20:35:09Z",
-      "kind": "run",
-      "text": "npm install --silent 2>&1 | tail -20 && npm run typecheck 2>&1 | tail -30 && npm test 2>&1 | tail -40"
-    },
-    {
-      "t": "2026-10-19T20:35:19Z",
-      "kind": "think",
-      "text": "Good, confirmed clean baseline: 221/221 tests pass, typecheck clean. Now let me look for a fresh angle, since sessions 1-78 have exhausted many obvious review paths. Let me explor\u2026"
-    },
-    {
-      "t": "2026-10-19T20:35:19Z",
-      "kind": "run",
-      "text": "find src -name \"*.ts\" | grep -v test | sort"
-    },
-    {
       "t": "2026-10-19T20:35:24Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"balanceIndex\\|holderRescore\\.ts\\|requestHandler\\.ts\\|rescore\\.ts\\|wsDiscovery\\.ts\\|wsLogParser\\.ts\" PROGRESS.md | \u2026"
@@ -1157,6 +1142,21 @@
       "t": "2026-10-20T00:19:42Z",
       "kind": "run",
       "text": "sed -n '290,340p' README.md"
+    },
+    {
+      "t": "2026-10-20T00:19:58Z",
+      "kind": "run",
+      "text": "grep -n \"blockTime\\|same second\\|duplicate\\|tie\" src/discovery.test.ts | head -60"
+    },
+    {
+      "t": "2026-10-20T00:20:01Z",
+      "kind": "read",
+      "text": "rug-radar/src/discovery.test.ts"
+    },
+    {
+      "t": "2026-10-20T00:20:09Z",
+      "kind": "read",
+      "text": "rug-radar/src/discovery.test.ts"
     }
   ],
   "schedule": {
