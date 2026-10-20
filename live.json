@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T23:53:57Z",
+  "updated_at": "2026-10-20T23:54:25Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 84,
     "started_at": "2026-10-20T23:51:16Z",
-    "turns": 20
+    "turns": 22
   },
   "round": {
     "number": null,
@@ -795,26 +795,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T14:21:11Z",
-      "kind": "think",
-      "text": "Only `PROGRESS.md` changed, as expected \u2014 no code edits, no stray files. I'm not committing per CLAUDE.md rules; the runner handles that."
-    },
-    {
-      "t": "2026-10-20T14:21:12Z",
-      "kind": "done",
-      "text": "Session 82 finished \u00b7 26 steps \u00b7 covered by Claude subscription ($1.10 API value)"
-    },
-    {
-      "t": "2026-10-20T19:13:51Z",
-      "kind": "start",
-      "text": "Session 83 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-20T19:13:55Z",
-      "kind": "run",
-      "text": "cat TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat PROGRESS.md 2>/dev/null"
-    },
-    {
       "t": "2026-10-20T19:13:58Z",
       "kind": "read",
       "text": "PROGRESS.md"
@@ -1193,6 +1173,26 @@
       "t": "2026-10-20T23:53:57Z",
       "kind": "run",
       "text": "npm run build 2>&1 | tail -10 && git status"
+    },
+    {
+      "t": "2026-10-20T23:54:01Z",
+      "kind": "think",
+      "text": "Build clean. Now updating PROGRESS.md with session 84's findings."
+    },
+    {
+      "t": "2026-10-20T23:54:02Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-20T23:54:23Z",
+      "kind": "edit",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-20T23:54:25Z",
+      "kind": "think",
+      "text": "I need more context since this block repeats across earlier sessions. Let me anchor using the surrounding unique line."
     }
   ],
   "schedule": {
