@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T23:53:04Z",
+  "updated_at": "2026-10-20T23:53:31Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 84,
     "started_at": "2026-10-20T23:51:16Z",
-    "turns": 12
+    "turns": 15
   },
   "round": {
     "number": null,
@@ -795,26 +795,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T14:19:54Z",
-      "kind": "read",
-      "text": "rug-radar/src/rescore.ts"
-    },
-    {
-      "t": "2026-10-20T14:20:00Z",
-      "kind": "read",
-      "text": "rug-radar/src/scoringGate.ts"
-    },
-    {
-      "t": "2026-10-20T14:20:05Z",
-      "kind": "read",
-      "text": "rug-radar/src/poller.ts"
-    },
-    {
-      "t": "2026-10-20T14:20:07Z",
-      "kind": "think",
-      "text": "This confirms session 81's fix is correctly implemented and well-reasoned \u2014 the `inFlight` check happens synchronously before the first `await`, so there's no TOCTOU gap. Everythi\u2026"
-    },
-    {
       "t": "2026-10-20T14:20:08Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && sed -n '1,80p' src/server.ts"
@@ -1193,6 +1173,26 @@
       "t": "2026-10-20T23:52:26Z",
       "kind": "run",
       "text": "grep -rn \"CreateVariant\\|TradeKind\" src/*.ts | grep -v test"
+    },
+    {
+      "t": "2026-10-20T23:53:06Z",
+      "kind": "run",
+      "text": "grep -n \"Program log\\|Program data\\|RETURN_RE\\|INVOKE_RE\" -r src/*.ts README.md 2>/dev/null | grep -v test"
+    },
+    {
+      "t": "2026-10-20T23:53:25Z",
+      "kind": "think",
+      "text": "Re-deriving the invoke-stack walk from scratch, I found a real bug: `RETURN_RE = /^Program \\S+ (success|failed)/` can falsely match a `Program log: ...` or `Program data: ...` lin\u2026"
+    },
+    {
+      "t": "2026-10-20T23:53:28Z",
+      "kind": "run",
+      "text": "cat > /tmp/repro.test.mjs << 'EOF' EOF node --experimental-strip-types -e \" const INVOKE_RE = /^Program (\\S+) invoke \\[\\d+\\]\\$/; const RETURN_RE = /^Program \\S+ (success|failed)/;\u2026"
+    },
+    {
+      "t": "2026-10-20T23:53:31Z",
+      "kind": "run",
+      "text": "node -e \" const RETURN_RE = /^Program \\S+ (success|failed)/; console.log('log: failed match?', RETURN_RE.test('Program log: failed validation, retrying')); console.log('log: succe\u2026"
     }
   ],
   "schedule": {
