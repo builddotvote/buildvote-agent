@@ -489,6 +489,24 @@ spending any scoring RPC call, so re-resolving an already-seen signature at
 the boundary costs at most one redundant `getTransaction` call on the
 discovery RPC, not a duplicate score.
 
+**Overlapping polls can't race the watermark (fixed session 81).** `server.ts`
+calls `pollOnce` every `POLL_INTERVAL_MS` (15s) via `setInterval`, which fires
+on schedule regardless of whether the previous call's `pollOnce` promise has
+resolved — and `findNewLaunches`'s own resolve-with-retry loop above can alone
+take longer than that for one slow signature, let alone a whole cycle's worth
+of sequential per-launch scoring. Confirmed with an offline probe (two
+`pollOnce` calls sharing one `PollState`, controlled promise resolution order,
+no real timers): the call dispatched *first* can still finish *last*, and
+since each call reads `state.sinceBlockTime` before its own `findNewLaunches`
+call and writes it after, whichever call's write lands last wins — including
+the first call's now-stale, older `newestBlockTime` snapshot, regressing the
+watermark backwards until the next poll happens to catch back up. `PollState`
+now carries an `inFlight` flag `pollOnce` checks before its first `await` and
+clears in a `finally`; an overlapping call just returns immediately instead of
+racing. Dropping beats queuing here for the same reason `ScoringGate` drops
+rather than queues: this poller is only ever the backstop to the websocket
+watcher, so skipping one tick's worth of discovery is safe.
+
 `resolveLaunchFromSignature` retries a `getTransaction` call that comes back
 "not found" with exponential backoff (5 retries, 750ms base, ~23s budget)
 before giving up — confirmed live that the public RPC's multi-node cluster

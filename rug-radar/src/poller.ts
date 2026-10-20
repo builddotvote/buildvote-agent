@@ -14,6 +14,23 @@ import type { DiscoveredLaunch } from "./discovery.js";
 
 export interface PollState {
   sinceBlockTime: number | null;
+  // True while a pollOnce call on this state is still running. server.ts's
+  // setInterval fires the next poll on a fixed schedule regardless of
+  // whether the previous tick finished — findNewLaunches's own
+  // resolve-with-retry loop (discovery.ts) can alone run well past
+  // POLL_INTERVAL_MS for one slow signature, let alone a whole cycle's worth
+  // of sequential per-launch scoring below. Without this guard, two
+  // overlapping pollOnce calls race on sinceBlockTime: each reads it before
+  // its own findNewLaunches call, and whichever call *finishes* last wins
+  // the final write — including the call that started first (and so
+  // captured an *older* newestBlockTime snapshot) if it happens to run
+  // longer than the next tick's call, regressing the watermark backward
+  // until the following poll catches back up. Dropping the overlapping tick
+  // instead (same "drop beats queue" choice as ScoringGate) avoids the race
+  // outright, at the cost of skipping one poll's worth of discovery — safe
+  // since this poller is only ever the backstop to the websocket watcher
+  // (see server.ts), not the primary discovery path.
+  inFlight?: boolean;
 }
 
 type DiscoveryRpc = Pick<SolanaRpcClient, "getSignaturesForAddress" | "getTransaction">;
@@ -48,34 +65,41 @@ export async function pollOnce(
   // at all, unlike every launch the primary path discovers.
   onScored?: (launch: DiscoveredLaunch) => void,
 ): Promise<void> {
-  const { launches, newestBlockTime } = await findNewLaunches(discoveryRpc, state.sinceBlockTime);
-  state.sinceBlockTime = newestBlockTime;
+  // See PollState.inFlight for why this must come before the first await.
+  if (state.inFlight) return;
+  state.inFlight = true;
+  try {
+    const { launches, newestBlockTime } = await findNewLaunches(discoveryRpc, state.sinceBlockTime);
+    state.sinceBlockTime = newestBlockTime;
 
-  for (const launch of launches) {
-    // The watcher runs concurrently and can have already scored this exact
-    // launch within the same window findNewLaunches just rescanned (its
-    // cursor is time-based, not feed-based) — without this check every such
-    // overlap re-ran all four signals' RPC calls against the already-strained
-    // scoring RPC only to have feed.add() silently drop the duplicate at the
-    // very end, wasting the gate slot and the calls for nothing.
-    if (feed.has(launch.mint)) continue;
-    if (scoringInFlight && !scoringInFlight.tryAcquire(launch.mint)) {
-      console.error(`skipping launch ${launch.mint}: already being scored by another discovery path`);
-      continue;
+    for (const launch of launches) {
+      // The watcher runs concurrently and can have already scored this exact
+      // launch within the same window findNewLaunches just rescanned (its
+      // cursor is time-based, not feed-based) — without this check every such
+      // overlap re-ran all four signals' RPC calls against the already-strained
+      // scoring RPC only to have feed.add() silently drop the duplicate at the
+      // very end, wasting the gate slot and the calls for nothing.
+      if (feed.has(launch.mint)) continue;
+      if (scoringInFlight && !scoringInFlight.tryAcquire(launch.mint)) {
+        console.error(`skipping launch ${launch.mint}: already being scored by another discovery path`);
+        continue;
+      }
+      if (scoringGate && !scoringGate.tryAcquire()) {
+        console.error(`skipping launch ${launch.mint}: too many pending scores`);
+        scoringInFlight?.release(launch.mint);
+        continue;
+      }
+      try {
+        feed.add(await scoreLaunch(scoringRpc, launch, deployerIndex));
+        if (feed.has(launch.mint)) onScored?.(launch);
+      } catch (err) {
+        console.error(`failed to score launch ${launch.mint}:`, err instanceof Error ? err.message : err);
+      } finally {
+        scoringGate?.release();
+        scoringInFlight?.release(launch.mint);
+      }
     }
-    if (scoringGate && !scoringGate.tryAcquire()) {
-      console.error(`skipping launch ${launch.mint}: too many pending scores`);
-      scoringInFlight?.release(launch.mint);
-      continue;
-    }
-    try {
-      feed.add(await scoreLaunch(scoringRpc, launch, deployerIndex));
-      if (feed.has(launch.mint)) onScored?.(launch);
-    } catch (err) {
-      console.error(`failed to score launch ${launch.mint}:`, err instanceof Error ? err.message : err);
-    } finally {
-      scoringGate?.release();
-      scoringInFlight?.release(launch.mint);
-    }
+  } finally {
+    state.inFlight = false;
   }
 }

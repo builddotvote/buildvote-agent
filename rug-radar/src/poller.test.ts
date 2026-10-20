@@ -218,6 +218,69 @@ test("onScored fires with the launch once it's actually kept in the feed", async
   assert.deepEqual(scored, [MINT]);
 });
 
+test("an overlapping pollOnce call on the same state is dropped, not run concurrently", async () => {
+  const signatures: SignatureInfo[] = [
+    { signature: "sigCreate", slot: 2, err: null, memo: null, blockTime: 1700000100 },
+  ];
+  const feed = new LiveFeed();
+  const state = { sinceBlockTime: 1700000000 };
+  const rpc = fakeRpc(signatures);
+  let getSignaturesCalls = 0;
+  let resolveSignatures!: (value: SignatureInfo[]) => void;
+  // Simulates server.ts's setInterval firing the next poll() tick before the
+  // first call's findNewLaunches has resolved — e.g. a slow
+  // resolve-with-retry chain on one signature (discovery.ts). The first
+  // call's getSignaturesForAddress is deliberately left unresolved so the
+  // second call has every chance to race it if the guard didn't exist.
+  const gatedRpc = {
+    ...rpc,
+    async getSignaturesForAddress(): Promise<SignatureInfo[]> {
+      getSignaturesCalls++;
+      return new Promise((resolve) => {
+        resolveSignatures = resolve;
+      });
+    },
+  };
+
+  const first = pollOnce(gatedRpc, rpc, feed, state);
+  const second = pollOnce(gatedRpc, rpc, feed, state);
+  await second;
+
+  // The overlapping call returned immediately without touching the RPC or
+  // the watermark at all — not a second, independent scan.
+  assert.equal(getSignaturesCalls, 1);
+  assert.equal(state.sinceBlockTime, 1700000000);
+
+  resolveSignatures(signatures);
+  await first;
+
+  // The first call's own result is unaffected by the dropped overlap.
+  assert.equal(state.sinceBlockTime, 1700000100);
+  assert.equal(feed.list().length, 1);
+});
+
+test("the in-flight guard clears after a call finishes, so a later poll still runs", async () => {
+  const signatures: SignatureInfo[] = [
+    { signature: "sigCreate", slot: 2, err: null, memo: null, blockTime: 1700000100 },
+  ];
+  const feed = new LiveFeed();
+  const state = { sinceBlockTime: 1700000000 };
+
+  await pollOnce(fakeRpc(signatures), fakeRpc(signatures), feed, state);
+  assert.equal(feed.list().length, 1);
+
+  // Same signature, newer blockTime: resolves without a retry-on-not-found
+  // (fakeRpc's getTransaction already knows "sigCreate"), and feed.has()
+  // skips it as already-scored — this call only needs to prove the
+  // watermark still advances, i.e. the guard isn't stuck "true" forever.
+  const moreSignatures: SignatureInfo[] = [
+    { signature: "sigCreate", slot: 3, err: null, memo: null, blockTime: 1700000200 },
+  ];
+  await pollOnce(fakeRpc(moreSignatures), fakeRpc(moreSignatures), feed, state);
+
+  assert.equal(state.sinceBlockTime, 1700000200);
+});
+
 test("onScored does not fire for a launch feed.add() dropped (zero signals)", async () => {
   const signatures: SignatureInfo[] = [
     { signature: "sigCreate", slot: 2, err: null, memo: null, blockTime: 1700000100 },

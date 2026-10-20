@@ -4930,3 +4930,101 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   timestamp as if it were a unique signature identity) is a pattern worth
   checking for elsewhere any time a cursor/watermark is built from
   `blockTime` rather than a signature or slot.
+
+## Session 81 — 2026-10-20
+
+### Done
+- Re-verified the repo first: `npm install`, 224/224 tests, clean
+  typecheck/build, `git status` clean before starting.
+- Took up session 80's "next" pointer: gave `server.ts`'s wiring as a whole
+  the same from-scratch re-derivation treatment discovery.ts got, rather than
+  another general re-read. Traced every shared-state object server.ts wires
+  between the websocket watcher and backstop poller (`deployerIndex`,
+  `scoringGate`, `scoringInFlight`, `balanceIndex`, the shared `scoringPacer`)
+  and re-derived each one's correctness from how it's actually used, not just
+  its comments.
+- Found a real bug in how `server.ts` drives `poller.ts`: `setInterval(poll,
+  POLL_INTERVAL_MS)` fires every 15s on schedule regardless of whether the
+  previous tick's `pollOnce` promise has resolved, since `poll()` fires
+  `pollOnce(...).catch(...)` without awaiting it. `pollOnce` itself reads
+  `state.sinceBlockTime` before its own `findNewLaunches` call and writes
+  `state.sinceBlockTime` after — with two overlapping calls sharing the same
+  `PollState` object, the call dispatched *first* can still finish *last*
+  (its `findNewLaunches` resolve-with-retry loop, or its own sequential
+  per-launch scoring, can easily run past 15s), and whichever call's write
+  lands last wins, including the first call's now-stale, older
+  `newestBlockTime` snapshot. That regresses the watermark backwards until
+  the next poll happens to catch back up — a real correctness bug, not just
+  wasted RPC budget, and the same shape of bug session 80 found in
+  discovery.ts (a shared mutable cursor raced by two callers), just one layer
+  up in the wiring that connects pollOnce to setInterval instead of inside
+  pollOnce's own logic.
+- Confirmed this wasn't already known and dismissed: session 18 noted
+  `pollOnce` "awaits the whole findNewLaunches call before the next interval
+  fires, so a worst-case retry chain would delay the next scheduled poll
+  rather than overlap it" — that reasoning doesn't hold, since `setInterval`
+  has no visibility into whether `poll()`'s internal, unawaited promise has
+  settled; it only cares that the synchronous `poll()` function returned.
+  No later session revisited that assumption or added a guard.
+- Verified live with a throwaway offline probe (deleted before finishing,
+  same habit as sessions 34/79/80): two `pollOnce` calls sharing one
+  `PollState`, with controlled (deferred) promise resolution so the first
+  call's `getSignaturesForAddress` resolves after the second call's — the
+  shared state's `sinceBlockTime` landed at the second call's (newer) value
+  first, then regressed back to the first call's (older) value once it
+  finally resolved. Reproduced the exact race on the first try.
+- Fixed in `src/poller.ts`: added an `inFlight?: boolean` field to
+  `PollState`, checked at the very top of `pollOnce` (before its first
+  `await`) and set/cleared around the existing body in a `try`/`finally`. An
+  overlapping call now returns immediately instead of racing — same "drop
+  beats queue" choice already used by `ScoringGate`, and safe for the same
+  reason: this poller is only ever the backstop to the websocket watcher, so
+  skipping one tick's worth of discovery costs nothing a healthy socket
+  connection wouldn't already cover.
+- Added two regression tests to `poller.test.ts`: one reproducing the
+  overlap directly (a controllable `discoveryRpc` whose
+  `getSignaturesForAddress` never resolves on its own, proving the second
+  concurrent call returns immediately without a second RPC call or touching
+  the watermark, then resolving the first call and confirming its own result
+  still lands correctly) and one confirming the guard clears afterward so a
+  later, non-overlapping poll still runs normally. Verified both catch the
+  bug: temporarily stashed the fix (`git stash` on `poller.ts` only), reran
+  `poller.test.ts`, confirmed the new tests hang/cancel (the second call ran
+  concurrently and got stuck waiting on a promise the first call's own flow
+  had already claimed) instead of failing fast — a clear sign of the same
+  unguarded race the probe found — then restored the fix and confirmed all
+  11 tests in that file pass in under a second.
+- Documented the fix in README.md right after session 80's watermark-boundary
+  writeup (same section, same style), explaining the race, how it was
+  confirmed, and why dropping the overlapping tick is the right fix.
+- Ran the full suite after the fix, not just at the end. Checked `git
+  status` after cleanup: only `src/poller.ts`, `src/poller.test.ts`,
+  README.md, and PROGRESS.md changed — no stray files, no leftover probe
+  script, no `.env`.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 226/226 passing (224 prior + 2 new), all offline, ~2.6s.
+- `pollOnce` no longer lets an overlapping call (the next `setInterval` tick
+  firing while a slow prior call is still resolving) race and potentially
+  regress the backstop poller's `sinceBlockTime` watermark.
+
+### Next
+- `server.ts`'s literal module-level wiring (constructing the RPC clients,
+  the HTTP server, `watcher.start()`/`poll()`/`setInterval`) itself has no
+  behavior of its own left untested now that this session's fix lives in
+  `poller.ts` — same "glue code wrapping already-tested pieces" state prior
+  sessions (59-61) found, just with one more real bug fixed out of that glue
+  along the way.
+- Worth a similar check someday for `wsDiscovery.ts`'s own idle-watchdog
+  `setInterval` (`startIdleWatchdog`) and reconnect scheduling — different
+  shape (scoped to one connection via a closure, not a shared mutable
+  cursor), but the same family of "does a fixed-interval timer firing
+  without checking in-flight state cause a race" question this session asked
+  about `poller.ts`.
+- The untracked-then-retracked-the-same-mint-before-the-ack case (session
+  79), `RESCORE_DELAY_MS` (60s, 14 live samples as of session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71) are all
+  unchanged — still not a priority on their own.
+- All five TASK.md steps remain functionally complete.
