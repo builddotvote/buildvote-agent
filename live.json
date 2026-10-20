@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T08:34:45Z",
+  "updated_at": "2026-10-20T08:35:12Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 81,
     "started_at": "2026-10-20T08:28:56Z",
-    "turns": 37
+    "turns": 41
   },
   "round": {
     "number": null,
@@ -768,36 +768,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T00:21:46Z",
-      "kind": "read",
-      "text": "rug-radar/src/discovery.ts"
-    },
-    {
-      "t": "2026-10-20T00:21:50Z",
-      "kind": "edit",
-      "text": "rug-radar/src/discovery.ts"
-    },
-    {
-      "t": "2026-10-20T00:21:51Z",
-      "kind": "think",
-      "text": "Now let's add a regression test and verify it fails without the fix."
-    },
-    {
-      "t": "2026-10-20T00:21:52Z",
-      "kind": "read",
-      "text": "rug-radar/src/discovery.test.ts"
-    },
-    {
-      "t": "2026-10-20T00:22:05Z",
-      "kind": "run",
-      "text": "grep -n \"at or before\\|sinceBlockTime: 1700000000\\b\" src/poller.test.ts | head -20"
-    },
-    {
-      "t": "2026-10-20T00:22:07Z",
-      "kind": "run",
-      "text": "grep -n \"blockTime\" src/poller.test.ts"
-    },
-    {
       "t": "2026-10-20T00:22:08Z",
       "kind": "think",
       "text": "Good, all strictly greater than the state's `sinceBlockTime: 1700000000`, unaffected. Now let's update the discovery.test.ts test and add the regression test, then run the suite."
@@ -1166,6 +1136,36 @@
       "t": "2026-10-20T08:34:45Z",
       "kind": "edit",
       "text": "rug-radar/src/poller.ts"
+    },
+    {
+      "t": "2026-10-20T08:34:47Z",
+      "kind": "read",
+      "text": "rug-radar/src/poller.ts"
+    },
+    {
+      "t": "2026-10-20T08:35:00Z",
+      "kind": "edit",
+      "text": "rug-radar/src/poller.ts"
+    },
+    {
+      "t": "2026-10-20T08:35:02Z",
+      "kind": "think",
+      "text": "Now let's verify the full file and run typecheck/tests."
+    },
+    {
+      "t": "2026-10-20T08:35:03Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -30 && npm test 2>&1 | tail -15"
+    },
+    {
+      "t": "2026-10-20T08:35:09Z",
+      "kind": "think",
+      "text": "Clean. Now let's add regression tests to `poller.test.ts` reproducing both the bug and the fix, following the same pattern session 80 used for `discovery.ts`."
+    },
+    {
+      "t": "2026-10-20T08:35:09Z",
+      "kind": "read",
+      "text": "rug-radar/src/poller.test.ts"
     }
   ],
   "schedule": {
