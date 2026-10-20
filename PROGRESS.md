@@ -5027,4 +5027,84 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
   endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71) are all
   unchanged — still not a priority on their own.
+
+## Session 82 — 2026-10-20
+
+### Done
+- Re-verified the repo first: `npm install`, 226/226 tests, clean
+  typecheck/build, `git status` clean before starting.
+- Took up session 81's top "next" pointer: checked `wsDiscovery.ts`'s own
+  idle-watchdog `setInterval` and reconnect scheduling for the same "fixed
+  interval timer firing without checking in-flight state" race family that
+  turned out to be real in `poller.ts`. Traced both from scratch:
+  - The idle watchdog (`startIdleWatchdog`) captures the `ws` it was started
+    for in its own closure and checks `this.ws !== ws` on every tick before
+    acting, so a stale watchdog left over from a superseded connection no-ops
+    and stops rescheduling itself instead of closing the *new* connection —
+    already the same guard shape session 81 added to `poller.ts`, just via
+    closure capture instead of a boolean flag on shared state.
+  - Reconnect scheduling (`scheduleReconnect`/`connect`) only ever has one
+    chain active at a time: `connect()` is called once from `start()` and
+    otherwise only from `onclose` (which fires once per socket) or a
+    synchronous `wsFactory` failure — there is no second path that can call
+    `connect()` while one is already pending, so two overlapping connection
+    attempts racing shared state (the failure mode in `poller.ts`) isn't
+    reachable here.
+  - Confirmed both conclusions against the existing test suite
+    (`wsDiscovery.test.ts` already has dedicated tests for "forces a
+    reconnect when the program subscription goes idle past the timeout",
+    "does not force a reconnect when a program notification arrived within
+    the idle timeout", and "clears the idle watchdog on stop()") rather than
+    just reading the code — this area already got the regression coverage
+    this project usually only adds after finding a live bug.
+  - Conclusion: unlike `poller.ts`'s `PollState.sinceBlockTime`, this module
+    doesn't share a mutable cursor across overlapping async calls — the
+    per-connection state that matters (`lastProgramActivityAt`,
+    subscription bookkeeping) is reset in `onopen` and guarded by identity
+    checks, so this specific pointer is clean. No code change from this
+    check alone.
+- Used the same "two overlapping async callers racing a shared mutable
+  field" lens on the other shared-state objects `server.ts` wires between
+  the two discovery paths, to see if the same bug shape exists anywhere else
+  undiscovered: `deployerIndex.ts` (`DeployerIndex.record`/`getPriorLaunches`),
+  `balanceIndex.ts` (`BalanceIndex.recordTrade`/`getHolders`),
+  `scoringGate.ts`, `scoringInFlight.ts`, and `rpc.ts`'s `RequestPacer.reserve`/
+  `SolanaRpcClient.acquireSlot`/`releaseSlot`. All five do their
+  read-then-write on the shared field in a single synchronous section with no
+  `await` in between (or, for `RequestPacer`, chain the promise itself rather
+  than reading a timestamp before awaiting), so there's no gap for a second
+  concurrent caller to interleave into — the class of bug session 81 found
+  needs an `await` between reading and writing the shared field, and none of
+  these five have one. No new bug found.
+- Ran the full suite again after this review pass (no files changed, so this
+  just reconfirms the baseline): still 226/226.
+
+### Works
+- Everything session 81 left working still works: `npm run typecheck` and
+  `npm run build` clean, `npm test` 226/226, all offline.
+- No regressions, no code changes this session — this was a verification
+  pass over session 81's "next" pointer plus adjacent shared-state code, not
+  a fix.
+
+### Next
+- `wsDiscovery.ts`'s idle-watchdog/reconnect scheduling and the five
+  shared-state objects checked this session are now off the list — reviewed
+  with the specific "overlapping async callers race a shared field" lens,
+  not just a general read-through.
+- `server.ts`'s literal module-level wiring remains "glue code wrapping
+  already-tested pieces" per sessions 59-61/81 — still no behavior of its
+  own left to test.
+- The untracked-then-retracked-the-same-mint-before-the-ack case (session
+  79, confirmed this session to still not be reachable from
+  `holderRescore.ts`, the only current caller — it calls `trackMint` once
+  per launch and `untrackMint` once, never retracking the same mint),
+  `RESCORE_DELAY_MS` (60s, 14 live samples as of session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71) are all
+  unchanged — still not a priority on their own.
+- With the obvious race-condition angle now checked across the main shared
+  mutable state, a future session's next from-scratch pass may need to pick
+  a different lens (e.g. re-deriving a module's math/decoding logic, like
+  sessions 77-79 did) rather than another concurrency sweep, since that
+  angle is close to exhausted for now.
 - All five TASK.md steps remain functionally complete.
