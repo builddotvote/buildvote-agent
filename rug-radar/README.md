@@ -471,6 +471,24 @@ Two discovery paths feed the same pipeline:
   startup or a reconnect gap isn't lost. `resolveLaunchFromSignature` (used
   by both paths) is shared so they decode a `create` the same way.
 
+**The watermark boundary is inclusive, not exclusive (fixed session 80).**
+`findNewLaunches` tracks a `sinceBlockTime` watermark (not a feed check —
+see above), and `blockTime` only has 1-second resolution: pump.fun's
+firehose routinely puts multiple creates in the same wall-clock second. The
+boundary check used to be `blockTime <= sinceBlockTime`, which meant any
+signature sharing the *exact* second as the current watermark was skipped —
+including a signature that was never actually seen before, just because an
+earlier signature from that same second had already set the watermark one
+poll ago. Reproduced live: poll 1 sees only sigA (second T) and sets the
+watermark to T; poll 2 sees a genuinely new sigB also at second T, and the
+old `<=` excluded it forever, since the watermark never moves backwards to
+give it another chance. Changed to `blockTime < sinceBlockTime` so a
+signature exactly at the watermark is scanned again rather than skipped —
+safe because `pollOnce` already checks `feed.has(launch.mint)` before
+spending any scoring RPC call, so re-resolving an already-seen signature at
+the boundary costs at most one redundant `getTransaction` call on the
+discovery RPC, not a duplicate score.
+
 `resolveLaunchFromSignature` retries a `getTransaction` call that comes back
 "not found" with exponential backoff (5 retries, 750ms base, ~23s budget)
 before giving up — confirmed live that the public RPC's multi-node cluster

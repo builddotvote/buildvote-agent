@@ -142,15 +142,73 @@ test("does not mistake a bundled sell for a bundled buy", async () => {
   assert.equal(launch?.bundledBuy, undefined);
 });
 
-test("ignores signatures at or before the watermark", async () => {
+test("ignores signatures strictly before the watermark", async () => {
+  const signatures: SignatureInfo[] = [
+    { signature: "sigCreate", slot: 1, err: null, memo: null, blockTime: 1700000099 },
+  ];
+  const rpc = fakeRpc({ sigCreate: createTx() }, signatures);
+
+  const result = await findNewLaunches(rpc, 1700000100);
+  assert.deepEqual(result.launches, []);
+  assert.equal(result.newestBlockTime, 1700000099);
+});
+
+// Regression (session 80): blockTime only has 1-second resolution, so a
+// strictly-exclusive `<=` boundary used to silently drop forever any
+// signature sharing the exact same blockTime as the watermark, even one the
+// previous poll never actually saw. A signature exactly at the watermark is
+// therefore included, not skipped — see the `<` comment in discovery.ts for
+// why re-resolving an already-seen one this way is safe.
+test("includes a signature exactly at the watermark, not just strictly newer ones", async () => {
   const signatures: SignatureInfo[] = [
     { signature: "sigCreate", slot: 1, err: null, memo: null, blockTime: 1700000100 },
   ];
   const rpc = fakeRpc({ sigCreate: createTx() }, signatures);
 
   const result = await findNewLaunches(rpc, 1700000100);
-  assert.deepEqual(result.launches, []);
+  assert.equal(result.launches.length, 1);
+  assert.equal(result.launches[0].mint, "Mint1111111111111111111111111111111111111");
   assert.equal(result.newestBlockTime, 1700000100);
+});
+
+test("a signature sharing the watermark's exact blockTime is found on the poll after the one that set it", async () => {
+  // sigA sets the watermark to blockTime T on poll 1 (the only signature
+  // visible then). sigB is a genuinely new signature — never seen before —
+  // that lands with that same blockTime T and is only visible starting on
+  // poll 2. Before the fix, poll 2's `sig.blockTime <= sinceBlockTime` (T <=
+  // T) excluded sigB and it was never found on any later poll either, since
+  // the watermark never moves backwards.
+  const poll1Signatures: SignatureInfo[] = [
+    { signature: "sigA", slot: 1, err: null, memo: null, blockTime: 1700000100 },
+  ];
+  const poll1Rpc = fakeRpc({ sigA: createTx() }, poll1Signatures);
+  const poll1 = await findNewLaunches(poll1Rpc, 1700000050, { resolveOptions: { retries: 0 } });
+  assert.equal(poll1.launches.length, 1);
+  assert.equal(poll1.newestBlockTime, 1700000100);
+
+  const sigBTx = createTx();
+  sigBTx.transaction.message.instructions = [
+    {
+      programId: PUMP_FUN_PROGRAM_ID,
+      accounts: [
+        "MintB111111111111111111111111111111111111",
+        ...CREATE_ACCOUNTS.slice(1, 7),
+        "DeployerB11111111111111111111111111111111",
+      ],
+      data: createInstructionData(),
+    },
+  ];
+  const poll2Signatures: SignatureInfo[] = [
+    { signature: "sigB", slot: 2, err: null, memo: null, blockTime: 1700000100 },
+    { signature: "sigA", slot: 1, err: null, memo: null, blockTime: 1700000100 },
+  ];
+  const poll2Rpc = fakeRpc({ sigA: createTx(), sigB: sigBTx }, poll2Signatures);
+  const poll2 = await findNewLaunches(poll2Rpc, poll1.newestBlockTime, { resolveOptions: { retries: 0 } });
+
+  assert.ok(
+    poll2.launches.some((l) => l.mint === "MintB111111111111111111111111111111111111"),
+    "sigB's launch, sharing the watermark's exact blockTime, should still be found",
+  );
 });
 
 test("skips failed transactions and non-create instructions", async () => {

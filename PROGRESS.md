@@ -4870,3 +4870,63 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   applying the same treatment to modules not yet done this way (e.g.
   `discovery.ts`'s cursor/backstop logic, `server.ts`'s wiring as a whole)
   in a future session.
+
+## Session 80 — 2026-10-20
+
+### Done
+- Re-verified the repo first: `npm install`, 222/222 tests, clean
+  typecheck/build, `git status` clean before starting.
+- Took up session 79's "next" pointer: re-derived `discovery.ts`'s
+  cursor/backstop logic from scratch, the one module flagged as not yet
+  given that treatment.
+- Found a real bug in `findNewLaunches`'s watermark comparison:
+  `sig.blockTime <= sinceBlockTime` treats the cursor as a *signature*
+  boundary, but it's only a *blockTime* (1-second resolution) value, and
+  pump.fun's firehose routinely puts multiple creates in the same
+  wall-clock second. Confirmed live with a throwaway probe script (deleted
+  before finishing, same habit as sessions 34/79): poll 1 sees only sigA at
+  blockTime T and sets the watermark to T; poll 2 sees sigB — a genuinely
+  new signature, never seen before — also at blockTime T, and the old `<=`
+  excluded it. Because the watermark only ever moves forward, sigB's launch
+  was lost forever, not just delayed a poll.
+- Fixed by changing the comparison to `sig.blockTime < sinceBlockTime` in
+  `src/discovery.ts`, so a signature exactly at the watermark is scanned
+  again instead of skipped. Checked this is safe, not just "less wrong":
+  `poller.ts`'s `pollOnce` already calls `feed.has(launch.mint)` before
+  spending any scoring RPC call, so re-resolving an already-seen signature
+  at the boundary costs at most one redundant `getTransaction` call against
+  the discovery RPC (already the high-volume side of this service's RPC
+  use) for one extra poll, not a duplicate score or a correctness issue.
+- Added two regression tests to `discovery.test.ts`: one confirming a
+  signature exactly at the watermark is now included, and one reproducing
+  the exact two-poll scenario above (sigA sets the watermark, sigB shares
+  its blockTime and is only visible starting the next poll). Verified both
+  catch the bug: temporarily reverted the fix, confirmed both new tests
+  fail, restored the fix and confirmed all pass. Updated the one existing
+  test that encoded the old (buggy) exact-watermark-is-excluded behavior as
+  intentional, since that was the bug itself, not a case worth preserving.
+- Documented the fix in README.md's "Live feed" section alongside the
+  other watermark/backstop notes, matching how sessions 50-52's fixes there
+  are written up.
+- Ran the full suite after the fix, not just at the end.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 224/224 passing (222 prior + 2 new), all offline, ~3.1s.
+- `findNewLaunches` no longer permanently drops a launch whose signature
+  happens to share the exact same blockTime second as the current
+  watermark.
+
+### Next
+- `server.ts`'s wiring as a whole (session 79's other flagged target) still
+  hasn't had this same from-scratch re-derivation treatment.
+- The narrower untrack-then-retrack-the-same-mint-before-the-ack case
+  (session 79), `RESCORE_DELAY_MS` (60s, 14 live samples as of session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71) are all
+  unchanged — still not a priority on their own.
+- All five TASK.md steps remain functionally complete. Worth noting for a
+  future session: this bug's root cause (treating a 1-second-resolution
+  timestamp as if it were a unique signature identity) is a pattern worth
+  checking for elsewhere any time a cursor/watermark is built from
+  `blockTime` rather than a signature or slot.

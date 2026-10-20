@@ -59,9 +59,10 @@ export interface FindNewLaunchesResult {
   newestBlockTime: number | null;
 }
 
-// Finds launches newer than `sinceBlockTime` (exclusive), returned oldest-first.
-// Pass `sinceBlockTime: null` on the very first poll — it seeds the watermark
-// from whatever's currently at the head of the program's history rather than
+// Finds launches at or newer than `sinceBlockTime` (inclusive — see the `<`
+// comment below for why equal is kept in), returned oldest-first. Pass
+// `sinceBlockTime: null` on the very first poll — it seeds the watermark from
+// whatever's currently at the head of the program's history rather than
 // treating that entire initial window as "new" launches to score.
 //
 // Deliberately timestamp-based rather than using getSignaturesForAddress's
@@ -88,7 +89,22 @@ export async function findNewLaunches(
   // getSignaturesForAddress returns newest-first; scan oldest-first so the
   // feed fills in launch order.
   for (const sig of [...signatures].reverse()) {
-    if (sig.err || sig.blockTime === null || sig.blockTime <= sinceBlockTime) continue;
+    // `<` not `<=`: blockTime only has 1-second resolution and pump.fun's
+    // firehose commonly puts multiple creates in the same wall-clock second,
+    // so a strictly-exclusive `<=` boundary silently dropped forever any
+    // signature that happened to land in the exact same second as the
+    // watermark but wasn't visible yet on the poll that set it (reproduced
+    // live, session 80: sigA sets the watermark to blockTime T, then sigB —
+    // a genuinely new signature, never seen before — arrives on the next
+    // poll with that same blockTime T and was excluded by `<=` with no way
+    // to ever see it again, since the watermark never moves backwards).
+    // Using `<` means a signature already resolved on a prior poll can be
+    // re-resolved once more if it shares the watermark's exact second (one
+    // extra getTransaction call against the discovery RPC, already the
+    // high-volume side of this service's RPC use) — safe because
+    // poller.ts's `feed.has(launch.mint)` dedups by mint before any scoring
+    // RPC call is spent on the result.
+    if (sig.err || sig.blockTime === null || sig.blockTime < sinceBlockTime) continue;
 
     const launch = await resolveLaunchFromSignature(rpc, sig.signature, options.resolveOptions);
     if (launch) launches.push(launch);
