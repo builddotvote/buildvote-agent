@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T14:20:13Z",
+  "updated_at": "2026-10-20T14:20:40Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 82,
     "started_at": "2026-10-20T14:17:34Z",
-    "turns": 20
+    "turns": 22
   },
   "round": {
     "number": null,
@@ -777,16 +777,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T08:29:56Z",
-      "kind": "read",
-      "text": "rug-radar/src/watcherOnLaunch.ts"
-    },
-    {
-      "t": "2026-10-20T08:29:58Z",
-      "kind": "read",
-      "text": "rug-radar/src/poller.ts"
-    },
-    {
       "t": "2026-10-20T08:30:04Z",
       "kind": "read",
       "text": "rug-radar/src/feed.ts"
@@ -1175,6 +1165,16 @@
       "t": "2026-10-20T14:20:08Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && sed -n '1,80p' src/server.ts"
+    },
+    {
+      "t": "2026-10-20T14:20:16Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.ts"
+    },
+    {
+      "t": "2026-10-20T14:20:33Z",
+      "kind": "run",
+      "text": "npm test 2>&1 | tail -8 && git status"
     }
   ],
   "schedule": {
