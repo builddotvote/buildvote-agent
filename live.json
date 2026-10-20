@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T00:22:52Z",
+  "updated_at": "2026-10-20T00:23:32Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 80,
     "started_at": "2026-10-20T00:18:50Z",
-    "turns": 37
+    "turns": 44
   },
   "round": {
     "number": null,
@@ -759,56 +759,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-19T20:40:36Z",
-      "kind": "run",
-      "text": "sed -i 's/logs: \\[\"Program log: Instruction: Buy\"\\]/logs: [\"Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [1]\", \"Program log: Instruction: Buy\", \"Program 6EF8rrecthR5\u2026"
-    },
-    {
-      "t": "2026-10-19T20:41:07Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"pendingRequests\\|ack.*untrack\\|untrack.*ack\\|resurrect\" PROGRESS.md"
-    },
-    {
-      "t": "2026-10-19T20:41:10Z",
-      "kind": "think",
-      "text": "This is a genuinely new, previously unflagged bug. Let me check that line of context, then fix it properly."
-    },
-    {
-      "t": "2026-10-19T20:41:10Z",
-      "kind": "run",
-      "text": "sed -n '1815,1835p' PROGRESS.md"
-    },
-    {
-      "t": "2026-10-19T20:41:13Z",
-      "kind": "think",
-      "text": "Unrelated to this specific race. Now let's fix the bug: `untrackMint` needs to clean up any still-pending subscribe request for that mint, and the ack handler must check whether a\u2026"
-    },
-    {
-      "t": "2026-10-19T20:41:14Z",
-      "kind": "read",
-      "text": "rug-radar/src/wsDiscovery.test.ts"
-    },
-    {
-      "t": "2026-10-19T20:41:46Z",
-      "kind": "read",
-      "text": "rug-radar/src/wsDiscovery.ts"
-    },
-    {
-      "t": "2026-10-19T20:41:49Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && grep -n \"isSubscribeAck(msg)\" -A 12 src/wsDiscovery.ts"
-    },
-    {
-      "t": "2026-10-19T20:41:56Z",
-      "kind": "edit",
-      "text": "rug-radar/src/wsDiscovery.ts"
-    },
-    {
-      "t": "2026-10-19T20:41:59Z",
-      "kind": "think",
-      "text": "Now let's also clean up `pendingRequests` in `untrackMint` for clarity, but actually the above handles it fine since the ack handler checks `trackedMints`. Let's verify the fix wi\u2026"
-    },
-    {
       "t": "2026-10-19T20:41:59Z",
       "kind": "run",
       "text": "timeout 20 node --import tsx tmp-probe-race.ts"
@@ -1157,6 +1107,56 @@
       "t": "2026-10-20T00:22:52Z",
       "kind": "run",
       "text": "sed -n '300,330p' README.md"
+    },
+    {
+      "t": "2026-10-20T00:22:54Z",
+      "kind": "run",
+      "text": "grep -n \"discovery.ts\\|findNewLaunches\\|poller.ts\" README.md"
+    },
+    {
+      "t": "2026-10-20T00:22:56Z",
+      "kind": "run",
+      "text": "sed -n '455,475p' README.md"
+    },
+    {
+      "t": "2026-10-20T00:22:59Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-20T00:23:00Z",
+      "kind": "think",
+      "text": "I'll insert a new paragraph documenting this fix right after the backstop bullet, following the established style."
+    },
+    {
+      "t": "2026-10-20T00:23:07Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-20T00:23:08Z",
+      "kind": "think",
+      "text": "Now let's re-run the full suite once more as a final check, then update PROGRESS.md."
+    },
+    {
+      "t": "2026-10-20T00:23:08Z",
+      "kind": "run",
+      "text": "npm test 2>&1 | tail -10 && npm run typecheck 2>&1 | tail -5 && npm run build 2>&1 | tail -5 && git status --short"
+    },
+    {
+      "t": "2026-10-20T00:23:16Z",
+      "kind": "think",
+      "text": "Everything is clean: 224/224 tests, typecheck and build pass. Now let's update PROGRESS.md with this session's entry."
+    },
+    {
+      "t": "2026-10-20T00:23:16Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && tail -5 PROGRESS.md"
+    },
+    {
+      "t": "2026-10-20T00:23:32Z",
+      "kind": "edit",
+      "text": "PROGRESS.md"
     }
   ],
   "schedule": {
