@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T08:36:31Z",
+  "updated_at": "2026-10-20T08:36:58Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 81,
     "started_at": "2026-10-20T08:28:56Z",
-    "turns": 46
+    "turns": 51
   },
   "round": {
     "number": null,
@@ -768,51 +768,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T00:22:36Z",
-      "kind": "run",
-      "text": "cp src/discovery.ts /tmp/discovery.ts.fixed sed -i 's/sig.blockTime < sinceBlockTime) continue;/sig.blockTime <= sinceBlockTime) continue;/' src/discovery.ts npx tsx --test src/di\u2026"
-    },
-    {
-      "t": "2026-10-20T00:22:38Z",
-      "kind": "think",
-      "text": "Both new tests correctly fail without the fix (2 failures). Restored the fix \u2014 let's confirm the full suite is green again."
-    },
-    {
-      "t": "2026-10-20T00:22:39Z",
-      "kind": "run",
-      "text": "npm test 2>&1 | tail -10 && echo \"---typecheck---\" && npm run typecheck 2>&1 | tail -20 && echo \"---build---\" && npm run build 2>&1 | tail -20"
-    },
-    {
-      "t": "2026-10-20T00:22:46Z",
-      "kind": "think",
-      "text": "All green. Let's clean up the probe script and double-check nothing else references it."
-    },
-    {
-      "t": "2026-10-20T00:22:46Z",
-      "kind": "run",
-      "text": "rm -f tmp-probe-tie.ts git status --short"
-    },
-    {
-      "t": "2026-10-20T00:22:48Z",
-      "kind": "run",
-      "text": "grep -n \"findNewLaunches\\|watermark\\|sinceBlockTime\" README.md"
-    },
-    {
-      "t": "2026-10-20T00:22:51Z",
-      "kind": "run",
-      "text": "grep -n \"^#\\|^##\" README.md | head -60"
-    },
-    {
-      "t": "2026-10-20T00:22:52Z",
-      "kind": "run",
-      "text": "sed -n '300,330p' README.md"
-    },
-    {
-      "t": "2026-10-20T00:22:54Z",
-      "kind": "run",
-      "text": "grep -n \"discovery.ts\\|findNewLaunches\\|poller.ts\" README.md"
-    },
-    {
       "t": "2026-10-20T00:22:56Z",
       "kind": "run",
       "text": "sed -n '455,475p' README.md"
@@ -1166,6 +1121,51 @@
       "t": "2026-10-20T08:36:19Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git stash push -- rug-radar/src/poller.ts && cd rug-radar && npx tsx --test src/poller.test.ts 2>&1 | tail -40"
+    },
+    {
+      "t": "2026-10-20T08:36:33Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git stash pop && cd rug-radar && npm test 2>&1 | tail -15"
+    },
+    {
+      "t": "2026-10-20T08:36:38Z",
+      "kind": "think",
+      "text": "Fix restored, all 226 tests pass (224 prior + 2 new). Let's confirm typecheck/build are clean and check `git status` for stray files before documenting."
+    },
+    {
+      "t": "2026-10-20T08:36:39Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && cd /home/runner/work/buildvote-agent/buildvote-agent && git status"
+    },
+    {
+      "t": "2026-10-20T08:36:44Z",
+      "kind": "think",
+      "text": "Clean \u2014 only `poller.ts` and `poller.test.ts` changed, no stray files. Now let's update the README to match the existing documentation pattern for watermark/backstop notes, then u\u2026"
+    },
+    {
+      "t": "2026-10-20T08:36:45Z",
+      "kind": "run",
+      "text": "cd rug-radar && grep -n \"watermark\\|sinceBlockTime\\|backstop\" README.md | head -30"
+    },
+    {
+      "t": "2026-10-20T08:36:48Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-20T08:36:49Z",
+      "kind": "think",
+      "text": "I'll add a new paragraph right after the session-80 watermark fix, documenting this session's overlap guard in the same style."
+    },
+    {
+      "t": "2026-10-20T08:36:56Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-20T08:36:58Z",
+      "kind": "think",
+      "text": "Now let's update PROGRESS.md with this session's entry."
     }
   ],
   "schedule": {
