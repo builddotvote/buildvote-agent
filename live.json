@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T14:19:47Z",
+  "updated_at": "2026-10-20T14:20:13Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 82,
     "started_at": "2026-10-20T14:17:34Z",
-    "turns": 15
+    "turns": 20
   },
   "round": {
     "number": null,
@@ -777,36 +777,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T08:29:22Z",
-      "kind": "run",
-      "text": "pwd"
-    },
-    {
-      "t": "2026-10-20T08:29:25Z",
-      "kind": "run",
-      "text": "npm install --silent 2>&1 | tail -5 && npm test 2>&1 | tail -25 && npm run typecheck 2>&1 | tail -20 && npm run build 2>&1 | tail -20"
-    },
-    {
-      "t": "2026-10-20T08:29:34Z",
-      "kind": "think",
-      "text": "Baseline confirmed: 224/224 tests pass, clean typecheck/build. Now let's read `server.ts` in full to do the from-scratch re-derivation session 80 flagged as next."
-    },
-    {
-      "t": "2026-10-20T08:29:34Z",
-      "kind": "read",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-20T08:29:38Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"server.ts\" PROGRESS.md | tail -40"
-    },
-    {
-      "t": "2026-10-20T08:29:43Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
       "t": "2026-10-20T08:29:56Z",
       "kind": "read",
       "text": "rug-radar/src/watcherOnLaunch.ts"
@@ -1175,6 +1145,36 @@
       "t": "2026-10-20T14:19:42Z",
       "kind": "read",
       "text": "rug-radar/src/scoringInFlight.ts"
+    },
+    {
+      "t": "2026-10-20T14:19:48Z",
+      "kind": "read",
+      "text": "rug-radar/src/balanceIndex.ts"
+    },
+    {
+      "t": "2026-10-20T14:19:54Z",
+      "kind": "read",
+      "text": "rug-radar/src/rescore.ts"
+    },
+    {
+      "t": "2026-10-20T14:20:00Z",
+      "kind": "read",
+      "text": "rug-radar/src/scoringGate.ts"
+    },
+    {
+      "t": "2026-10-20T14:20:05Z",
+      "kind": "read",
+      "text": "rug-radar/src/poller.ts"
+    },
+    {
+      "t": "2026-10-20T14:20:07Z",
+      "kind": "think",
+      "text": "This confirms session 81's fix is correctly implemented and well-reasoned \u2014 the `inFlight` check happens synchronously before the first `await`, so there's no TOCTOU gap. Everythi\u2026"
+    },
+    {
+      "t": "2026-10-20T14:20:08Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && sed -n '1,80p' src/server.ts"
     }
   ],
   "schedule": {
