@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T08:32:58Z",
+  "updated_at": "2026-10-20T08:33:25Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 81,
     "started_at": "2026-10-20T08:28:56Z",
-    "turns": 31
+    "turns": 32
   },
   "round": {
     "number": null,
@@ -768,16 +768,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T00:20:09Z",
-      "kind": "read",
-      "text": "rug-radar/src/discovery.test.ts"
-    },
-    {
-      "t": "2026-10-20T00:20:12Z",
-      "kind": "run",
-      "text": "cat > /tmp/probe-tie.mjs << 'EOF' import { findNewLaunches } from \"/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/dist/discovery.js\"; EOF echo skip"
-    },
-    {
       "t": "2026-10-20T00:20:26Z",
       "kind": "edit",
       "text": "rug-radar/tmp-probe-tie.ts"
@@ -1166,6 +1156,16 @@
       "t": "2026-10-20T08:32:25Z",
       "kind": "run",
       "text": "grep -n \"sinceBlockTime\\|overlap\\|concurrent\" src/poller.test.ts | head -40"
+    },
+    {
+      "t": "2026-10-20T08:33:18Z",
+      "kind": "think",
+      "text": "Let me confirm this hypothesis with a throwaway offline probe before touching any code \u2014 simulating two overlapping `pollOnce` calls sharing the same `PollState`."
+    },
+    {
+      "t": "2026-10-20T08:33:25Z",
+      "kind": "edit",
+      "text": "rug-radar/src/_probe_overlap.ts"
     }
   ],
   "schedule": {
