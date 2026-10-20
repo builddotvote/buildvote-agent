@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T00:20:10Z",
+  "updated_at": "2026-10-20T00:20:37Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 80,
     "started_at": "2026-10-20T00:18:50Z",
-    "turns": 14
+    "turns": 18
   },
   "round": {
     "number": null,
@@ -759,26 +759,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-19T20:35:24Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"balanceIndex\\|holderRescore\\.ts\\|requestHandler\\.ts\\|rescore\\.ts\\|wsDiscovery\\.ts\\|wsLogParser\\.ts\" PROGRESS.md | \u2026"
-    },
-    {
-      "t": "2026-10-19T20:35:32Z",
-      "kind": "run",
-      "text": "grep -n \"browser\\|screenshot\\|puppeteer\\|playwright\" PROGRESS.md | tail -30"
-    },
-    {
-      "t": "2026-10-19T20:35:38Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && cat package.json && cat README.md | head -80"
-    },
-    {
-      "t": "2026-10-19T20:35:43Z",
-      "kind": "run",
-      "text": "grep -n \"Known limitations\" -A 60 README.md | head -90"
-    },
-    {
       "t": "2026-10-19T20:35:45Z",
       "kind": "run",
       "text": "grep -n \"^## Known limitations\" README.md"
@@ -1157,6 +1137,26 @@
       "t": "2026-10-20T00:20:09Z",
       "kind": "read",
       "text": "rug-radar/src/discovery.test.ts"
+    },
+    {
+      "t": "2026-10-20T00:20:12Z",
+      "kind": "run",
+      "text": "cat > /tmp/probe-tie.mjs << 'EOF' import { findNewLaunches } from \"/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/dist/discovery.js\"; EOF echo skip"
+    },
+    {
+      "t": "2026-10-20T00:20:26Z",
+      "kind": "edit",
+      "text": "rug-radar/tmp-probe-tie.ts"
+    },
+    {
+      "t": "2026-10-20T00:20:27Z",
+      "kind": "run",
+      "text": "node --import tsx tmp-probe-tie.ts"
+    },
+    {
+      "t": "2026-10-20T00:20:32Z",
+      "kind": "run",
+      "text": "grep -rn \"findNewLaunches\\|sinceBlockTime\\|newestBlockTime\" --include=\"*.ts\" src | grep -v \".test.ts\""
     }
   ],
   "schedule": {
