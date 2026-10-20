@@ -1,10 +1,9 @@
 {
-  "updated_at": "2026-10-20T19:17:04Z",
+  "updated_at": "2026-10-20T19:17:06Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 83,
-    "started_at": "2026-10-20T19:13:51Z",
     "turns": 43
   },
   "round": {
@@ -781,15 +780,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 1.0991
+    },
+    {
+      "date": "2026-10-20T19:13:51Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 44,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0083.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 1.3749
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-20T14:17:43Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
     {
       "t": "2026-10-20T14:17:44Z",
       "kind": "read",
@@ -1184,6 +1187,11 @@
       "t": "2026-10-20T19:17:04Z",
       "kind": "think",
       "text": "Changes are in place and the tree is otherwise clean (I'm not committing \u2014 the runner handles that per the project rules)."
+    },
+    {
+      "t": "2026-10-20T19:17:06Z",
+      "kind": "done",
+      "text": "Session 83 finished \u00b7 43 steps \u00b7 covered by Claude subscription ($1.37 API value)"
     }
   ],
   "schedule": {
