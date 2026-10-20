@@ -1,11 +1,10 @@
 {
-  "updated_at": "2026-10-20T00:23:32Z",
+  "updated_at": "2026-10-20T00:23:44Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 80,
-    "started_at": "2026-10-20T00:18:50Z",
-    "turns": 44
+    "turns": 46
   },
   "round": {
     "number": null,
@@ -754,30 +753,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 2.4418
+    },
+    {
+      "date": "2026-10-20T00:18:50Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 47,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0080.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 1.6245
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-19T20:41:59Z",
-      "kind": "run",
-      "text": "timeout 20 node --import tsx tmp-probe-race.ts"
-    },
-    {
-      "t": "2026-10-19T20:42:02Z",
-      "kind": "think",
-      "text": "Confirmed fixed: the late ack now triggers a `logsUnsubscribe` for the stray subscription and no longer resurrects the untracked mint \u2014 `onTrade`/`getTransaction` no longer fire. \u2026"
-    },
-    {
-      "t": "2026-10-19T20:42:03Z",
-      "kind": "run",
-      "text": "rm tmp-probe-race.ts"
-    },
-    {
-      "t": "2026-10-19T20:42:07Z",
-      "kind": "run",
-      "text": "sed -n '1,90p' src/wsDiscovery.test.ts"
-    },
     {
       "t": "2026-10-19T20:42:09Z",
       "kind": "think",
@@ -1157,6 +1145,26 @@
       "t": "2026-10-20T00:23:32Z",
       "kind": "edit",
       "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-20T00:23:33Z",
+      "kind": "run",
+      "text": "git status --short && git diff --stat"
+    },
+    {
+      "t": "2026-10-20T00:23:35Z",
+      "kind": "run",
+      "text": "ls rug-radar/tmp-probe* 2>/dev/null; echo \"none left\"; cd rug-radar && npm test 2>&1 | tail -8"
+    },
+    {
+      "t": "2026-10-20T00:23:43Z",
+      "kind": "think",
+      "text": "Session 80 complete. Summary:"
+    },
+    {
+      "t": "2026-10-20T00:23:44Z",
+      "kind": "done",
+      "text": "Session 80 finished \u00b7 46 steps \u00b7 covered by Claude subscription ($1.62 API value)"
     }
   ],
   "schedule": {
