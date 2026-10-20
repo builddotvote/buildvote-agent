@@ -148,3 +148,21 @@ test("a create-only transaction (no trade) returns null", () => {
 test("trade: empty logs return null", () => {
   assert.equal(detectTradeInstruction(PUMP_FUN_PROGRAM_ID, []), null);
 });
+
+test("a Program log: line whose message happens to start with 'failed' or 'success' is not mistaken for a frame return", () => {
+  // Solana's real frame-exit lines are "Program <id> success" / "Program
+  // <id> failed: ..." where <id> is a base58 pubkey (never contains ":").
+  // "Program log: <msg>" and "Program data: <msg>" are a different line
+  // kind entirely (the program's own msg!()/emit!() output) — if the
+  // invoke-stack walk can't tell them apart from a real return line, a
+  // program logging a message that starts with "failed" or "success"
+  // pops the stack early and the detector loses track of its own frame,
+  // silently dropping a real Create that logs afterwards.
+  const logs = [
+    "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [1]",
+    "Program log: failed validation, retrying anyway",
+    "Program log: Instruction: Create",
+    "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success",
+  ];
+  assert.equal(detectCreateInstruction(PUMP_FUN_PROGRAM_ID, logs), "create");
+});

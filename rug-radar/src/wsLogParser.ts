@@ -15,8 +15,14 @@
 export type CreateVariant = "create" | "create_v2";
 export type TradeKind = "buy" | "sell";
 
-const INVOKE_RE = /^Program (\S+) invoke \[\d+\]$/;
-const RETURN_RE = /^Program \S+ (success|failed)/;
+// The captured token must look like a program id, not the reserved "log:"
+// / "data:" / "return:" prefixes Anchor's own msg!()/emit!() lines use —
+// those are a different line kind than a real invoke/return control line,
+// and a base58 program id never contains a colon, so excluding ":" from the
+// token keeps "Program log: failed ..." (a message that merely starts with
+// the word "failed") from being mistaken for "Program <id> failed: ...".
+const INVOKE_RE = /^Program ([^\s:]+) invoke \[\d+\]$/;
+const RETURN_RE = /^Program [^\s:]+ (success|failed)/;
 
 // Walks the invoke stack and returns only the "Program log:" lines the given
 // program emitted about itself (top of stack == programId) — shared by every

@@ -5191,3 +5191,75 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71) are all
   unchanged — still not a priority on their own.
 - All five TASK.md steps remain functionally complete.
+
+## Session 84 — 2026-10-20
+
+### Done
+- Re-verified the repo first: fresh `npm install`, 226/226 tests, clean
+  typecheck/build, `git status` clean before starting.
+- Took up session 83's pointer and gave `wsLogParser.ts`'s invoke-stack walk
+  (`ownLogLines`, last touched/refactored sessions 30-31) the same
+  "re-derive from scratch" treatment the data-layer modules got in session
+  83, rather than another concurrency sweep.
+- Found and fixed a real bug: `RETURN_RE` (`/^Program \S+ (success|failed)/`)
+  and `INVOKE_RE` captured the token after `"Program "` with `\S+`, which
+  doesn't distinguish a real frame-exit/invoke control line from a
+  `"Program log: <msg>"` or `"Program data: <msg>"` line (Anchor's own
+  `msg!()`/`emit!()` output) whose message text happens to start with the
+  word `"success"` or `"failed"`. E.g. `"Program log: failed validation,
+  retrying anyway"` matched `RETURN_RE` and popped the invoke stack as if
+  pump.fun's own frame had just returned — any genuine
+  `"Program log: Instruction: Create"` line logged afterward would then be
+  silently dropped (stack top no longer the target program), meaning
+  `wsDiscovery.ts`'s real-time path could miss a real launch and fall back
+  only to the slower poller. Confirmed reachable with a standalone repro
+  before touching any code, then wrote a regression test
+  (`wsLogParser.test.ts`, "a Program log: line whose message happens to
+  start with 'failed' or 'success' is not mistaken for a frame return")
+  that failed against the old regexes (`null !== 'create'`).
+  - Fix: real Solana program ids are base58 and never contain a colon,
+    while the reserved line prefixes other than invoke/success/failed
+    (`log:`, `data:`, `return:`) always do. Changed both regexes' token
+    capture from `\S+` to `[^\s:]+`, which still matches real program ids
+    but can no longer match `log:`/`data:`/`return:`.
+  - Re-ran the full suite after the fix: 227/227 (226 + the new regression
+    test), typecheck and build still clean.
+- Re-derived the rest of the walk and both detectors against this same
+  "could a program's own log *content* be mistaken for Solana's own control
+  line format" lens: `INVOKE_RE`'s `$`-anchored `invoke [N]` match has no
+  equivalent risk (a log message would need to be the exact literal text
+  `"invoke [N]"` with nothing else on the line to collide, vs. `RETURN_RE`'s
+  unanchored prefix match which only needed the message's *first word* to
+  collide) — left as `[^\s:]+` for the same defense-in-depth reason, but
+  this particular collision was already effectively closed by the `$`
+  anchor. The `detectCreateInstruction`/`detectTradeInstruction` "last match
+  wins" loops (if a program's own frame logs more than one instruction name
+  across the transaction) were also checked: both current callers in
+  `wsDiscovery.ts` only test the return value for null/non-null as a gate
+  to decide whether to call `resolveTransactionFromSignature`/
+  `resolveTradeFromSignature` — the actual decode happens from raw
+  instruction bytes elsewhere, not from which variant string this detector
+  returns — so "last wins" vs. "first wins" has no behavioral consequence
+  for any current caller. Not a bug, just confirmed inert.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 227/227 passing (one new regression test), all offline, ~2.6s.
+- `git status`: two files touched, both intended
+  (`src/wsLogParser.ts`, `src/wsLogParser.test.ts`).
+
+### Next
+- `wsLogParser.ts`'s invoke-stack walk is now re-derived from scratch and
+  the one bug found this session is fixed with a regression test — don't
+  re-run this exact pass without new evidence.
+- Modules not yet given the "re-derive from scratch" lens:
+  `data/deployerHistory.ts`'s data-fetching logic (as opposed to
+  `signals/deployerHistory.ts`'s score math, already checked session 79)
+  and `rpc.ts`'s response-parsing helpers (as opposed to its
+  `RequestPacer`/concurrency logic, already checked session 82). A future
+  session could pick one of these for the next from-scratch pass.
+- `RESCORE_DELAY_MS` (60s, 14 live samples as of session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71) are all
+  unchanged — still not a priority on their own.
+- All five TASK.md steps remain functionally complete.
