@@ -5108,3 +5108,86 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   sessions 77-79 did) rather than another concurrency sweep, since that
   angle is close to exhausted for now.
 - All five TASK.md steps remain functionally complete.
+
+## Session 83 — 2026-10-20
+
+### Done
+- Re-verified the repo first: `npm install` (fresh sandbox, `node_modules`
+  wasn't present yet), 226/226 tests, clean typecheck/build, `git status`
+  clean before starting.
+- Took up session 82's pointer to switch lenses (math/decoding re-derivation
+  instead of another concurrency sweep). Re-derived the holder-concentration
+  data path end to end, from scratch, since `BalanceIndex`/`rescore.ts` hadn't
+  had that specific treatment before (sessions 78-79's re-derivation pass
+  covered the four signal scorers' own share/ratio math, not the supporting
+  data layer that feeds them):
+  - `balanceIndex.ts`'s `recordTrade`/`getHolders`: buy/sell delta accounting,
+    zero-clamping, FIFO eviction, and the positive-balance/exclusion filter
+    in `getHolders` — all correct, units consistent throughout (raw token
+    base units).
+  - Traced the unit chain across the two different `totalSupply` sources
+    `scoreHolderConcentration` can be called with: `data/holderConcentration.ts`
+    (`getTokenSupply`/`getTokenLargestAccounts`, both already in raw base
+    units per the RPC) and `rescore.ts` (`curve.tokenTotalSupply` from
+    `pumpfun.ts`'s `decodeBondingCurve`). Cross-checked against
+    `decodeTradeInstruction`'s own comment confirming its `amount` arg is
+    "the token amount traded, in the mint's raw base units" — same units
+    `BalanceIndex.recordTrade` accumulates and the same units
+    `tokenTotalSupply` is read in, so no scale mismatch between the two
+    totalSupply sources or between trade amounts and total supply.
+  - Re-derived `holderRescore.ts`'s dev-bundled-buy seeding
+    (`if (launch.bundledBuy) balanceIndex.recordTrade(...)`): confirmed
+    `discovery.ts`'s `resolveLaunchFromSignature` (which sets `bundledBuy`)
+    is shared by both the polling path and `wsDiscovery.ts`'s real-time path
+    per its own comment, so both discovery paths seed the index the same
+    way — not a polling-only behavior that would silently differ for
+    websocket-discovered launches.
+  - Re-read `scorer.ts`'s weighted average and `feed.ts`'s `add`/`update`
+    (in-place replace keyed by mint, no-op if aged out) once more against
+    this specific call path (holder-concentration rescore replacing one
+    signal in an existing feed entry) — both still correct, matching
+    sessions 78-79's prior "reviewed clean" conclusion from the signal-math
+    angle.
+  - No logic bug found in any of the above.
+- Did find one real but non-logic issue: `balanceIndex.ts`'s header comment
+  said "Not wired into holderConcentration yet... deciding how/whether the
+  signal should prefer this over the RPC call is a separate step" — stale.
+  `rescore.ts`'s `rescoreHolderConcentrationFromIndex` (wired into the feed
+  via `holderRescore.ts`/`server.ts`) has had `BalanceIndex.getHolders` as
+  its holder source for a while; the "separate step" this comment describes
+  as still-pending already happened. Fixed the comment to describe the
+  current wiring instead of the pre-rescore.ts state.
+- Also checked `data/bundledBuys.ts`'s `findTokenReceiver`/`findSolSender`
+  (pre/post token and lamport balance diffing) and `findFundingSource`'s
+  oldest-to-newest walk, and `data/holderConcentration.ts`'s
+  `knownTotalSupply` short-circuit — all re-derived from scratch, all
+  correct, no new issues.
+- Ran the full suite again after the comment fix (no production logic
+  changed): still 226/226.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 226/226 passing, all offline, ~4.1s.
+- `git status` clean except the one intended `balanceIndex.ts` comment edit.
+- No behavior change this session — comment accuracy fix only.
+
+### Next
+- The holder-concentration data path (`balanceIndex.ts`, `rescore.ts`,
+  `holderRescore.ts`'s bundled-buy seeding, the totalSupply unit chain) is
+  now re-derived from scratch and checked clean — don't re-run this exact
+  pass without new evidence.
+- `data/bundledBuys.ts`'s balance-diffing helpers and `data/holderConcentration.ts`
+  are also now re-derived and clean.
+- Modules not yet given this specific "re-derive from scratch" treatment:
+  `data/deployerHistory.ts`'s data-fetching logic (as opposed to
+  `signals/deployerHistory.ts`'s score math, already checked session 79),
+  `wsLogParser.ts`'s invoke-stack walk (last touched/refactored session
+  30-31, not re-derived with this specific lens since), and `rpc.ts`'s
+  response-parsing helpers (as opposed to its `RequestPacer`/concurrency
+  logic, already checked session 82). A future session could pick one of
+  these for the next from-scratch pass.
+- `RESCORE_DELAY_MS` (60s, 14 live samples as of session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71) are all
+  unchanged — still not a priority on their own.
+- All five TASK.md steps remain functionally complete.

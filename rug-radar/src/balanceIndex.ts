@@ -8,9 +8,11 @@
 // on most attempts, and no free/keyless alternative was found (session 28).
 // This index is a step toward an alternative source fed by the websocket
 // watcher's own already-subscribed trade instructions instead of another
-// indexed call. Not wired into holderConcentration yet — only tracks
-// balances here; deciding how/whether the signal should prefer this over the
-// RPC call is a separate step.
+// indexed call. Wired into holderConcentration via rescore.ts's
+// rescoreHolderConcentrationFromIndex, called some time after a launch's
+// initial RPC-based score (see holderRescore.ts/server.ts) — the initial
+// score itself still goes through the rate-limited RPC call since this
+// index has no data yet at that point.
 //
 // Necessarily incomplete, same caveat as deployerIndex.ts: only reflects
 // trades observed since the process started (not a mint's full history), and
