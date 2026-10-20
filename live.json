@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T19:14:45Z",
+  "updated_at": "2026-10-20T19:15:12Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 83,
     "started_at": "2026-10-20T19:13:51Z",
-    "turns": 12
+    "turns": 19
   },
   "round": {
     "number": null,
@@ -786,41 +786,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T08:34:25Z",
-      "kind": "think",
-      "text": "Bug confirmed. Now let's remove the probe and implement the fix: add an in-flight guard directly to `PollState` so a second overlapping `pollOnce` call is dropped rather than raci\u2026"
-    },
-    {
-      "t": "2026-10-20T08:34:26Z",
-      "kind": "run",
-      "text": "rm /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/_probe_overlap.ts"
-    },
-    {
-      "t": "2026-10-20T08:34:39Z",
-      "kind": "edit",
-      "text": "rug-radar/src/poller.ts"
-    },
-    {
-      "t": "2026-10-20T08:34:40Z",
-      "kind": "think",
-      "text": "Now update `pollOnce` itself to check and set this guard:"
-    },
-    {
-      "t": "2026-10-20T08:34:45Z",
-      "kind": "edit",
-      "text": "rug-radar/src/poller.ts"
-    },
-    {
-      "t": "2026-10-20T08:34:47Z",
-      "kind": "read",
-      "text": "rug-radar/src/poller.ts"
-    },
-    {
-      "t": "2026-10-20T08:35:00Z",
-      "kind": "edit",
-      "text": "rug-radar/src/poller.ts"
-    },
-    {
       "t": "2026-10-20T08:35:02Z",
       "kind": "think",
       "text": "Now let's verify the full file and run typecheck/tests."
@@ -1184,6 +1149,41 @@
       "t": "2026-10-20T19:14:44Z",
       "kind": "read",
       "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-20T19:14:53Z",
+      "kind": "read",
+      "text": "rug-radar/src/balanceIndex.ts"
+    },
+    {
+      "t": "2026-10-20T19:14:55Z",
+      "kind": "run",
+      "text": "cd rug-radar && cat src/signals/holderConcentration.ts"
+    },
+    {
+      "t": "2026-10-20T19:15:01Z",
+      "kind": "run",
+      "text": "cd rug-radar && grep -n \"totalSupply\\|HolderConcentrationInput\\|scoreHolderConcentration\\|getTokenLargestAccounts\\|getHolders\" src/pipeline.ts src/rpc.ts src/holderRescore.ts 2>/d\u2026"
+    },
+    {
+      "t": "2026-10-20T19:15:03Z",
+      "kind": "run",
+      "text": "pwd; grep -n \"totalSupply\\|HolderConcentrationInput\\|scoreHolderConcentration\\|getTokenLargestAccounts\\|getHolders\" src/pipeline.ts src/rpc.ts src/holderRescore.ts 2>/dev/null"
+    },
+    {
+      "t": "2026-10-20T19:15:05Z",
+      "kind": "read",
+      "text": "rug-radar/src/rescore.ts"
+    },
+    {
+      "t": "2026-10-20T19:15:11Z",
+      "kind": "read",
+      "text": "rug-radar/src/data"
+    },
+    {
+      "t": "2026-10-20T19:15:12Z",
+      "kind": "run",
+      "text": "ls src/data; echo \"---\"; cat src/data/bondingCurve.ts 2>/dev/null"
     }
   ],
   "schedule": {
