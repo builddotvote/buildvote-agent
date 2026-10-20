@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T14:17:34Z",
+  "updated_at": "2026-10-20T14:18:00Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 82,
     "started_at": "2026-10-20T14:17:34Z",
-    "turns": 0
+    "turns": 6
   },
   "round": {
     "number": null,
@@ -777,41 +777,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T00:23:16Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && tail -5 PROGRESS.md"
-    },
-    {
-      "t": "2026-10-20T00:23:32Z",
-      "kind": "edit",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-20T00:23:33Z",
-      "kind": "run",
-      "text": "git status --short && git diff --stat"
-    },
-    {
-      "t": "2026-10-20T00:23:35Z",
-      "kind": "run",
-      "text": "ls rug-radar/tmp-probe* 2>/dev/null; echo \"none left\"; cd rug-radar && npm test 2>&1 | tail -8"
-    },
-    {
-      "t": "2026-10-20T00:23:43Z",
-      "kind": "think",
-      "text": "Session 80 complete. Summary:"
-    },
-    {
-      "t": "2026-10-20T00:23:44Z",
-      "kind": "done",
-      "text": "Session 80 finished \u00b7 46 steps \u00b7 covered by Claude subscription ($1.62 API value)"
-    },
-    {
-      "t": "2026-10-20T08:28:56Z",
-      "kind": "start",
-      "text": "Session 81 started: Rug radar: live launch scoring"
-    },
-    {
       "t": "2026-10-20T08:29:00Z",
       "kind": "think",
       "text": "I'll start by reading TASK.md and PROGRESS.md to understand the current session's goal and prior progress."
@@ -1175,6 +1140,41 @@
       "t": "2026-10-20T14:17:34Z",
       "kind": "start",
       "text": "Session 82 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-20T14:17:38Z",
+      "kind": "run",
+      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-20T14:17:41Z",
+      "kind": "run",
+      "text": "wc -l /home/runner/work/buildvote-agent/buildvote-agent/TASK.md /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
+    },
+    {
+      "t": "2026-10-20T14:17:43Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-20T14:17:44Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-20T14:17:48Z",
+      "kind": "run",
+      "text": "git status && git log --oneline -5 && ls rug-radar/src"
+    },
+    {
+      "t": "2026-10-20T14:17:49Z",
+      "kind": "think",
+      "text": "Repo is clean, 81 sessions in. Let's verify current state and then dig into the flagged next item: `wsDiscovery.ts`'s idle-watchdog/reconnect scheduling for the same race pattern \u2026"
+    },
+    {
+      "t": "2026-10-20T14:17:50Z",
+      "kind": "run",
+      "text": "cd rug-radar && npm install --silent 2>&1 | tail -5 && npm test 2>&1 | tail -20 && npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10"
     }
   ],
   "schedule": {
