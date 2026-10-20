@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-20T19:14:19Z",
+  "updated_at": "2026-10-20T19:14:45Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 83,
     "started_at": "2026-10-20T19:13:51Z",
-    "turns": 7
+    "turns": 12
   },
   "round": {
     "number": null,
@@ -786,36 +786,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T08:31:52Z",
-      "kind": "read",
-      "text": "rug-radar/src/discovery.ts"
-    },
-    {
-      "t": "2026-10-20T08:32:25Z",
-      "kind": "run",
-      "text": "grep -n \"sinceBlockTime\\|overlap\\|concurrent\" src/poller.test.ts | head -40"
-    },
-    {
-      "t": "2026-10-20T08:33:18Z",
-      "kind": "think",
-      "text": "Let me confirm this hypothesis with a throwaway offline probe before touching any code \u2014 simulating two overlapping `pollOnce` calls sharing the same `PollState`."
-    },
-    {
-      "t": "2026-10-20T08:33:25Z",
-      "kind": "edit",
-      "text": "rug-radar/src/_probe_overlap.ts"
-    },
-    {
-      "t": "2026-10-20T08:33:27Z",
-      "kind": "run",
-      "text": "npx tsx src/_probe_overlap.ts"
-    },
-    {
-      "t": "2026-10-20T08:34:21Z",
-      "kind": "run",
-      "text": "grep -n \"deepEqual\\|deepStrictEqual\\|PollState\" src/*.ts"
-    },
-    {
       "t": "2026-10-20T08:34:25Z",
       "kind": "think",
       "text": "Bug confirmed. Now let's remove the probe and implement the fix: add an in-flight guard directly to `PollState` so a second overlapping `pollOnce` call is dropped rather than raci\u2026"
@@ -1184,6 +1154,36 @@
       "t": "2026-10-20T19:14:16Z",
       "kind": "run",
       "text": "npm test 2>&1 | tail -60"
+    },
+    {
+      "t": "2026-10-20T19:14:22Z",
+      "kind": "think",
+      "text": "Good, 226/226 pass after `npm install` (node_modules just wasn't present). Repo is in the committed state from session 82. Let me check typecheck/build and git status before decid\u2026"
+    },
+    {
+      "t": "2026-10-20T19:14:23Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -20; echo \"---build---\"; npm run build 2>&1 | tail -20; echo \"---git status---\"; cd /home/runner/work/buildvote-agent/buildvote-agent && git status"
+    },
+    {
+      "t": "2026-10-20T19:14:30Z",
+      "kind": "run",
+      "text": "grep -n \"^## Session\" PROGRESS.md | tail -20"
+    },
+    {
+      "t": "2026-10-20T19:14:31Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-20T19:14:42Z",
+      "kind": "run",
+      "text": "grep -n -i \"wsLogParser\" PROGRESS.md | tail -20"
+    },
+    {
+      "t": "2026-10-20T19:14:44Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
     }
   ],
   "schedule": {
