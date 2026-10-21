@@ -1,10 +1,11 @@
 {
-  "updated_at": "2026-10-20T23:54:59Z",
+  "updated_at": "2026-10-21T04:42:28Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 84,
-    "turns": 25
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 85,
+    "started_at": "2026-10-21T04:42:28Z",
+    "turns": 0
   },
   "round": {
     "number": null,
@@ -803,11 +804,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T19:14:22Z",
-      "kind": "think",
-      "text": "Good, 226/226 pass after `npm install` (node_modules just wasn't present). Repo is in the committed state from session 82. Let me check typecheck/build and git status before decid\u2026"
-    },
-    {
       "t": "2026-10-20T19:14:23Z",
       "kind": "run",
       "text": "npm run typecheck 2>&1 | tail -20; echo \"---build---\"; npm run build 2>&1 | tail -20; echo \"---git status---\"; cd /home/runner/work/buildvote-agent/buildvote-agent && git status"
@@ -1201,11 +1197,16 @@
       "t": "2026-10-20T23:54:59Z",
       "kind": "done",
       "text": "Session 84 finished \u00b7 25 steps \u00b7 covered by Claude subscription ($0.91 API value)"
+    },
+    {
+      "t": "2026-10-21T04:42:28Z",
+      "kind": "start",
+      "text": "Session 85 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-10-21T02:51:16Z"
+    "next_run": "2026-10-21T07:42:28Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
