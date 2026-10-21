@@ -5494,3 +5494,95 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   speculative non-SOL-quote-mint risk (session 86; no action needed
   unless live evidence appears).
 - All five TASK.md steps remain functionally complete.
+
+## Session 88 — 2026-10-21
+
+### Done
+- Fresh checkout again had no `node_modules` (same as sessions 85-87) — ran
+  `npm install` before typecheck/build/test; recurring per-session
+  environment step, not a code issue.
+- Took up session 87's pointer: gave the orchestration layer the
+  "re-derive from scratch" treatment. Walked each module independently
+  against its tests rather than just re-reading comments:
+  - `pipeline.ts`: traced the shared bonding-curve-fetch failure path by
+    hand — when `getAccountInfo` throws, `curve` becomes `undefined`, and
+    `holder-concentration` survives (its data fetcher falls back to a
+    separate `getTokenSupply` call) while `liquidity` fails (its fetcher
+    has no fallback, just re-calls `fetchBondingCurveAccount`, which fails
+    again). This matches `pipeline.test.ts`'s "drops a signal" case exactly
+    — confirmed by reading `data/holderConcentration.ts` and
+    `data/liquidity.ts` side by side, not just trusting the test's
+    expected names list. No bug.
+  - `poller.ts`, `watcherOnLaunch.ts`: both discovery paths' guard ordering
+    (`feed.has` -> `scoringInFlight.tryAcquire` -> `scoringGate.tryAcquire`
+    -> score -> release both in `finally`) matches exactly between the two
+    (poller.ts's backstop path and the websocket watcher's path), and the
+    `PollState.inFlight` synchronous-check-before-first-await pattern is
+    correct for preventing overlapping `pollOnce` calls on the same state.
+    No bug.
+  - `scoringGate.ts`, `scoringInFlight.ts`: trivial, correct as written.
+  - `rescore.ts`, `holderRescore.ts`: confirmed `excludedAddresses: []`
+    passed to `scoreHolderConcentration` in `rescore.ts` is correct, not a
+    missing-exclusion bug — `balanceIndex.getHolders()` already filtered
+    the bonding curve and known program accounts out *before* this point
+    (checked `balanceIndex.ts`'s `getHolders` directly). Confirmed
+    `holderRescore.ts`'s `.finally(() => watcher.untrackMint(...))` always
+    runs after an early `if (!signal) return` inside `.then()` (Promise
+    semantics), so no leaked mint subscription. No bug in either.
+  - `wsDiscovery.ts`'s reconnect logic: found a real bug. `ws.onclose`
+    didn't check that the closing socket was still `this.ws` before acting
+    on it (unlike `startIdleWatchdog`'s interval callback, which already
+    has this exact guard: `if (this.ws !== ws) { ... return; }`). A real
+    WebSocket's close event fires asynchronously, so a `stop()` followed
+    by a `start()` (both public methods, a legitimate restart sequence)
+    can leave the first socket's close event to arrive *after* a second,
+    healthy connection is already open. Without the guard, that stale
+    close would mark the new connection as disconnected, stop its idle
+    watchdog, and schedule a spurious extra reconnect — opening a third
+    socket on top of the still-good second one.
+  - Reproduced it first with a new test using the existing `FakeWebSocket`
+    harness (`sleep` overridden to resolve immediately, same as the
+    existing "reconnects and resubscribes" test, so `scheduleReconnect`'s
+    `.then()` actually runs inside the test instead of waiting on a real
+    1000ms timer): start -> open -> stop -> start -> open (second socket)
+    -> manually fire the *first* socket's `onclose` again (simulating the
+    late real-world close event) -> asserted only 2 sockets exist. This
+    failed with `3 !== 2` on the pre-fix code, confirming the bug was
+    live, not theoretical.
+  - Fix: added the same `if (this.ws !== ws) return;` guard to the start
+    of `ws.onclose` in `connect()`. Re-ran the new test: passes. Re-ran
+    the full `wsDiscovery.test.ts` suite (22 tests) and the full repo
+    suite: all pass, nothing else disturbed.
+  - Not reachable by `server.ts` today (it constructs one `LaunchWatcher`
+    and calls `start()` once, never `stop()`), so this was never hit live
+    — but `start()`/`stop()` are both public API and the class's own doc
+    comment calls `stop()` "a handle to stop watching", implying restart
+    is a supported use, not undefined behavior. Worth fixing now rather
+    than waiting for a future caller (e.g. a restart/health-check path) to
+    hit it.
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 228/228 passing (227 + 1 new regression test), offline.
+- `git status` before this edit: one source file and one test file
+  changed (`src/wsDiscovery.ts`, `src/wsDiscovery.test.ts`).
+
+### Next
+- The orchestration layer (`pipeline.ts`, `poller.ts`, `watcherOnLaunch.ts`,
+  `scoringGate.ts`, `scoringInFlight.ts`, `rescore.ts`, `holderRescore.ts`,
+  `wsDiscovery.ts`) has now had the "re-derive from scratch" pass, same as
+  the data layer (sessions 84-86) and the signal-scoring layer (session
+  87). One real bug found and fixed this session (the stale-close race in
+  `wsDiscovery.ts`), on top of session 84's `wsLogParser.ts` fix.
+- No from-scratch candidates remain among the core modules swept so far.
+  A future session should either look at the remaining untouched files
+  (`server.ts`'s own wiring, `deployerIndex.ts`, `knownAccounts.ts`,
+  `requestHandler.ts`, `config.ts`, `rpc.ts`'s request/retry plumbing
+  itself as opposed to its response-shape parsing already checked in
+  session 85) or fall back to the standing low-priority items below.
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71), and the
+  speculative non-SOL-quote-mint risk (session 86; no action needed
+  unless live evidence appears).
+- All five TASK.md steps remain functionally complete.

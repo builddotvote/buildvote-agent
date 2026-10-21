@@ -323,6 +323,38 @@ test("reconnects and resubscribes after the connection drops", async () => {
   watcher.stop();
 });
 
+test("a stale close event from a superseded connection does not disturb the current one", async () => {
+  const sockets: FakeWebSocket[] = [];
+  const watcher = new LaunchWatcher("wss://fake", fakeRpc(async () => null), {
+    onLaunch: () => {},
+    sleep: async () => {},
+    wsFactory: (url) => {
+      const ws = new FakeWebSocket();
+      sockets.push(ws);
+      return ws;
+    },
+  });
+
+  watcher.start();
+  sockets[0].emitOpen();
+  watcher.stop();
+  watcher.start();
+  sockets[1].emitOpen();
+
+  // The first socket's close already fired synchronously during stop() above
+  // (and was correctly ignored since this.stopped was true by then). Here we
+  // simulate a real-world WebSocket's close event arriving late — after a
+  // restart has already moved on to a second, healthy connection — which a
+  // real socket's asynchronous close handshake makes possible even though
+  // this fake's close() fires onclose synchronously.
+  sockets[0].emitDrop();
+  await flushMicrotasks();
+
+  assert.equal(sockets.length, 2, "a stale close from the superseded socket must not open a third one");
+
+  watcher.stop();
+});
+
 test("does not reconnect after stop() is called", async () => {
   const sockets: FakeWebSocket[] = [];
   const watcher = new LaunchWatcher("wss://fake", fakeRpc(async () => null), {

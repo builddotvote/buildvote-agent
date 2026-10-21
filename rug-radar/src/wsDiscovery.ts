@@ -247,6 +247,13 @@ export class LaunchWatcher {
     ws.onmessage = (event) => this.handleMessage(event.data);
     ws.onerror = (err) => this.opts.onError?.(err);
     ws.onclose = () => {
+      // A real socket's close event fires asynchronously, so it can arrive
+      // after a stop()+start() has already moved on to a newer connection
+      // (this.ws no longer === ws) — same stale-connection guard as
+      // startIdleWatchdog's interval callback. Without this, a late close
+      // from the superseded socket would mark the new, healthy connection
+      // as disconnected and schedule a spurious extra reconnect.
+      if (this.ws !== ws) return;
       this.connected = false;
       this.stopIdleWatchdog();
       if (this.stopped) return;
