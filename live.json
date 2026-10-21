@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-21T21:44:04Z",
+  "updated_at": "2026-10-21T21:44:34Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 88,
     "started_at": "2026-10-21T21:40:26Z",
-    "turns": 39
+    "turns": 42
   },
   "round": {
     "number": null,
@@ -831,26 +831,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-21T17:10:11Z",
-      "kind": "tool",
-      "text": "ToolSearch"
-    },
-    {
-      "t": "2026-10-21T17:10:14Z",
-      "kind": "tool",
-      "text": "TaskCreate"
-    },
-    {
-      "t": "2026-10-21T17:10:17Z",
-      "kind": "tool",
-      "text": "TaskCreate"
-    },
-    {
-      "t": "2026-10-21T17:10:19Z",
-      "kind": "tool",
-      "text": "TaskCreate"
-    },
-    {
       "t": "2026-10-21T17:10:21Z",
       "kind": "tool",
       "text": "TaskCreate"
@@ -1229,6 +1209,26 @@
       "t": "2026-10-21T21:44:01Z",
       "kind": "run",
       "text": "npx tsx --test src/wsDiscovery.test.ts 2>&1 | tail -15 && echo \"---FULL SUITE---\" && npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -15"
+    },
+    {
+      "t": "2026-10-21T21:44:07Z",
+      "kind": "run",
+      "text": "npm run build 2>&1 | tail -20 && git status"
+    },
+    {
+      "t": "2026-10-21T21:44:10Z",
+      "kind": "think",
+      "text": "All green: typecheck, build, and 228/228 tests (227 + 1 new regression test). Now updating PROGRESS.md with this session's findings."
+    },
+    {
+      "t": "2026-10-21T21:44:11Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"^## Session 87\" PROGRESS.md"
+    },
+    {
+      "t": "2026-10-21T21:44:34Z",
+      "kind": "run",
+      "text": "cat >> PROGRESS.md << 'EOF'  ## Session 88 \u2014 2026-10-21  ### Done - Fresh checkout again had no `node_modules` (same as sessions 85-87) \u2014 ran   `npm install` before typecheck/buil\u2026"
     }
   ],
   "schedule": {
