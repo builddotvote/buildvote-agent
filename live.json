@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-21T11:45:19Z",
+  "updated_at": "2026-10-21T11:45:46Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 86,
     "started_at": "2026-10-21T11:44:52Z",
-    "turns": 8
+    "turns": 13
   },
   "round": {
     "number": null,
@@ -813,51 +813,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T19:17:06Z",
-      "kind": "done",
-      "text": "Session 83 finished \u00b7 43 steps \u00b7 covered by Claude subscription ($1.37 API value)"
-    },
-    {
-      "t": "2026-10-20T23:51:16Z",
-      "kind": "start",
-      "text": "Session 84 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-20T23:51:21Z",
-      "kind": "run",
-      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md 2>/dev/null"
-    },
-    {
-      "t": "2026-10-20T23:51:24Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-20T23:51:25Z",
-      "kind": "run",
-      "text": "find /home/runner/work/buildvote-agent/buildvote-agent/rug-radar -type f -not -path \"*/node_modules/*\" | sort"
-    },
-    {
-      "t": "2026-10-20T23:51:28Z",
-      "kind": "run",
-      "text": "wc -l /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
-    },
-    {
-      "t": "2026-10-20T23:51:30Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-20T23:51:36Z",
-      "kind": "run",
-      "text": "git status && git log --oneline -5"
-    },
-    {
-      "t": "2026-10-20T23:51:39Z",
-      "kind": "think",
-      "text": "Clean tree, session 83 already committed. I'll start session 84: re-verify the baseline, then pick up the \"Next\" pointer \u2014 a from-scratch re-derivation of one of the untouched mod\u2026"
-    },
-    {
       "t": "2026-10-20T23:51:40Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --no-audit --no-fund 2>&1 | tail -5 && npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -20"
@@ -1211,6 +1166,51 @@
       "t": "2026-10-21T11:45:19Z",
       "kind": "run",
       "text": "git log --oneline -20 && echo \"---\" && ls rug-radar && echo \"---src---\" && ls rug-radar/src && echo \"---data---\" && ls rug-radar/src/data 2>/dev/null"
+    },
+    {
+      "t": "2026-10-21T11:45:21Z",
+      "kind": "think",
+      "text": "Let's run the test suite first to confirm current state, then pick up the \"from-scratch\" review on one of the untouched data modules session 85 flagged."
+    },
+    {
+      "t": "2026-10-21T11:45:22Z",
+      "kind": "run",
+      "text": "cd rug-radar && npm run typecheck 2>&1 | tail -20 && echo \"===TEST===\" && npm test 2>&1 | tail -40"
+    },
+    {
+      "t": "2026-10-21T11:45:26Z",
+      "kind": "think",
+      "text": "Same issue as session 85 \u2014 fresh checkout, `node_modules` missing. Let me install deps."
+    },
+    {
+      "t": "2026-10-21T11:45:27Z",
+      "kind": "run",
+      "text": "cd rug-radar && npm install 2>&1 | tail -20"
+    },
+    {
+      "t": "2026-10-21T11:45:32Z",
+      "kind": "run",
+      "text": "pwd"
+    },
+    {
+      "t": "2026-10-21T11:45:34Z",
+      "kind": "think",
+      "text": "Already in rug-radar from the prior command. Running install here."
+    },
+    {
+      "t": "2026-10-21T11:45:34Z",
+      "kind": "run",
+      "text": "npm install 2>&1 | tail -20"
+    },
+    {
+      "t": "2026-10-21T11:45:37Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -20 && echo \"===BUILD===\" && npm run build 2>&1 | tail -20 && echo \"===TEST===\" && npm test 2>&1 | tail -15"
+    },
+    {
+      "t": "2026-10-21T11:45:46Z",
+      "kind": "think",
+      "text": "Clean baseline: 227/227 passing, typecheck/build clean. Now let's do the \"re-derive from scratch\" review session 85 pointed to next \u2014 the remaining `data/*.ts` fetchers that haven\u2026"
     }
   ],
   "schedule": {
