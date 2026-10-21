@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-21T11:46:40Z",
+  "updated_at": "2026-10-21T11:47:06Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 86,
     "started_at": "2026-10-21T11:44:52Z",
-    "turns": 22
+    "turns": 28
   },
   "round": {
     "number": null,
@@ -813,41 +813,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T23:53:28Z",
-      "kind": "run",
-      "text": "cat > /tmp/repro.test.mjs << 'EOF' EOF node --experimental-strip-types -e \" const INVOKE_RE = /^Program (\\S+) invoke \\[\\d+\\]\\$/; const RETURN_RE = /^Program \\S+ (success|failed)/;\u2026"
-    },
-    {
-      "t": "2026-10-20T23:53:31Z",
-      "kind": "run",
-      "text": "node -e \" const RETURN_RE = /^Program \\S+ (success|failed)/; console.log('log: failed match?', RETURN_RE.test('Program log: failed validation, retrying')); console.log('log: succe\u2026"
-    },
-    {
-      "t": "2026-10-20T23:53:33Z",
-      "kind": "think",
-      "text": "Confirmed. Now let me add a regression test demonstrating the real consequence (a missed `Create` detection) and then fix the regex."
-    },
-    {
-      "t": "2026-10-20T23:53:40Z",
-      "kind": "edit",
-      "text": "rug-radar/src/wsLogParser.test.ts"
-    },
-    {
-      "t": "2026-10-20T23:53:42Z",
-      "kind": "run",
-      "text": "npx tsx --test src/wsLogParser.test.ts 2>&1 | tail -30"
-    },
-    {
-      "t": "2026-10-20T23:53:45Z",
-      "kind": "think",
-      "text": "Bug confirmed reachable. Now applying the fix: exclude the colon-suffixed reserved tokens (`log:`, `data:`, `return:`) from the program-id capture, since real base58 program IDs n\u2026"
-    },
-    {
-      "t": "2026-10-20T23:53:49Z",
-      "kind": "edit",
-      "text": "rug-radar/src/wsLogParser.ts"
-    },
-    {
       "t": "2026-10-20T23:53:51Z",
       "kind": "run",
       "text": "npm run typecheck 2>&1 | tail -10 && npm test 2>&1 | tail -15"
@@ -1211,6 +1176,41 @@
       "t": "2026-10-21T11:46:36Z",
       "kind": "run",
       "text": "grep -n \"BondingCurve\\b\\|bonding curve account\\|decodeBondingCurve\\|struct\\|fetched.*IDL\\|raw IDL\\|bonding-curve\" README.md | head -60"
+    },
+    {
+      "t": "2026-10-21T11:46:42Z",
+      "kind": "run",
+      "text": "grep -n \"BondingCurve account\\|bonding curve.*layout\\|bonding_curve.*struct\\|creator.*pubkey\\|complete.*bool\" PROGRESS.md | head -40"
+    },
+    {
+      "t": "2026-10-21T11:46:45Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"BondingCurve account\\|bonding curve.*layout\\|bonding_curve.*struct\\|creator.*pubkey\\|complete.*bool\\|accs.rs\\|stat\u2026"
+    },
+    {
+      "t": "2026-10-21T11:46:47Z",
+      "kind": "run",
+      "text": "sed -n '85,130p' PROGRESS.md"
+    },
+    {
+      "t": "2026-10-21T11:46:53Z",
+      "kind": "tool",
+      "text": "ToolSearch"
+    },
+    {
+      "t": "2026-10-21T11:46:58Z",
+      "kind": "run",
+      "text": "curl -sL \"https://raw.githubusercontent.com/pump-fun/pump-public-docs/main/idl/pump.json\" -o /tmp/pump_idl.json && wc -c /tmp/pump_idl.json && head -c 300 /tmp/pump_idl.json"
+    },
+    {
+      "t": "2026-10-21T11:47:00Z",
+      "kind": "think",
+      "text": "Good, got the raw IDL directly. Now let's parse the BondingCurve account struct definition myself."
+    },
+    {
+      "t": "2026-10-21T11:47:01Z",
+      "kind": "run",
+      "text": "cd /tmp && python3 -c \" import json d = json.load(open('pump_idl.json')) for t in d.get('types', []):     if t['name'].lower() == 'bondingcurve':         print(json.dumps(t, inden\u2026"
     }
   ],
   "schedule": {
