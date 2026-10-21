@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-21T21:40:53Z",
+  "updated_at": "2026-10-21T21:41:20Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 88,
     "started_at": "2026-10-21T21:40:26Z",
-    "turns": 9
+    "turns": 16
   },
   "round": {
     "number": null,
@@ -831,41 +831,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-21T11:46:58Z",
-      "kind": "run",
-      "text": "curl -sL \"https://raw.githubusercontent.com/pump-fun/pump-public-docs/main/idl/pump.json\" -o /tmp/pump_idl.json && wc -c /tmp/pump_idl.json && head -c 300 /tmp/pump_idl.json"
-    },
-    {
-      "t": "2026-10-21T11:47:00Z",
-      "kind": "think",
-      "text": "Good, got the raw IDL directly. Now let's parse the BondingCurve account struct definition myself."
-    },
-    {
-      "t": "2026-10-21T11:47:01Z",
-      "kind": "run",
-      "text": "cd /tmp && python3 -c \" import json d = json.load(open('pump_idl.json')) for t in d.get('types', []):     if t['name'].lower() == 'bondingcurve':         print(json.dumps(t, inden\u2026"
-    },
-    {
-      "t": "2026-10-21T11:47:13Z",
-      "kind": "think",
-      "text": "Interesting \u2014 the IDL shows these fields are named `virtual_quote_reserves`/`real_quote_reserves` (not SOL-specific), and the struct has a `quote_mint` field. That means pump.fun \u2026"
-    },
-    {
-      "t": "2026-10-21T11:47:15Z",
-      "kind": "run",
-      "text": "cd /tmp && python3 -c \" import json d = json.load(open('pump_idl.json')) for t in d.get('types', []):     if t['name'].lower() in ('createevent','create','createv2'):         prin\u2026"
-    },
-    {
-      "t": "2026-10-21T11:47:26Z",
-      "kind": "run",
-      "text": "cd /tmp && python3 -c \" import json d = json.load(open('pump_idl.json')) for i in d.get('instructions', []):     name = i['name']     if 'create' in name.lower():         print(na\u2026"
-    },
-    {
-      "t": "2026-10-21T11:47:31Z",
-      "kind": "run",
-      "text": "cd /tmp && python3 -c \" import json d = json.load(open('pump_idl.json')) for i in d.get('instructions', []):     if i['name'] in ('create','create_v2'):         print('===', i['na\u2026"
-    },
-    {
       "t": "2026-10-21T11:47:46Z",
       "kind": "run",
       "text": "cd /tmp && python3 -c \" import json d = json.load(open('pump_idl.json')) for t in d.get('types', []):     if t['name'].lower() in ('global','globalparams') :         print('===', \u2026"
@@ -1229,6 +1194,41 @@
       "t": "2026-10-21T21:40:52Z",
       "kind": "read",
       "text": "rug-radar/src/pipeline.ts"
+    },
+    {
+      "t": "2026-10-21T21:40:54Z",
+      "kind": "run",
+      "text": "ls src/*.test.ts 2>/dev/null | grep -iE \"pipeline|poller\"; find . -iname \"*pipeline*\" -o -iname \"*poller*\" | grep -v node_modules"
+    },
+    {
+      "t": "2026-10-21T21:40:55Z",
+      "kind": "read",
+      "text": "rug-radar/src/pipeline.test.ts"
+    },
+    {
+      "t": "2026-10-21T21:40:59Z",
+      "kind": "read",
+      "text": "rug-radar/src/scorer.ts"
+    },
+    {
+      "t": "2026-10-21T21:41:04Z",
+      "kind": "read",
+      "text": "rug-radar/src/poller.ts"
+    },
+    {
+      "t": "2026-10-21T21:41:06Z",
+      "kind": "run",
+      "text": "grep -n \"^test(\" src/poller.test.ts"
+    },
+    {
+      "t": "2026-10-21T21:41:11Z",
+      "kind": "read",
+      "text": "rug-radar/src/feed.ts"
+    },
+    {
+      "t": "2026-10-21T21:41:14Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/bondingCurve.ts"
     }
   ],
   "schedule": {
