@@ -5419,3 +5419,78 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   speculative non-SOL-quote-mint risk noted above (no action needed unless
   live evidence appears).
 - All five TASK.md steps remain functionally complete.
+
+## Session 87 — 2026-10-21
+
+### Done
+- Fresh checkout again had no `node_modules` (same as sessions 85/86) —
+  ran `npm install` before typecheck/build/test; recurring per-session
+  environment step, not a code issue.
+- Took up session 86's pointer: gave the `signals/*.ts` scoring logic the
+  "re-derive from scratch" treatment (the data-fetching layer under
+  `data/*.ts` had already been fully covered by sessions 84-86; the
+  scoring math itself had not). Walked each module's thresholds and
+  edge cases independently against its tests rather than just re-reading
+  comments:
+  - `signals/deployerHistory.ts`: thin-history cap (< 3 prior launches,
+    capped at 40), and the two fixed-score bands (>= 80% dead -> 90,
+    50-80% dead -> 55) vs. the continuous `round(deadShare * 100)` below
+    50% — all boundary values (exactly 50%, exactly 80%, exactly 3 prior
+    launches) checked by hand against `deployerHistory.test.ts`'s 9 cases
+    and match.
+  - `signals/bundledBuys.ts`: confirmed the denominator is distinct early
+    *buyers* (a `Set`), not buy events, so a bundled wallet repeat-buying
+    small amounts can't dilute its own detected share — matches both the
+    code comment and the dedicated regression test for it. "Largest
+    funding-source group wins" uses strict `>` (first-seen-wins on ties),
+    but since the score only depends on the winning group's *size*, not
+    which wallet source ties go to, a tie can't change the score. Same
+    >= 50% / 30-50% / continuous-below-30% band shape as deployer-history,
+    all boundaries checked against the 10 existing test cases and match.
+  - `signals/holderConcentration.ts`: exclusion-then-sort-then-top-10
+    order checked against `getTokenLargestAccounts`'s real shape (already
+    sorted, but the code re-sorts anyway after filtering excluded
+    addresses, which is correct since removing excluded accounts can
+    change who's in the top 10). Same >= 50% / 30-50% / continuous bands.
+    All 7 test cases match by hand.
+  - `signals/liquidity.ts`: pure threshold ladder on real (non-virtual)
+    SOL reserves, no proportional component — `complete` short-circuits to
+    score 10 regardless of reserves. Boundary cases (exactly 5 SOL, exactly
+    15 SOL) checked against the 6 existing tests and match.
+  - `scorer.ts` (`combineSignals`): weighted average with
+    liquidity/holder-concentration at weight 2, bundled-buys/
+    deployer-history at weight 1, unknown names default to weight 1.
+    Cross-checked against `pipeline.ts`'s `safeSignal` wrapper: a signal
+    that throws is dropped (returns `null`, filtered out) before
+    `combineSignals` ever sees it, so `totalWeight` is always computed
+    only over signals actually present — a dropped signal can't silently
+    zero-weight into the average, it's just absent from both sums. No
+    way for `signals.length > 0` to reach `combineSignals` with
+    `totalWeight === 0` (every name defaults to at least weight 1).
+  - Conclusion: no bug found in any of the five modules this pass (same
+    outcome as session 85 on the data layer's two previously-unchecked
+    modules). Made no code changes.
+
+### Works
+- `npm run typecheck` and `npm run build`: clean.
+- `npm test`: 227/227 passing, offline, no source code changed this session.
+- `git status` before this edit: clean, only this PROGRESS.md update.
+
+### Next
+- Every signal-scoring module (`signals/*.ts` + `scorer.ts`) and every
+  data-fetching module (`data/*.ts` + `pumpfun.ts`'s decoders, sessions
+  84-86) has now had the "re-derive from scratch" pass. No from-scratch
+  candidates remain among the core scoring/data modules — a future
+  session should either pick a different angle entirely (e.g. the
+  orchestration layer: `pipeline.ts`'s `Promise.all`/`safeSignal`
+  failure handling, `poller.ts`, `wsDiscovery.ts`'s reconnect logic,
+  or `rescore.ts`/`holderRescore.ts`'s retry scheduling — none have had
+  this specific "independently re-derive" treatment recorded, as opposed
+  to the ad-hoc checks they got when first written) or fall back to the
+  standing low-priority items below.
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71), and the
+  speculative non-SOL-quote-mint risk (session 86; no action needed
+  unless live evidence appears).
+- All five TASK.md steps remain functionally complete.
