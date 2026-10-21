@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-21T04:42:28Z",
+  "updated_at": "2026-10-21T04:42:54Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 85,
     "started_at": "2026-10-21T04:42:28Z",
-    "turns": 0
+    "turns": 7
   },
   "round": {
     "number": null,
@@ -804,46 +804,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-20T19:14:23Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -20; echo \"---build---\"; npm run build 2>&1 | tail -20; echo \"---git status---\"; cd /home/runner/work/buildvote-agent/buildvote-agent && git status"
-    },
-    {
-      "t": "2026-10-20T19:14:30Z",
-      "kind": "run",
-      "text": "grep -n \"^## Session\" PROGRESS.md | tail -20"
-    },
-    {
-      "t": "2026-10-20T19:14:31Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-20T19:14:42Z",
-      "kind": "run",
-      "text": "grep -n -i \"wsLogParser\" PROGRESS.md | tail -20"
-    },
-    {
-      "t": "2026-10-20T19:14:44Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-20T19:14:53Z",
-      "kind": "read",
-      "text": "rug-radar/src/balanceIndex.ts"
-    },
-    {
-      "t": "2026-10-20T19:14:55Z",
-      "kind": "run",
-      "text": "cd rug-radar && cat src/signals/holderConcentration.ts"
-    },
-    {
-      "t": "2026-10-20T19:15:01Z",
-      "kind": "run",
-      "text": "cd rug-radar && grep -n \"totalSupply\\|HolderConcentrationInput\\|scoreHolderConcentration\\|getTokenLargestAccounts\\|getHolders\" src/pipeline.ts src/rpc.ts src/holderRescore.ts 2>/d\u2026"
-    },
-    {
       "t": "2026-10-20T19:15:03Z",
       "kind": "run",
       "text": "pwd; grep -n \"totalSupply\\|HolderConcentrationInput\\|scoreHolderConcentration\\|getTokenLargestAccounts\\|getHolders\" src/pipeline.ts src/rpc.ts src/holderRescore.ts 2>/dev/null"
@@ -1202,6 +1162,46 @@
       "t": "2026-10-21T04:42:28Z",
       "kind": "start",
       "text": "Session 85 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-21T04:42:34Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-21T04:42:34Z",
+      "kind": "read",
+      "text": "TASK.md"
+    },
+    {
+      "t": "2026-10-21T04:42:37Z",
+      "kind": "run",
+      "text": "wc -l /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md && tail -c 4000 /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
+    },
+    {
+      "t": "2026-10-21T04:42:42Z",
+      "kind": "run",
+      "text": "git log --oneline -20 && echo --- && ls rug-radar && echo --- && ls rug-radar/src && echo --- && ls rug-radar/src/data 2>/dev/null && echo --- && ls rug-radar/src/signals 2>/dev/n\u2026"
+    },
+    {
+      "t": "2026-10-21T04:42:45Z",
+      "kind": "think",
+      "text": "This is session 85 of a long-running project (rug radar, a Solana launch risk scorer). All 5 TASK.md steps are already complete per PROGRESS.md. Let me pick up the suggested next \u2026"
+    },
+    {
+      "t": "2026-10-21T04:42:46Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && wc -l src/data/deployerHistory.ts src/data/deployerHistory.test.ts"
+    },
+    {
+      "t": "2026-10-21T04:42:50Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/deployerHistory.ts"
+    },
+    {
+      "t": "2026-10-21T04:42:54Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.ts"
     }
   ],
   "schedule": {
