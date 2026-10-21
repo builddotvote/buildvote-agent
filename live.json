@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-21T21:41:46Z",
+  "updated_at": "2026-10-21T21:42:13Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 88,
     "started_at": "2026-10-21T21:40:26Z",
-    "turns": 22
+    "turns": 28
   },
   "round": {
     "number": null,
@@ -831,41 +831,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-21T11:49:13Z",
-      "kind": "think",
-      "text": "I'll append using line-anchored insertion instead since the exact file is 5338 lines \u2014 use Bash to append after the last line."
-    },
-    {
-      "t": "2026-10-21T11:49:30Z",
-      "kind": "run",
-      "text": "cat >> /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md << 'EOF'  ## Session 86 \u2014 2026-10-21  ### Done - Fresh checkout again had no `node_modules` (same as session 8\u2026"
-    },
-    {
-      "t": "2026-10-21T11:49:32Z",
-      "kind": "think",
-      "text": "Now let's confirm the test suite is still green and nothing else changed."
-    },
-    {
-      "t": "2026-10-21T11:49:32Z",
-      "kind": "run",
-      "text": "cd rug-radar && npm test 2>&1 | tail -8 && git status --short"
-    },
-    {
-      "t": "2026-10-21T11:49:38Z",
-      "kind": "think",
-      "text": "227/227 tests pass, build clean, and the only change this session is the PROGRESS.md update (no source code touched). As per CLAUDE.md, I won't commit \u2014 the runner handles that."
-    },
-    {
-      "t": "2026-10-21T11:49:38Z",
-      "kind": "run",
-      "text": "rm -f /tmp/pump_idl.json"
-    },
-    {
-      "t": "2026-10-21T11:49:44Z",
-      "kind": "think",
-      "text": "Session 86 summary: completed the \"re-derive from scratch\" verification pass session 85 flagged, checking `data/bundledBuys.ts`, `data/holderConcentration.ts`, `data/liquidity.ts`\u2026"
-    },
-    {
       "t": "2026-10-21T11:49:45Z",
       "kind": "done",
       "text": "Session 86 finished \u00b7 39 steps \u00b7 covered by Claude subscription ($1.51 API value)"
@@ -1229,6 +1194,41 @@
       "t": "2026-10-21T21:41:44Z",
       "kind": "read",
       "text": "rug-radar/src/holderRescore.ts"
+    },
+    {
+      "t": "2026-10-21T21:41:51Z",
+      "kind": "run",
+      "text": "grep -n \"^test(\" src/holderRescore.test.ts"
+    },
+    {
+      "t": "2026-10-21T21:41:56Z",
+      "kind": "run",
+      "text": "wc -l src/wsDiscovery.ts src/watcherOnLaunch.ts src/scoringGate.ts src/scoringInFlight.ts"
+    },
+    {
+      "t": "2026-10-21T21:42:00Z",
+      "kind": "read",
+      "text": "rug-radar/src/watcherOnLaunch.ts"
+    },
+    {
+      "t": "2026-10-21T21:42:01Z",
+      "kind": "think",
+      "text": "Matches poller.ts's structure exactly, mirrored for the websocket path. Let's check the small gate/in-flight primitives."
+    },
+    {
+      "t": "2026-10-21T21:42:02Z",
+      "kind": "read",
+      "text": "rug-radar/src/scoringGate.ts"
+    },
+    {
+      "t": "2026-10-21T21:42:04Z",
+      "kind": "read",
+      "text": "rug-radar/src/scoringInFlight.ts"
+    },
+    {
+      "t": "2026-10-21T21:42:07Z",
+      "kind": "read",
+      "text": "rug-radar/src/wsDiscovery.ts"
     }
   ],
   "schedule": {
