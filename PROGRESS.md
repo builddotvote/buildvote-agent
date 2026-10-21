@@ -5336,3 +5336,86 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71) are all
   unchanged — still not a priority on their own.
 - All five TASK.md steps remain functionally complete.
+
+## Session 86 — 2026-10-21
+
+### Done
+- Fresh checkout again had no `node_modules` (same as session 85's start) —
+  ran `npm install` before typecheck/build/test; this is a recurring
+  per-session environment step, not a code issue.
+- Finished the "re-derive from scratch" pass session 85 pointed at: the
+  remaining `data/*.ts` fetchers that hadn't had it —
+  `data/bundledBuys.ts`, `data/holderConcentration.ts`, `data/liquidity.ts`,
+  `data/bondingCurve.ts`. Walked each independently against `rpc.ts`'s
+  actual response shapes and the signal modules that consume them:
+  - `bundledBuys.ts`: confirmed `knownBundledBuy` is pushed into `found`
+    *before* `uniqueBuyers`/`fundingMap` are built, so the dev's own
+    bundled buy gets a `fundedBy` lookup too, not just the scanned buys.
+    Confirmed `findFundingSource`'s oldest-first walk and `findSolSender`'s
+    largest-balance-decrease heuristic match their doc comments. No bug.
+  - `holderConcentration.ts` / `liquidity.ts`: both trivial pass-throughs
+    over `fetchBondingCurveAccount` / `rpc.ts` calls. No bug.
+  - `bondingCurve.ts` / `decodeBondingCurve` (`pumpfun.ts`): this field
+    layout was researched in session 3, *before* session 30 established
+    the "parse the raw IDL JSON directly, never trust a summarized fetch"
+    rule (which caught two fabricated discriminators). It had never been
+    re-checked under that rule. Downloaded `idl/pump.json` directly with
+    `curl` (not a summarizing fetch tool) and parsed the `BondingCurve`
+    struct with `python3`'s `json` module: field order is
+    `virtual_token_reserves, virtual_quote_reserves, real_token_reserves,
+    real_quote_reserves, token_total_supply, complete (bool), creator
+    (pubkey), is_mayhem_mode, ...` — exactly 5×u64 + 1×bool + 1×pubkey
+    before the fields the code ignores. Matches `decodeBondingCurve`
+    exactly. No bug.
+  - Noteworthy nuance surfaced by reading the raw struct (not a bug):
+    the account's reserve fields are now named generically
+    `virtual_quote_reserves`/`real_quote_reserves`, not SOL-specific, and
+    the struct also carries a `quote_mint` pubkey field — pump.fun's
+    `Global` config has a `whitelisted_quote_mints` array (currently sized
+    1) suggesting a single swappable quote mint rather than always-SOL.
+    Checked whether this can affect what rug-radar actually decodes today:
+    neither `create` nor `create_v2` (the only two instructions `pumpfun.ts`
+    decodes, and the only ones `discovery.ts`/`wsDiscovery.ts` watch for)
+    takes a `quote_mint` account or arg — both just pass `global` by
+    account index, so whatever curve they create uses the Global account's
+    *current* single whitelisted quote mint, whatever that is. Separately,
+    the IDL's `CreateEvent` (emitted by these same two instructions) still
+    carries both a SOL-specific `virtual_sol_reserves` field *and* the
+    generic `virtual_quote_reserves` field side by side — i.e. even
+    pump.fun's own event schema still treats SOL as the thing worth naming
+    explicitly for coins created this way. Combined with many sessions of
+    live sanity-checks (back to session 3) never showing reserve numbers
+    at the wrong order of magnitude for SOL, there's no live evidence the
+    currently-active whitelisted quote mint is anything but native SOL.
+    Conclusion: not a live bug, so no code change (same reasoning as
+    session 85 — didn't invent a fix for a non-problem). It is a real
+    external-state risk, not a code risk: if pump.fun's admin ever
+    switches the one whitelisted quote mint away from SOL, *all* future
+    `create`/`create_v2` launches would silently be quoted in whatever that
+    other mint is, and `liquidity.ts`'s `realSolReserves` (and the holder
+    signal's supply math) would quietly misinterpret the units. Worth a
+    live spot-check of the `Global` account's `whitelisted_quote_mints[0]`
+    in some future session if there's ever reason to suspect it (e.g. a
+    launch scoring with reserve numbers that look implausible); not worth
+    building a defensive check against today, since nothing live suggests
+    it's happened.
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 227/227 passing, offline, no source code changed this session.
+- `git status` before this edit: clean (only this PROGRESS.md update).
+
+### Next
+- Every `data/*.ts` fetcher and `pumpfun.ts`'s decoders have now had the
+  "re-derive from scratch, verify against the raw source" pass session 84
+  started. No more from-scratch candidates queued from this effort — a
+  future session should either pick a fresh angle (e.g. the `signals/*.ts`
+  scoring logic itself, which hasn't had this specific treatment, vs. the
+  data-fetching layer which now has) or fall back to the standing
+  low-priority items below.
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71), and the
+  speculative non-SOL-quote-mint risk noted above (no action needed unless
+  live evidence appears).
+- All five TASK.md steps remain functionally complete.
