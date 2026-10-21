@@ -5263,3 +5263,76 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71) are all
   unchanged — still not a priority on their own.
 - All five TASK.md steps remain functionally complete.
+
+## Session 85 — 2026-10-21
+
+### Done
+- `node_modules` wasn't present at session start (fresh checkout) — ran
+  `npm install` before anything else; that's a one-time environment step,
+  not a code issue (typecheck/build/test all failed with "Cannot find name
+  'Buffer'/'console'/'node:test'" etc. until installed, which is just
+  `@types/node` missing, not a real type error).
+- Took up session 84's pointer and gave `data/deployerHistory.ts`'s
+  data-fetching logic (`fetchDeployerHistoryInput`, `findCreatedMint`,
+  `wasMigrated`) the same "re-derive from scratch" treatment, reasoning
+  through it independently rather than just re-reading the comments:
+  - Walked the create-instruction scan against `rpc.ts`'s actual
+    `getTransaction` encoding (`jsonParsed`): confirmed pump.fun instructions
+    always come back as `PartiallyDecodedInstruction` (has `data`), never
+    `KnownProgramInstruction` (has `parsed`), so the `"data" in ix` filter is
+    sound and matches the identical pattern in `discovery.ts`'s
+    `findCreateInstruction`/`findTradeInstruction`.
+  - Cross-checked `deployer` identity end to end: `pipeline.ts` passes
+    `launch.deployer`, which `discovery.ts` sets from `decoded.user` (the
+    create instruction's `user` account) — the same field `findCreatedMint`
+    compares against (`decoded.user === deployer`). No mismatch between
+    "deployer" as used by the live discovery path and as used by this
+    retroactive scan.
+  - Checked `wasMigrated`'s `getAccountInfo` call: no `encoding` arg is
+    passed, so it uses the client's `"base64"` default, returning
+    `data: [string, string]` — matches what `decodeBondingCurve` expects
+    (a base64 string), not the `jsonParsed`-shaped object. Correct.
+  - Checked dedup math (`seenMints`, current mint seeded first, then
+    scanned creates, then observed launches each checked against the
+    running set) against all of the existing data-layer tests
+    (`deployerHistory.test.ts`, 8 cases) — matches the "first wins"/no
+    double-count behavior every test already asserts.
+  - Considered "first match wins" in `findCreatedMint`'s instruction loop
+    (same shape as `discovery.ts`): a transaction with two create
+    instructions from the same deployer for two different mints would only
+    count the first. Not reachable from a real pump.fun create (one
+    `create`/`create_v2` call per transaction in practice) and, if it ever
+    happened, is the same already-documented under-counting direction as
+    the signature-limit tradeoff — not a new bug.
+  - Also read through `rpc.ts`'s method wrappers
+    (`getTokenSupply`/`getTokenLargestAccounts`/`getAccountInfo`/
+    `getSignaturesForAddress`/`getTransaction`) against the public Solana
+    JSON-RPC docs' actual result shapes: the `{ value }`-unwrapping methods
+    and the two methods that return their result directly both match the
+    documented shape for each method. No mismatch found.
+  - Conclusion: no bug found in either module this pass (unlike session
+    84's `wsLogParser.ts` pass, which did find one). Made no code changes —
+    didn't want to invent a fix for a non-problem just to show activity.
+
+### Works
+- `npm run typecheck` and `npm run build` clean in `/rug-radar`.
+- `npm test`: 227/227 passing, all offline, ~4.7s wall (first run after a
+  fresh `npm install`, not re-measured warm).
+- `git status`: clean, no files touched this session.
+
+### Next
+- Both modules session 84 flagged as not yet given the "re-derive from
+  scratch" lens (`data/deployerHistory.ts`'s data-fetching logic and
+  `rpc.ts`'s response-parsing helpers) are now checked clean — don't
+  re-run this exact pass on either without new evidence.
+- No from-scratch candidate list remains from prior sessions' notes. A
+  future session should pick a different module (e.g. one of the other
+  `data/*.ts` fetchers — `bundledBuys.ts`, `holderConcentration.ts`,
+  `liquidity.ts`, `bondingCurve.ts` — none have had this specific
+  "independently re-derive, don't just re-read the comments" treatment
+  recorded yet) or fall back to the standing low-priority items below.
+- `RESCORE_DELAY_MS` (60s, 14 live samples as of session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71) are all
+  unchanged — still not a priority on their own.
+- All five TASK.md steps remain functionally complete.
