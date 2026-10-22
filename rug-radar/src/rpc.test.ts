@@ -389,6 +389,79 @@ test("minIntervalMs of 0 (the default) does not space requests at all", async ()
   assert.equal(calls, 2);
 });
 
+test("a rejected reservation does not poison the lane for callers queued behind it", async () => {
+  // RequestPacer.reserve() chains each lane's callers through bucket.chain.
+  // If bucket.chain were set to a ticket that can itself reject (e.g. an
+  // injected sleep/now throws), every reserve() queued behind it on that
+  // lane would chain off a rejected promise and re-reject with that same
+  // stale error forever -- one failed reservation would permanently wedge
+  // the lane for every later caller, not just the one that failed.
+  let sleepCalls = 0;
+  const flakySleep = (ms: number): Promise<void> => {
+    sleepCalls++;
+    if (sleepCalls === 1) return Promise.reject(new Error("injected sleep failure"));
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  };
+  const pacer = new RequestPacer(50, { sleep: flakySleep });
+
+  await pacer.reserve("x"); // first reservation never waits (lastRequestStartedAt starts at -Infinity)
+  await assert.rejects(() => pacer.reserve("x"), /injected sleep failure/); // needs to wait -> hits flakySleep
+
+  let thirdOutcome: "resolved" | "rejected" | "pending" = "pending";
+  const third = pacer.reserve("x").then(
+    () => { thirdOutcome = "resolved"; },
+    () => { thirdOutcome = "rejected"; },
+  );
+  await Promise.race([third, new Promise((resolve) => setTimeout(resolve, 500))]);
+  assert.equal(
+    thirdOutcome,
+    "resolved",
+    `a later reserve() on the same lane should succeed normally after an earlier one failed, got: ${thirdOutcome}`,
+  );
+});
+
+test("a rejected pacer reservation still releases the request's concurrency slot", async () => {
+  // Guards the other half of the same bug: pacer.reserve() is called after
+  // acquireSlot() has already handed out a concurrency slot. If reserve()
+  // ever rejects and that rejection isn't inside the same try/finally that
+  // releases the slot, the slot leaks permanently -- after maxConcurrent
+  // such leaks, every future call would queue in acquireSlot() forever.
+  let sleepCalls = 0;
+  const flakySleep = (ms: number): Promise<void> => {
+    sleepCalls++;
+    if (sleepCalls === 1) return Promise.reject(new Error("injected sleep failure"));
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  };
+  const pacer = new RequestPacer(50, { sleep: flakySleep });
+
+  const fetchImpl: FetchLike = (async () =>
+    new Response(
+      JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        result: { context: { slot: 1 }, value: { amount: "1", decimals: 0, uiAmount: 1, uiAmountString: "1" } },
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    )) as FetchLike;
+
+  const client = new SolanaRpcClient("https://example.test/rpc", fetchImpl, { maxConcurrent: 1, pacer });
+
+  await client.getTokenSupply("Mint1"); // first reservation never waits, succeeds, releases its slot
+  await assert.rejects(() => client.getTokenSupply("Mint2"), /injected sleep failure/); // reservation fails after the slot is already held
+
+  let thirdOutcome: "resolved" | "rejected" | "pending" = "pending";
+  const third = client.getTokenSupply("Mint3").then(
+    () => { thirdOutcome = "resolved"; },
+    () => { thirdOutcome = "rejected"; },
+  );
+  await Promise.race([third, new Promise((resolve) => setTimeout(resolve, 500))]);
+  assert.equal(
+    thirdOutcome,
+    "resolved",
+    `call 3 should not hang behind a leaked slot from call 2's failed reservation, got: ${thirdOutcome}`,
+  );
+});
+
 test("a shared RequestPacer paces two SolanaRpcClient instances to one combined rate", async () => {
   // Same real-timer reasoning as the minIntervalMs test above. Two clients
   // each with their own independent minIntervalMs would combine to roughly

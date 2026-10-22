@@ -231,7 +231,15 @@ export class RequestPacer {
       if (wait > 0) await this.sleep(wait);
       bucket!.lastRequestStartedAt = this.now();
     });
-    bucket.chain = ticket;
+    // The chain itself must never reject: it's also the queue every later
+    // caller on this lane waits on. If `ticket` rejects (e.g. an injected
+    // `sleep`/`now` throws) and bucket.chain were set to `ticket` directly,
+    // every subsequent reserve() on this lane would chain off a rejected
+    // promise and immediately reject too, with that same stale error,
+    // forever — one failed reservation would permanently wedge the lane.
+    // The caller that issued this reservation still sees its own rejection
+    // via the returned `ticket`.
+    bucket.chain = ticket.catch(() => {});
     return ticket;
   }
 }
@@ -294,10 +302,16 @@ export class SolanaRpcClient {
     // to prevent. Acquiring the concurrency slot first means pacer.reserve()
     // always resolves immediately before the real fetch call, so its spacing
     // reflects actual request-send time.
+    //
+    // pacer.reserve() is inside this try/finally (not just the fetch loop)
+    // so that if it ever rejects, the slot acquireSlot() already handed out
+    // is still released — otherwise a rejected reservation would leak a
+    // concurrency slot permanently, and after maxConcurrent such leaks every
+    // future call would hang in acquireSlot() forever.
     await this.acquireSlot();
-    await this.pacer.reserve(method);
-    const maxRetries = this.methodMaxRetries[method] ?? this.maxRetries;
     try {
+      await this.pacer.reserve(method);
+      const maxRetries = this.methodMaxRetries[method] ?? this.maxRetries;
       for (let attempt = 0; ; attempt++) {
         const res = await this.fetchImpl(this.url, {
           method: "POST",

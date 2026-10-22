@@ -5666,3 +5666,94 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   speculative non-SOL-quote-mint risk (session 86; no action needed
   unless live evidence appears).
 - All five TASK.md steps remain functionally complete.
+
+## Session 90 — 2026-10-22
+
+### Done
+- Fresh checkout again had no `node_modules` (same as sessions 85-89) — ran
+  `npm install` before typecheck/build/test; recurring per-session
+  environment step, not a code issue.
+- Took up session 89's pointer: gave `RequestPacer`'s own `reserve()`/chain
+  logic a second, deeper pass now that session 89 found one ordering bug in
+  how `rpc.ts` calls it. Found and fixed two more real bugs in the same
+  area, both reproduced live with standalone scripts before touching the
+  test suite:
+  - `RequestPacer.reserve()`: `bucket.chain` was set directly to each
+    reservation's own `ticket` promise. If a ticket ever rejects (its
+    `sleep`/`now` call throws), `bucket.chain` becomes a rejected promise.
+    Every later `reserve()` call on that lane does `bucket.chain.then(...)`
+    with no rejection handler, so it re-rejects with that same stale error
+    instead of running — one failed reservation permanently wedges the
+    lane for every caller queued behind it, forever (confirmed: a third
+    `reserve()` call rejected immediately with the first failure's error
+    message, not a fresh attempt). Fix: `bucket.chain = ticket.catch(() =>
+    {})` — the chain always advances to a resolved promise regardless of
+    whether the reservation it's tracking succeeded, while the `ticket`
+    returned to that specific caller still rejects normally.
+  - `SolanaRpcClient.request()`: `acquireSlot()` and `pacer.reserve()` were
+    both called *before* the `try { ... } finally { this.releaseSlot(); }`
+    block that wraps the fetch/retry loop. If `pacer.reserve()` rejects
+    after `acquireSlot()` already handed out a slot, `releaseSlot()` never
+    runs — the slot leaks permanently. Reproduced live: `maxConcurrent: 1`,
+    an injected `sleep` that rejects on its first real invocation, call 1
+    succeeds (no wait needed, first reservation), call 2's reservation
+    rejects as expected but leaks its slot, call 3 then hangs forever
+    behind the leaked slot (timed out at 2s in the repro). After
+    `maxConcurrent` such leaks a client would deadlock permanently — every
+    future call queuing in `acquireSlot()`'s `waiters` with nothing left to
+    ever call `releaseSlot()`. Fix: moved `pacer.reserve(method)` inside the
+    existing `try` block, so the same `finally { this.releaseSlot(); }`
+    covers it.
+  - Checked reachability honestly: today's only `sleep`/`now` implementations
+    (`defaultSleep` via `setTimeout`, `Date.now`) never throw, and
+    `server.ts` never injects a custom one, so neither bug fires under the
+    current production wiring — same caveat as session 88's `wsDiscovery.ts`
+    fix. Fixed anyway because `sleep`/`now` are both public, documented
+    `RetryOptions`/`RequestPacer` constructor params (exactly the kind of
+    seam a future caller — a cancellable sleep, an injected clock for some
+    other test or feature — could plug into), and because the failure mode
+    compounds silently into a permanent deadlock rather than a one-off
+    dropped request, which is a disproportionate blast radius for "one
+    reservation's wait failed once."
+  - Added two regression tests to `rpc.test.ts`, one per bug, each using an
+    injected `sleep` that rejects exactly once then behaves normally,
+    verified to fail against the pre-fix code (confirmed via `git stash` on
+    `src/rpc.ts` alone, re-running just these two tests, then restoring the
+    fix) with the exact pre-fix symptom: the lane-poisoning test saw a third
+    `reserve()` reject instead of resolve; the slot-leak test saw a third
+    `getTokenSupply()` call stay pending past a 500ms race timeout instead
+    of resolving. Both pass cleanly after the fix.
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 231/231 passing (229 + 2 new regression tests), offline, run
+  3x to check for flakiness (real timers/injected sleep involved) — stable
+  each time.
+- `git status` before this edit: two files changed (`src/rpc.ts`,
+  `src/rpc.test.ts`); no stray repro scripts left behind (written to the
+  repo root during investigation, deleted before this commit).
+
+### Next
+- `RequestPacer`'s chain logic and `SolanaRpcClient.request()`'s
+  acquire/reserve/release ordering have now each had two independent
+  "re-derive from scratch" passes (session 89 then this session) and both
+  found real, fixed bugs — this area has earned its scrutiny; a third pass
+  without new evidence probably isn't the best use of a session. Five real
+  bugs found and fixed total across sessions 84-90 now (84's
+  `wsLogParser.ts`, 88's `wsDiscovery.ts` stale-close race, 89's and this
+  session's two `rpc.ts`/`RequestPacer` issues).
+- A future session should pick a genuinely fresh angle rather than a third
+  pass over `rpc.ts`: e.g. the public web page (`public/feed.js`,
+  `public/index.html`) hasn't had a "re-derive from scratch" pass the way
+  every backend module now has, or `feed.ts`'s in-memory feed state /
+  eviction logic, or revisit whether `RequestPacer`'s per-method lane
+  design has any gaps when `methodIntervalsMs` is mutated between client
+  construction calls sharing one pacer (currently it's read-only after
+  construction in every real caller, so likely inert, but not yet checked
+  under the same lens as the two bugs found here).
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71), and the
+  speculative non-SOL-quote-mint risk (session 86; no action needed
+  unless live evidence appears).
+- All five TASK.md steps remain functionally complete.
