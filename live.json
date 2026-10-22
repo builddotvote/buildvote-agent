@@ -1,11 +1,10 @@
 {
-  "updated_at": "2026-10-22T17:11:05Z",
+  "updated_at": "2026-10-22T17:11:29Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 91,
-    "started_at": "2026-10-22T17:08:03Z",
-    "turns": 35
+    "turns": 39
   },
   "round": {
     "number": null,
@@ -853,45 +852,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 1.9708
+    },
+    {
+      "date": "2026-10-22T17:08:03Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 40,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0091.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 1.2626
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-22T11:50:46Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar grep -n \"sleep\\|RequestPacer\\|new SolanaRpcClient\" src/server.ts"
-    },
-    {
-      "t": "2026-10-22T11:51:17Z",
-      "kind": "think",
-      "text": "Confirmed two related bugs stemming from the same root cause. Let me view the existing pacer tests to match the file's style before writing fixes and regression tests."
-    },
-    {
-      "t": "2026-10-22T11:51:18Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar grep -n \"^test\\|RequestPacer\\|maxConcurrent\" src/rpc.test.ts"
-    },
-    {
-      "t": "2026-10-22T11:51:21Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.test.ts"
-    },
-    {
-      "t": "2026-10-22T11:51:24Z",
-      "kind": "think",
-      "text": "Now let me apply both fixes in `rpc.ts`: the chain-poisoning fix in `RequestPacer.reserve()`, and the slot-leak fix in `SolanaRpcClient.request()`."
-    },
-    {
-      "t": "2026-10-22T11:51:28Z",
-      "kind": "edit",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
-      "t": "2026-10-22T11:51:32Z",
-      "kind": "edit",
-      "text": "rug-radar/src/rpc.ts"
-    },
     {
       "t": "2026-10-22T11:51:36Z",
       "kind": "read",
@@ -1256,6 +1229,41 @@
       "t": "2026-10-22T17:11:05Z",
       "kind": "edit",
       "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-22T17:11:07Z",
+      "kind": "think",
+      "text": "I'll append directly instead since the trailing boilerplate repeats across sessions."
+    },
+    {
+      "t": "2026-10-22T17:11:07Z",
+      "kind": "run",
+      "text": "wc -l /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
+    },
+    {
+      "t": "2026-10-22T17:11:08Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-22T17:11:21Z",
+      "kind": "run",
+      "text": "cat >> /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md << 'ENTRY_EOF'  ## Session 91 \u2014 2026-10-22  ### Done - Fresh checkout again had no `node_modules` (same as ses\u2026"
+    },
+    {
+      "t": "2026-10-22T17:11:22Z",
+      "kind": "run",
+      "text": "git status && git diff --stat"
+    },
+    {
+      "t": "2026-10-22T17:11:27Z",
+      "kind": "think",
+      "text": "Session complete. Summary:"
+    },
+    {
+      "t": "2026-10-22T17:11:29Z",
+      "kind": "done",
+      "text": "Session 91 finished \u00b7 39 steps \u00b7 covered by Claude subscription ($1.26 API value)"
     }
   ],
   "schedule": {
