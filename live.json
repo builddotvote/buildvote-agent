@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-22T04:45:43Z",
+  "updated_at": "2026-10-22T04:46:10Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 89,
     "started_at": "2026-10-22T04:39:54Z",
-    "turns": 44
+    "turns": 48
   },
   "round": {
     "number": null,
@@ -840,26 +840,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-21T21:41:51Z",
-      "kind": "run",
-      "text": "grep -n \"^test(\" src/holderRescore.test.ts"
-    },
-    {
-      "t": "2026-10-21T21:41:56Z",
-      "kind": "run",
-      "text": "wc -l src/wsDiscovery.ts src/watcherOnLaunch.ts src/scoringGate.ts src/scoringInFlight.ts"
-    },
-    {
-      "t": "2026-10-21T21:42:00Z",
-      "kind": "read",
-      "text": "rug-radar/src/watcherOnLaunch.ts"
-    },
-    {
-      "t": "2026-10-21T21:42:01Z",
-      "kind": "think",
-      "text": "Matches poller.ts's structure exactly, mirrored for the websocket path. Let's check the small gate/in-flight primitives."
-    },
-    {
       "t": "2026-10-21T21:42:02Z",
       "kind": "read",
       "text": "rug-radar/src/scoringGate.ts"
@@ -1238,6 +1218,26 @@
       "t": "2026-10-22T04:45:38Z",
       "kind": "run",
       "text": "git apply /tmp/rpc_fix.patch && npm test 2>&1 | tail -15"
+    },
+    {
+      "t": "2026-10-22T04:45:46Z",
+      "kind": "run",
+      "text": "npm test 2>&1 | tail -40"
+    },
+    {
+      "t": "2026-10-22T04:45:59Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.test.ts"
+    },
+    {
+      "t": "2026-10-22T04:46:05Z",
+      "kind": "edit",
+      "text": "rug-radar/src/rpc.test.ts"
+    },
+    {
+      "t": "2026-10-22T04:46:07Z",
+      "kind": "run",
+      "text": "npm test 2>&1 | tail -20"
     }
   ],
   "schedule": {
