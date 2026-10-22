@@ -1,10 +1,9 @@
 {
-  "updated_at": "2026-10-22T21:33:14Z",
+  "updated_at": "2026-10-22T21:33:18Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 92,
-    "started_at": "2026-10-22T21:33:14Z",
     "turns": 0
   },
   "round": {
@@ -862,20 +861,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 1.2626
+    },
+    {
+      "date": "2026-10-22T21:33:14Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 1,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0092.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 0.0
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-22T11:51:38Z",
-      "kind": "think",
-      "text": "Good, the structure now correctly wraps `pacer.reserve()` inside the try/finally. Let me check the rest and fix indentation for the remaining lines in the function."
-    },
-    {
-      "t": "2026-10-22T11:51:39Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.ts"
-    },
     {
       "t": "2026-10-22T11:51:42Z",
       "kind": "think",
@@ -1265,6 +1263,16 @@
       "t": "2026-10-22T21:33:14Z",
       "kind": "start",
       "text": "Session 92 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-22T21:33:17Z",
+      "kind": "think",
+      "text": "You've hit your weekly limit \u00b7 resets Oct 24, 4am (UTC)"
+    },
+    {
+      "t": "2026-10-22T21:33:18Z",
+      "kind": "error",
+      "text": "Session 92 ended with an error \u00b7 0 steps \u00b7 covered by Claude subscription ($0.00 API value)"
     }
   ],
   "schedule": {
