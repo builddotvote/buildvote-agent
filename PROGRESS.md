@@ -5586,3 +5586,83 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   speculative non-SOL-quote-mint risk (session 86; no action needed
   unless live evidence appears).
 - All five TASK.md steps remain functionally complete.
+
+## Session 89 — 2026-10-22
+
+### Done
+- Fresh checkout again had no `node_modules` (same as sessions 85-88) — ran
+  `npm install` before typecheck/build/test; recurring per-session
+  environment step, not a code issue.
+- Took up session 88's pointer: gave the remaining untouched modules
+  (`rpc.ts`'s request/retry/pacing plumbing, `server.ts`'s wiring,
+  `deployerIndex.ts`, `knownAccounts.ts`, `config.ts`, `requestHandler.ts`)
+  the "re-derive from scratch" treatment.
+  - `server.ts`, `deployerIndex.ts`, `knownAccounts.ts`, `config.ts`,
+    `requestHandler.ts`: walked each independently against its tests
+    (including cross-checking `knownAccounts.ts`'s four hardcoded program
+    IDs against known Solana constants by hand, e.g. confirming the
+    32-character all-`1` system program address is the correct base58
+    encoding of 32 zero bytes, not a truncated/typo'd string) and against
+    `server.ts`'s own comments (e.g. confirmed `scoringPacer`'s
+    `getTransaction: 2000ms` lane is actually exercised — `getTransaction`
+    is called from both the discovery RPC clients, which don't use this
+    pacer, *and* from `data/deployerHistory.ts`/`data/bundledBuys.ts`,
+    which run on the scoring RPC clients that do share this pacer, so the
+    lane isn't dead). No bug found in any of the five.
+  - `rpc.ts`: found a real bug in `SolanaRpcClient.request()`. The order
+    was `await this.pacer.reserve(method)` then `await
+    this.acquireSlot()`. Under `maxConcurrent` slot contention (a request
+    has to queue because all slots are in use), its pacer reservation
+    still resolves on schedule *while it's queued* — the pacer has no
+    way to know the request hasn't actually fired yet. Once a slot frees
+    up, the queued request proceeds straight to `fetchImpl` with no
+    further pacing wait, since its `reserve()` call already finished
+    earlier. Reproduced live with a standalone script before touching
+    the test suite: 3 calls, `maxConcurrent: 1`, `minIntervalMs: 100`,
+    call1 held its slot while blocked; calls 2 and 3 queued behind it.
+    Once call1's slot freed, call2 and call3 fired 1ms apart instead of
+    ~100ms apart — the exact rate-limit burst `minIntervalMs`/`pacer`
+    exist to prevent (per `rpc.ts`'s own session 42/43 comments), and
+    exactly the kind of contention (slow in-flight requests holding a
+    scarce slot) `server.ts` configures `maxConcurrent: 2` scoring
+    clients plus a shared 400ms pacer to guard against.
+  - Fix: swapped the order to `acquireSlot()` then `pacer.reserve(method)`,
+    so a request's pacing slot is only reserved once it actually has a
+    concurrency slot and is about to fire, not while it's still queued.
+  - Added a regression test (`rpc.test.ts`, real timers, same reasoning
+    as the file's existing `minIntervalMs` tests for why fake-clock
+    doesn't work here): `maxConcurrent: 1`, `minIntervalMs: 40`, 3 calls,
+    call1 holds its slot for 150ms of real time (long enough that if the
+    bug were present, calls 2 and 3's pacer reservations would already be
+    "cleared" while still queued) before releasing. Confirmed this test
+    fails on the pre-fix code (`0ms` gap between call2 and call3 instead
+    of >=30ms) and passes after the fix.
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 229/229 passing (228 + 1 new regression test), offline, run
+  3x to check for flakiness (it uses real timers) — stable each time.
+- `git status` before this edit: two files changed (`src/rpc.ts`,
+  `src/rpc.test.ts`).
+
+### Next
+- Every module in the project has now had the "re-derive from scratch"
+  pass across sessions 84-89: data layer (84-86), signal-scoring layer
+  (87), orchestration layer (88), and this session's remaining modules
+  (rpc.ts, server.ts, deployerIndex.ts, knownAccounts.ts, config.ts,
+  requestHandler.ts). Three real bugs found and fixed total across that
+  effort (session 84's `wsLogParser.ts`, session 88's `wsDiscovery.ts`
+  stale-close race, this session's `rpc.ts` pacer-vs-concurrency-slot
+  ordering). A future session should pick a new
+  angle — e.g. a second independent pass over a module that's only had
+  one pair of eyes on it, or exploring whether `RequestPacer`'s
+  `reserve()`/chain logic has any other ordering subtleties now that this
+  one surfaced — rather than assuming there's nothing left, since this
+  session's finding came from a module that three prior "re-derive"
+  sessions (84-86) hadn't reached yet.
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71), and the
+  speculative non-SOL-quote-mint risk (session 86; no action needed
+  unless live evidence appears).
+- All five TASK.md steps remain functionally complete.

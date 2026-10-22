@@ -272,6 +272,66 @@ test("caps the number of in-flight requests at maxConcurrent", async () => {
   assert.equal(maxActive, 2);
 });
 
+test("pacer spacing survives maxConcurrent slot contention (queued requests don't burst once a slot frees up)", async () => {
+  // Real timers, same reasoning as the minIntervalMs test below: queuing on
+  // acquireSlot while real time passes is exactly the scenario that exposed
+  // the bug (pacer.reserve() running before acquireSlot() let a queued
+  // request's pacing slot resolve while it was still waiting for
+  // concurrency, so once the slot freed it fired immediately instead of
+  // waiting its paced turn) — a fake clock can't model "real time passes
+  // while queued" the way this needs.
+  const starts: number[] = [];
+  const releasers: Array<() => void> = [];
+  const fetchImpl: FetchLike = (async () => {
+    starts.push(Date.now());
+    await new Promise<void>((resolve) => releasers.push(resolve));
+    return new Response(
+      JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        result: { context: { slot: 1 }, value: { amount: "1", decimals: 0, uiAmount: 1, uiAmountString: "1" } },
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    );
+  }) as FetchLike;
+
+  const client = new SolanaRpcClient("https://example.test/rpc", fetchImpl, {
+    maxConcurrent: 1,
+    minIntervalMs: 40,
+  });
+
+  const calls = Promise.all([
+    client.getTokenSupply("Mint1"),
+    client.getTokenSupply("Mint2"),
+    client.getTokenSupply("Mint3"),
+  ]);
+
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(starts.length, 1);
+
+  // Let well over one paced interval of real time pass while call2 and call3
+  // are still queued behind call1's held slot, before freeing anything.
+  await new Promise((resolve) => setTimeout(resolve, 150));
+
+  releasers.shift()?.(); // free call1's slot for call2
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(starts.length, 2);
+
+  releasers.shift()?.(); // free call2's slot for call3
+
+  // call3 only fires once its paced interval elapses (a real wait, not just
+  // a microtask tick) — poll instead of a single setImmediate so this test
+  // doesn't assume exactly how that wait is implemented.
+  for (let i = 0; i < 20 && starts.length < 3; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  assert.equal(starts.length, 3);
+  releasers.shift()?.();
+  await calls;
+  const gap = starts[2] - starts[1];
+  assert.ok(gap >= 30, `expected call3 to wait roughly minIntervalMs after call2, got ${gap}ms`);
+});
+
 test("minIntervalMs spaces consecutive request starts by at least that much", async () => {
   // Uses the real default sleep/clock (not an injected fake): a shared fake
   // "clock" variable bumped synchronously by a fake sleep can't faithfully

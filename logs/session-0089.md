@@ -1,0 +1,93 @@
+# Session 89: Rug radar: live launch scoring
+
+- Started: 2026-10-22T04:39:54Z
+- Ended: 2026-10-22T04:47:42Z
+- Steps: 62
+- Model turns: 63
+- Billing: Claude subscription (API value $2.3959, not billed)
+- Outcome: ok
+
+## Summary
+
+Session 89 done. Summary:  - Continued the "re-derive from scratch" audit (sessions 84-88) by sweeping the last untouched modules: `server.ts`, `deployerIndex.ts`, `knownAccounts.ts`, `config.ts`, `requestHandler.ts`, and `rpc.ts`. - Found and fixed a real bug in `rpc.ts`: `SolanaRpcClient.request()` reserved its rate-limit pacing slot *before* acquiring a concurrency slot. Under `maxConcurrent` contention, a queued request's pacing reservation would resolve on schedule while it waited, then fire immediately (no spacing) once a slot freed up — defeating the exact rate-limit protection `minInt…
+
+## Steps
+
+- `run` cat PROGRESS.md 2>/dev/null; echo "---TASK---"; cat TASK.md 2>/dev/null
+- `run` echo "=== TASK.md ==="; cat TASK.md; echo; echo "=== PROGRESS.md tail ==="; tail -200 PROGRESS.md
+- `run` cd rug-radar && ls -la && cat package.json | head -30
+- `run` cd rug-radar && npm install --no-audit --no-fund 2>&1 | tail -20
+- `run` pwd && ls
+- `think` Already in the right directory. Let's run install and baseline checks.
+- `run` npm install --no-audit --no-fund 2>&1 | tail -20
+- `run` npm run typecheck 2>&1 | tail -40 && echo "---BUILD---" && npm run build 2>&1 | tail -40
+- `run` npm test 2>&1 | tail -30
+- `think` All 228 tests pass, typecheck and build clean. Baseline confirmed. Now picking up session 88's pointer: review the remaining untouched files. Let me look at them.
+- `run` cd src && wc -l server.ts deployerIndex.ts knownAccounts.ts requestHandler.ts config.ts rpc.ts 2>&1
+- `tool` ToolSearch
+- `tool` TaskCreate
+- `tool` TaskCreate
+- `tool` TaskCreate
+- `tool` TaskUpdate
+- `read` rug-radar/src/rpc.ts
+- `run` cd src && cat rpc.test.ts | head -150
+- `run` pwd; find . -name rpc.test.ts
+- `read` rug-radar/src/rpc.test.ts
+- `read` rug-radar/src/config.ts
+- `read` rug-radar/src/knownAccounts.ts
+- `read` rug-radar/src/deployerIndex.ts
+- `read` rug-radar/src/requestHandler.ts
+- `run` node -e ' const s = "11111111111111111111111111111111"; console.log("length:", s.length); const real = "11111111111111111111111111111111111111111"; console.log("real length:", real.length); '
+- `read` rug-radar/src/server.ts
+- `run` grep -rn "getTransaction" --include="*.ts" | grep -v test
+- `run` sed -n '1,60p' pipeline.ts
+- `run` find . -iname "config.test.ts" -o -iname "deployerIndex.test.ts" -o -iname "requestHandler.test.ts" -o -iname "knownAccounts.test.ts" 2>/dev/null; echo ---; find . -iname "server.test.ts"
+- `read` rug-radar/src/config.test.ts
+- `read` rug-radar/src/deployerIndex.test.ts
+- `read` rug-radar/src/knownAccounts.test.ts
+- `read` rug-radar/src/requestHandler.test.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && cat > /tmp/repro.mjs << 'EOF' import { SolanaRpcClient } from "./src/rpc.ts";  let starts = []; let resolvers = []; const fetchImpl = async () => {   starts.push(Date.now());   await new Promise((resolve) => resolvers.push(resolve));   return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: { context: {slot:1}, value: {…
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && sed -i 's#./src/rpc.ts#/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/rpc.ts#' /tmp/repro.mjs && node --import tsx /tmp/repro.mjs
+- `think` Confirmed: under slot contention, calls 2 and 3 fire almost back-to-back (1ms apart) instead of being spaced 100ms apart — the exact rate-limit burst these mechanisms exist to prevent. This is because `pacer.reserve()` runs *before* `acquireSlot()`, so a request's pacing slot is reserved at a time divorced from when its fetch actually fires if it has to queue for concurrency.
+- `read` rug-radar/src/rpc.ts
+- `edit` rug-radar/src/rpc.ts
+- `think` Now let's confirm the fix with the reproduction script, then run the full test suite.
+- `run` node --import tsx /tmp/repro.mjs
+- `think` Call3 now waits the full 100ms after call2 instead of firing immediately — the fix works. Let me re-run with a longer wait to see the full sequence.
+- `run` cat > /tmp/repro2.mjs << 'EOF' import { SolanaRpcClient } from "/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/rpc.ts";  let starts = []; let resolvers = []; const fetchImpl = async () => {   starts.push(Date.now());   await new Promise((resolve) => resolvers.push(resolve));   return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: { context: {slot:1}, value: { amount…
+- `think` Gap between call2 (315) and call3 (454) is 139ms — properly spaced ≥100ms, confirming the fix. Now run the full test suite and typecheck/build.
+- `run` npm run typecheck 2>&1 | tail -20 && echo "---BUILD---" && npm run build 2>&1 | tail -20 && echo "---TEST---" && npm test 2>&1 | tail -15
+- `think` All 228 existing tests still pass. Now let's add a regression test to the suite so this doesn't regress silently, matching the pattern from session 88.
+- `read` rug-radar/src/rpc.test.ts
+- `read` rug-radar/src/rpc.test.ts
+- `edit` rug-radar/src/rpc.test.ts
+- `think` Now let's confirm the test fails on the pre-fix code (to prove it's a real regression test) and passes on the fixed code.
+- `run` git stash && node --import tsx --test --test-reporter spec src/rpc.test.ts 2>&1 | grep -A 15 "pacer spacing survives"; echo "EXIT:$?"; git stash pop
+- `run` git diff src/rpc.ts > /tmp/rpc_fix.patch && git checkout -- src/rpc.ts && node --import tsx --test --test-reporter spec src/rpc.test.ts 2>&1 | grep -A 10 "pacer spacing survives"
+- `think` Confirmed: the test fails (0ms gap) on the pre-fix code. Now restore the fix and re-run the full suite.
+- `run` git apply /tmp/rpc_fix.patch && npm test 2>&1 | tail -15
+- `run` npm test 2>&1 | tail -40
+- `read` rug-radar/src/rpc.test.ts
+- `edit` rug-radar/src/rpc.test.ts
+- `run` npm test 2>&1 | tail -20
+- `think` All 229 tests pass now (228 + 1 new regression test). Let me run it a couple more times to confirm it's not flaky, then run typecheck/build once more.
+- `run` for i in 1 2 3; do npm test 2>&1 | tail -8; echo "---"; done
+- `think` Stable across 3 runs. Final typecheck/build check and cleanup of temp files.
+- `run` npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && rm -f /tmp/repro.mjs /tmp/repro2.mjs /tmp/rpc_fix.patch && git status
+- `think` Clean. Now let's mark task 1 complete and move to task 2 (server.ts, deployerIndex.ts, knownAccounts.ts, requestHandler.ts, config.ts) — already walked those by hand above and found no bugs, so let's close that out too.
+- `tool` TaskUpdate
+- `tool` TaskUpdate
+- `tool` TaskUpdate
+- `think` Now let's update PROGRESS.md.
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent && tail -5 PROGRESS.md
+- `edit` PROGRESS.md
+- `run` wc -l PROGRESS.md && tail -c 50 PROGRESS.md | od -c | tail -5
+- `think` File ends exactly at that line, so I can just append to the end of the file instead of using Edit's exact-match replace.
+- `run` cat >> /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md << 'EOF'  ## Session 89 — 2026-10-22  ### Done - Fresh checkout again had no `node_modules` (same as sessions 85-88) — ran   `npm install` before typecheck/build/test; recurring per-session   environment step, not a code issue. - Took up session 88's pointer: gave the remaining untouched modules   (`rpc.ts`'s request/retry/pacin…
+- `edit` PROGRESS.md
+- `run` sed -i 's/ordering) plus session 84 itself\. A future session should pick a new/ordering). A future session should pick a new/' PROGRESS.md && tail -20 PROGRESS.md
+- `run` sed -i "s/requestHandler.ts). Four real bugs found and fixed total across that/requestHandler.ts). Three real bugs found and fixed total across that/" PROGRESS.md && grep -n "real bugs found" PROGRESS.md | tail -3
+- `think` Good, fixed. Final verification pass.
+- `run` cd rug-radar && npm test 2>&1 | tail -8 && cd .. && git status && git diff --stat
+- `tool` TaskUpdate
+- `think` Session 89 done. Summary:

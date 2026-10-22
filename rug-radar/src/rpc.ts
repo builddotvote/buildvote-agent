@@ -284,8 +284,18 @@ export class SolanaRpcClient {
   }
 
   private async request<T>(method: string, params: unknown[]): Promise<T> {
-    await this.pacer.reserve(method);
+    // acquireSlot before pacer.reserve: reserving a pacing slot first would
+    // timestamp "request started" at reserve-resolution time, not at the
+    // actual fetch call below. Under concurrency contention (acquireSlot has
+    // to queue because maxConcurrent is already in use), a batch of requests
+    // can all have their pacer reservations resolve on schedule while they
+    // wait for a slot, then all fire their real fetch back-to-back the
+    // moment slots free up — a burst, exactly what minIntervalMs/pacer exists
+    // to prevent. Acquiring the concurrency slot first means pacer.reserve()
+    // always resolves immediately before the real fetch call, so its spacing
+    // reflects actual request-send time.
     await this.acquireSlot();
+    await this.pacer.reserve(method);
     const maxRetries = this.methodMaxRetries[method] ?? this.maxRetries;
     try {
       for (let attempt = 0; ; attempt++) {
