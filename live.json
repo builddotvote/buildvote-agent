@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-22T17:10:27Z",
+  "updated_at": "2026-10-22T17:11:05Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 91,
     "started_at": "2026-10-22T17:08:03Z",
-    "turns": 30
+    "turns": 35
   },
   "round": {
     "number": null,
@@ -858,36 +858,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-22T11:49:53Z",
-      "kind": "run",
-      "text": "cat > /tmp/repro_slotleak.ts << 'EOF' import { SolanaRpcClient, RequestPacer, type FetchLike } from \"./src/rpc.js\";  let sleepCalls = 0; const flakySleep = (ms: number): Promise<v\u2026"
-    },
-    {
-      "t": "2026-10-22T11:49:56Z",
-      "kind": "think",
-      "text": "Path needs fixing since the script is outside the repo. Let me place it inside the repo temporarily."
-    },
-    {
-      "t": "2026-10-22T11:49:57Z",
-      "kind": "run",
-      "text": "cp /tmp/repro_slotleak.ts /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/repro_slotleak.ts cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar npx tsx repr\u2026"
-    },
-    {
-      "t": "2026-10-22T11:50:15Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar cat > repro_slotleak.ts << 'EOF' import { SolanaRpcClient, RequestPacer, type FetchLike } from \"./src/rpc.js\";  let \u2026"
-    },
-    {
-      "t": "2026-10-22T11:50:25Z",
-      "kind": "think",
-      "text": "Confirmed one real bug: a slot leak when `pacer.reserve()` rejects. Let me also check the second suspected issue \u2014 whether a single rejected reservation permanently poisons that p\u2026"
-    },
-    {
-      "t": "2026-10-22T11:50:30Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar cat > repro_chainpoison.ts << 'EOF' import { RequestPacer } from \"./src/rpc.js\";  let sleepCalls = 0; const flakySle\u2026"
-    },
-    {
       "t": "2026-10-22T11:50:46Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar grep -n \"sleep\\|RequestPacer\\|new SolanaRpcClient\" src/server.ts"
@@ -1256,6 +1226,36 @@
       "t": "2026-10-22T17:10:27Z",
       "kind": "read",
       "text": "rug-radar/src/feed.test.ts"
+    },
+    {
+      "t": "2026-10-22T17:10:33Z",
+      "kind": "edit",
+      "text": "rug-radar/src/feed.test.ts"
+    },
+    {
+      "t": "2026-10-22T17:10:34Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm run typecheck && npm test 2>&1 | tail -20"
+    },
+    {
+      "t": "2026-10-22T17:10:42Z",
+      "kind": "think",
+      "text": "233/233 passing, both new tests pass against the current (already-correct) code, confirming the invariants as written. Now let's update PROGRESS.md."
+    },
+    {
+      "t": "2026-10-22T17:10:43Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git status"
+    },
+    {
+      "t": "2026-10-22T17:10:45Z",
+      "kind": "run",
+      "text": "tail -5 /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
+    },
+    {
+      "t": "2026-10-22T17:11:05Z",
+      "kind": "edit",
+      "text": "PROGRESS.md"
     }
   ],
   "schedule": {
