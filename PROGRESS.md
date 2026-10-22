@@ -5757,3 +5757,79 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   speculative non-SOL-quote-mint risk (session 86; no action needed
   unless live evidence appears).
 - All five TASK.md steps remain functionally complete.
+
+## Session 91 — 2026-10-22
+
+### Done
+- Fresh checkout again had no `node_modules` (same as sessions 85-90) — ran
+  `npm install` before typecheck/build/test; recurring per-session
+  environment step, not a code issue.
+- Took up session 90's pointer: gave the public web page (`public/feed.js`,
+  `public/index.html`) and `feed.ts`'s in-memory feed/eviction logic the
+  "re-derive from scratch" treatment, the one area not yet covered by the
+  backend's module-by-module sweep (data layer: 84-86, signal-scoring: 87,
+  orchestration: 88, remaining modules: 89, `RequestPacer`/`rpc.ts` second
+  pass: 90).
+  - `feed.ts`: traced `add()`/`update()`/eviction by hand. Confirmed
+    `mints` (the dedup set) and `launches` (the array) stay in sync on
+    every path, including eviction (`launches.pop()` paired with
+    `mints.delete()` in the same branch) — so a mint that ages out of the
+    feed is simultaneously removed from `has()`'s source of truth, letting
+    a later launch with the same mint be added again rather than silently
+    dropped forever. Confirmed `holderRescore.ts`'s `update()` call can
+    never pass an empty-signals score (the signal it pushes is checked
+    non-null before `combineSignals`), so `update()` lacking `add()`'s
+    "drop empty-signals" guard is not reachable. No bug.
+  - `public/feed.js`: `renderLaunch()` interpolates `mint`, `signal.name`,
+    and `reasons` directly into an HTML template string with no escaping —
+    initially looked like a stored-XSS risk, but checked what actually
+    reaches these fields: `mint` is a base58 Solana pubkey (alphanumeric
+    alphabet only, no HTML metacharacters), `signal.name` comes from a
+    fixed literal set in `signals/*.ts` (`"liquidity"`,
+    `"holder-concentration"`, etc.), and every `reasons` string across all
+    four signal modules is built from a fixed label plus a formatted
+    number/percentage — never raw on-chain token metadata (name/symbol
+    aren't even fields on `TokenLaunch`/`SignalResult` today). Not
+    reachable under the current data model; flagged here as a future seam
+    (not a bug) in case a later feature ever adds a raw-string
+    attacker-controlled field like token name/symbol to what's rendered.
+  - `public/index.html`: refresh loop, error fallback
+    (`try`/`catch` -> "Feed unavailable."), and empty-state text all check
+    out against `feed.test.ts`'s existing coverage. No bug.
+  - Also checked session 90's other open question (`RequestPacer`'s
+    `methodIntervalsMs` mutation gap): confirmed it's a non-issue, not just
+    "likely inert" — `methodIntervalsMs` is stored as a direct reference to
+    the object passed into the constructor, but the only real caller
+    (`server.ts`'s `scoringPacer`) passes a literal object inline with no
+    other reference kept anywhere, so there's no code path that could
+    mutate it after construction.
+  - Two real invariants in `feed.ts` were correct but previously unverified
+    by any test: a duplicate `add()` for an already-present mint is a
+    no-op (keeps the first entry), and eviction actually frees the mint for
+    a future `add()`. Added both as regression tests in `feed.test.ts`
+    rather than leaving them implicit.
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 233/233 passing (231 + 2 new tests), offline.
+- `git status` before this edit: one file changed (`src/feed.test.ts`); no
+  source logic changed this session, only test coverage added.
+
+### Next
+- Every module in the project (data layer, signals, orchestration, rpc/
+  server wiring, `RequestPacer`, and now `feed.ts`/the public page) has had
+  at least one "re-derive from scratch" pass. Five real bugs found and
+  fixed total across sessions 84-90; this session found none in its area
+  but closed a test-coverage gap instead.
+- A future session has no obvious next "fresh module" to sweep — options:
+  a second independent pass over a module that's only had one pair of eyes
+  on it (most of them, at this point), or move off the audit pattern
+  entirely and pick up a standing low-priority item below, or consider
+  whether the project needs a feature beyond TASK.md's five steps (all of
+  which remain functionally complete).
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71), and the
+  speculative non-SOL-quote-mint risk (session 86; no action needed
+  unless live evidence appears).
+- All five TASK.md steps remain functionally complete.
