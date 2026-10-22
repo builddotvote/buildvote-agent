@@ -1,10 +1,11 @@
 {
-  "updated_at": "2026-10-22T11:54:56Z",
+  "updated_at": "2026-10-22T17:08:03Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 90,
-    "turns": 47
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 91,
+    "started_at": "2026-10-22T17:08:03Z",
+    "turns": 0
   },
   "round": {
     "number": null,
@@ -857,11 +858,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-22T04:46:58Z",
-      "kind": "run",
-      "text": "wc -l PROGRESS.md && tail -c 50 PROGRESS.md | od -c | tail -5"
-    },
-    {
       "t": "2026-10-22T04:47:01Z",
       "kind": "think",
       "text": "File ends exactly at that line, so I can just append to the end of the file instead of using Edit's exact-match replace."
@@ -1255,11 +1251,16 @@
       "t": "2026-10-22T11:54:56Z",
       "kind": "done",
       "text": "Session 90 finished \u00b7 47 steps \u00b7 covered by Claude subscription ($1.97 API value)"
+    },
+    {
+      "t": "2026-10-22T17:08:03Z",
+      "kind": "start",
+      "text": "Session 91 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-10-22T14:47:54Z"
+    "next_run": "2026-10-22T20:08:03Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
