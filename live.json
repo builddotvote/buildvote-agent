@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-22T17:09:58Z",
+  "updated_at": "2026-10-22T17:10:27Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 91,
     "started_at": "2026-10-22T17:08:03Z",
-    "turns": 28
+    "turns": 30
   },
   "round": {
     "number": null,
@@ -858,21 +858,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-22T11:48:54Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
-      "t": "2026-10-22T11:49:44Z",
-      "kind": "run",
-      "text": "cat package.json"
-    },
-    {
-      "t": "2026-10-22T11:49:45Z",
-      "kind": "run",
-      "text": "sed -n '1,80p' src/rpc.test.ts"
-    },
-    {
       "t": "2026-10-22T11:49:53Z",
       "kind": "run",
       "text": "cat > /tmp/repro_slotleak.ts << 'EOF' import { SolanaRpcClient, RequestPacer, type FetchLike } from \"./src/rpc.js\";  let sleepCalls = 0; const flakySleep = (ms: number): Promise<v\u2026"
@@ -1256,6 +1241,21 @@
       "t": "2026-10-22T17:09:54Z",
       "kind": "read",
       "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-22T17:10:01Z",
+      "kind": "read",
+      "text": "rug-radar/src/scorer.ts"
+    },
+    {
+      "t": "2026-10-22T17:10:26Z",
+      "kind": "think",
+      "text": "Audit of `feed.ts`, `feed.js`, and `index.html` found the logic correct (verified eviction/mint-set sync, reachability of `update()`'s zero-signal risk, and that rendered fields a\u2026"
+    },
+    {
+      "t": "2026-10-22T17:10:27Z",
+      "kind": "read",
+      "text": "rug-radar/src/feed.test.ts"
     }
   ],
   "schedule": {
