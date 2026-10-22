@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-22T11:53:03Z",
+  "updated_at": "2026-10-22T11:53:31Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 90,
     "started_at": "2026-10-22T11:47:54Z",
-    "turns": 35
+    "turns": 37
   },
   "round": {
     "number": null,
@@ -849,31 +849,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-22T04:45:27Z",
-      "kind": "edit",
-      "text": "rug-radar/src/rpc.test.ts"
-    },
-    {
-      "t": "2026-10-22T04:45:29Z",
-      "kind": "think",
-      "text": "Now let's confirm the test fails on the pre-fix code (to prove it's a real regression test) and passes on the fixed code."
-    },
-    {
-      "t": "2026-10-22T04:45:30Z",
-      "kind": "run",
-      "text": "git stash && node --import tsx --test --test-reporter spec src/rpc.test.ts 2>&1 | grep -A 15 \"pacer spacing survives\"; echo \"EXIT:$?\"; git stash pop"
-    },
-    {
-      "t": "2026-10-22T04:45:35Z",
-      "kind": "run",
-      "text": "git diff src/rpc.ts > /tmp/rpc_fix.patch && git checkout -- src/rpc.ts && node --import tsx --test --test-reporter spec src/rpc.test.ts 2>&1 | grep -A 10 \"pacer spacing survives\""
-    },
-    {
-      "t": "2026-10-22T04:45:38Z",
-      "kind": "think",
-      "text": "Confirmed: the test fails (0ms gap) on the pre-fix code. Now restore the fix and re-run the full suite."
-    },
-    {
       "t": "2026-10-22T04:45:38Z",
       "kind": "run",
       "text": "git apply /tmp/rpc_fix.patch && npm test 2>&1 | tail -15"
@@ -1247,6 +1222,31 @@
       "t": "2026-10-22T11:53:03Z",
       "kind": "edit",
       "text": "rug-radar/src/rpc.test.ts"
+    },
+    {
+      "t": "2026-10-22T11:53:05Z",
+      "kind": "think",
+      "text": "Now let's confirm these tests fail against the pre-fix code (to prove they're real regression tests) and then pass against the fix."
+    },
+    {
+      "t": "2026-10-22T11:53:07Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar git stash push -- src/rpc.ts echo \"=== running new tests against PRE-FIX rpc.ts ===\" node --import tsx --test --test\u2026"
+    },
+    {
+      "t": "2026-10-22T11:53:11Z",
+      "kind": "think",
+      "text": "Both tests fail on pre-fix code exactly as predicted (confirming they're real regression tests, not tautologies), and the stash pop restored the fix. Now let's run the full suite \u2026"
+    },
+    {
+      "t": "2026-10-22T11:53:12Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar npm run typecheck 2>&1 | tail -20 npm run build 2>&1 | tail -20 for i in 1 2 3; do echo \"=== run $i ===\"; npm test 2\u2026"
+    },
+    {
+      "t": "2026-10-22T11:53:31Z",
+      "kind": "think",
+      "text": "231/231 passing, stable across 3 runs, typecheck/build clean, no leftover temp files. Let's check final git status and diff before writing PROGRESS.md."
     }
   ],
   "schedule": {
