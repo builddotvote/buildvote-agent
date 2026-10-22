@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-22T11:51:09Z",
+  "updated_at": "2026-10-22T11:51:35Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 90,
     "started_at": "2026-10-22T11:47:54Z",
-    "turns": 24
+    "turns": 28
   },
   "round": {
     "number": null,
@@ -849,36 +849,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-22T04:42:48Z",
-      "kind": "read",
-      "text": "rug-radar/src/deployerIndex.test.ts"
-    },
-    {
-      "t": "2026-10-22T04:42:49Z",
-      "kind": "read",
-      "text": "rug-radar/src/knownAccounts.test.ts"
-    },
-    {
-      "t": "2026-10-22T04:42:49Z",
-      "kind": "read",
-      "text": "rug-radar/src/requestHandler.test.ts"
-    },
-    {
-      "t": "2026-10-22T04:43:47Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && cat > /tmp/repro.mjs << 'EOF' import { SolanaRpcClient } from \"./src/rpc.ts\";  let starts = []; let resolvers = [\u2026"
-    },
-    {
-      "t": "2026-10-22T04:43:50Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && sed -i 's#./src/rpc.ts#/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/rpc.ts#' /tmp/repro.mjs &&\u2026"
-    },
-    {
-      "t": "2026-10-22T04:43:56Z",
-      "kind": "think",
-      "text": "Confirmed: under slot contention, calls 2 and 3 fire almost back-to-back (1ms apart) instead of being spaced 100ms apart \u2014 the exact rate-limit burst these mechanisms exist to pre\u2026"
-    },
-    {
       "t": "2026-10-22T04:43:57Z",
       "kind": "read",
       "text": "rug-radar/src/rpc.ts"
@@ -1247,6 +1217,36 @@
       "t": "2026-10-22T11:50:46Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar grep -n \"sleep\\|RequestPacer\\|new SolanaRpcClient\" src/server.ts"
+    },
+    {
+      "t": "2026-10-22T11:51:17Z",
+      "kind": "think",
+      "text": "Confirmed two related bugs stemming from the same root cause. Let me view the existing pacer tests to match the file's style before writing fixes and regression tests."
+    },
+    {
+      "t": "2026-10-22T11:51:18Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar grep -n \"^test\\|RequestPacer\\|maxConcurrent\" src/rpc.test.ts"
+    },
+    {
+      "t": "2026-10-22T11:51:21Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.test.ts"
+    },
+    {
+      "t": "2026-10-22T11:51:24Z",
+      "kind": "think",
+      "text": "Now let me apply both fixes in `rpc.ts`: the chain-poisoning fix in `RequestPacer.reserve()`, and the slot-leak fix in `SolanaRpcClient.request()`."
+    },
+    {
+      "t": "2026-10-22T11:51:28Z",
+      "kind": "edit",
+      "text": "rug-radar/src/rpc.ts"
+    },
+    {
+      "t": "2026-10-22T11:51:32Z",
+      "kind": "edit",
+      "text": "rug-radar/src/rpc.ts"
     }
   ],
   "schedule": {
