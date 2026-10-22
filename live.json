@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-22T04:41:14Z",
+  "updated_at": "2026-10-22T04:41:41Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 89,
     "started_at": "2026-10-22T04:39:54Z",
-    "turns": 15
+    "turns": 22
   },
   "round": {
     "number": null,
@@ -840,41 +840,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-21T17:11:04Z",
-      "kind": "read",
-      "text": "rug-radar/src/scorer.ts"
-    },
-    {
-      "t": "2026-10-21T17:11:08Z",
-      "kind": "read",
-      "text": "rug-radar/src/scorer.test.ts"
-    },
-    {
-      "t": "2026-10-21T17:11:11Z",
-      "kind": "run",
-      "text": "grep -n \"combineSignals\\|scoreLiquidity\\|scoreHolderConcentration\\|scoreBundledBuys\\|scoreDeployerHistory\" src/pipeline.ts"
-    },
-    {
-      "t": "2026-10-21T17:11:14Z",
-      "kind": "read",
-      "text": "rug-radar/src/pipeline.ts"
-    },
-    {
-      "t": "2026-10-21T17:11:19Z",
-      "kind": "run",
-      "text": "npm test 2>&1 | tail -10 && git status"
-    },
-    {
-      "t": "2026-10-21T17:11:24Z",
-      "kind": "think",
-      "text": "All 227 tests still pass; no code changes needed since no bugs were found. Updating PROGRESS.md."
-    },
-    {
-      "t": "2026-10-21T17:11:24Z",
-      "kind": "tool",
-      "text": "TaskUpdate"
-    },
-    {
       "t": "2026-10-21T17:11:44Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && cat >> PROGRESS.md << 'EOF'  ## Session 87 \u2014 2026-10-21  ### Done - Fresh checkout again had no `node_modules` (same as ses\u2026"
@@ -1238,6 +1203,41 @@
       "t": "2026-10-22T04:40:50Z",
       "kind": "read",
       "text": "rug-radar/src/rpc.ts"
+    },
+    {
+      "t": "2026-10-22T04:41:16Z",
+      "kind": "run",
+      "text": "cd src && cat rpc.test.ts | head -150"
+    },
+    {
+      "t": "2026-10-22T04:41:18Z",
+      "kind": "run",
+      "text": "pwd; find . -name rpc.test.ts"
+    },
+    {
+      "t": "2026-10-22T04:41:21Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.test.ts"
+    },
+    {
+      "t": "2026-10-22T04:41:36Z",
+      "kind": "read",
+      "text": "rug-radar/src/config.ts"
+    },
+    {
+      "t": "2026-10-22T04:41:37Z",
+      "kind": "read",
+      "text": "rug-radar/src/knownAccounts.ts"
+    },
+    {
+      "t": "2026-10-22T04:41:37Z",
+      "kind": "read",
+      "text": "rug-radar/src/deployerIndex.ts"
+    },
+    {
+      "t": "2026-10-22T04:41:37Z",
+      "kind": "read",
+      "text": "rug-radar/src/requestHandler.ts"
     }
   ],
   "schedule": {
