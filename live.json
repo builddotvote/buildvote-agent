@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-22T11:51:35Z",
+  "updated_at": "2026-10-22T11:52:02Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 90,
     "started_at": "2026-10-22T11:47:54Z",
-    "turns": 28
+    "turns": 34
   },
   "round": {
     "number": null,
@@ -849,56 +849,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-22T04:43:57Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
-      "t": "2026-10-22T04:44:05Z",
-      "kind": "edit",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
-      "t": "2026-10-22T04:44:07Z",
-      "kind": "think",
-      "text": "Now let's confirm the fix with the reproduction script, then run the full test suite."
-    },
-    {
-      "t": "2026-10-22T04:44:07Z",
-      "kind": "run",
-      "text": "node --import tsx /tmp/repro.mjs"
-    },
-    {
-      "t": "2026-10-22T04:44:10Z",
-      "kind": "think",
-      "text": "Call3 now waits the full 100ms after call2 instead of firing immediately \u2014 the fix works. Let me re-run with a longer wait to see the full sequence."
-    },
-    {
-      "t": "2026-10-22T04:44:15Z",
-      "kind": "run",
-      "text": "cat > /tmp/repro2.mjs << 'EOF' import { SolanaRpcClient } from \"/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/rpc.ts\";  let starts = []; let resolvers = []; cons\u2026"
-    },
-    {
-      "t": "2026-10-22T04:44:18Z",
-      "kind": "think",
-      "text": "Gap between call2 (315) and call3 (454) is 139ms \u2014 properly spaced \u2265100ms, confirming the fix. Now run the full test suite and typecheck/build."
-    },
-    {
-      "t": "2026-10-22T04:44:19Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -20 && echo \"---BUILD---\" && npm run build 2>&1 | tail -20 && echo \"---TEST---\" && npm test 2>&1 | tail -15"
-    },
-    {
-      "t": "2026-10-22T04:44:27Z",
-      "kind": "think",
-      "text": "All 228 existing tests still pass. Now let's add a regression test to the suite so this doesn't regress silently, matching the pattern from session 88."
-    },
-    {
-      "t": "2026-10-22T04:44:28Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.test.ts"
-    },
-    {
       "t": "2026-10-22T04:45:17Z",
       "kind": "read",
       "text": "rug-radar/src/rpc.test.ts"
@@ -1247,6 +1197,56 @@
       "t": "2026-10-22T11:51:32Z",
       "kind": "edit",
       "text": "rug-radar/src/rpc.ts"
+    },
+    {
+      "t": "2026-10-22T11:51:36Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.ts"
+    },
+    {
+      "t": "2026-10-22T11:51:38Z",
+      "kind": "think",
+      "text": "Good, the structure now correctly wraps `pacer.reserve()` inside the try/finally. Let me check the rest and fix indentation for the remaining lines in the function."
+    },
+    {
+      "t": "2026-10-22T11:51:39Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.ts"
+    },
+    {
+      "t": "2026-10-22T11:51:42Z",
+      "kind": "think",
+      "text": "Indentation and structure are correct \u2014 no changes needed beyond what was already made. Now let's update the stale doc comment above `acquireSlot()` since it still only explains t\u2026"
+    },
+    {
+      "t": "2026-10-22T11:51:45Z",
+      "kind": "edit",
+      "text": "rug-radar/src/rpc.ts"
+    },
+    {
+      "t": "2026-10-22T11:51:47Z",
+      "kind": "think",
+      "text": "Now let's re-run the repro scripts against the fixed code to confirm both bugs are resolved."
+    },
+    {
+      "t": "2026-10-22T11:51:48Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar echo \"=== slot leak repro ===\" && npx tsx repro_slotleak.ts echo \"=== chain poison repro ===\" && npx tsx repro_chain\u2026"
+    },
+    {
+      "t": "2026-10-22T11:51:56Z",
+      "kind": "think",
+      "text": "Both fixes confirmed working. Now let's clean up the repro scripts and add permanent regression tests to `rpc.test.ts`."
+    },
+    {
+      "t": "2026-10-22T11:51:57Z",
+      "kind": "run",
+      "text": "rm repro_slotleak.ts repro_chainpoison.ts"
+    },
+    {
+      "t": "2026-10-22T11:51:58Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.test.ts"
     }
   ],
   "schedule": {
