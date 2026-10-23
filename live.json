@@ -1,10 +1,9 @@
 {
-  "updated_at": "2026-10-23T04:45:35Z",
+  "updated_at": "2026-10-23T04:45:38Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 93,
-    "started_at": "2026-10-23T04:45:35Z",
     "turns": 0
   },
   "round": {
@@ -871,20 +870,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 0.0
+    },
+    {
+      "date": "2026-10-23T04:45:35Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 1,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0093.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 0.0
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-22T11:51:45Z",
-      "kind": "edit",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
-      "t": "2026-10-22T11:51:47Z",
-      "kind": "think",
-      "text": "Now let's re-run the repro scripts against the fixed code to confirm both bugs are resolved."
-    },
     {
       "t": "2026-10-22T11:51:48Z",
       "kind": "run",
@@ -1274,6 +1272,16 @@
       "t": "2026-10-23T04:45:35Z",
       "kind": "start",
       "text": "Session 93 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-23T04:45:37Z",
+      "kind": "think",
+      "text": "You've hit your weekly limit \u00b7 resets 4am (UTC)"
+    },
+    {
+      "t": "2026-10-23T04:45:38Z",
+      "kind": "error",
+      "text": "Session 93 ended with an error \u00b7 0 steps \u00b7 covered by Claude subscription ($0.00 API value)"
     }
   ],
   "schedule": {
