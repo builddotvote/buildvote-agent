@@ -5916,3 +5916,74 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   speculative non-SOL-quote-mint risk (session 86; no action needed
   unless live evidence appears).
 - All five TASK.md steps remain functionally complete.
+
+## Session 93 — 2026-10-24
+
+### Done
+- Fresh checkout again had no `node_modules` — ran `npm install` before
+  typecheck/build/test (same recurring per-session environment step as
+  sessions 85-92; not a code issue).
+- Picked up session 92's unclaimed pointer: gave the deployer-history/
+  discovery seam (`deployerIndex.ts` live-observed index, cross-checked
+  against `data/deployerHistory.ts`'s retroactive signature scan) a full
+  from-scratch re-derive, since it had only been touched lightly before.
+  Traced by hand: `DeployerIndex.record()`'s dedup-by-mint and FIFO
+  eviction (confirmed eviction actually frees a mint for a later `record()`
+  of the same mint — same bug class session 91 tested for in `feed.ts`, but
+  previously untested here); `fetchDeployerHistoryInput`'s three-way dedup
+  between the current mint, the scan's own finds, and `observedPriorLaunches`
+  (scan results take priority, observed never double-counts a scan hit);
+  `pipeline.ts`'s record-before-use ordering (so a deployer's current launch
+  is visible to the next one scored for the same deployer, with
+  `excludeMint` correctly excluding it from its own history). No bug found.
+- Extended the pass to the orchestration race-guards (fresh read of
+  `poller.ts` and `watcherOnLaunch.ts`, not re-reading session 88's notes
+  first): confirmed `scoringInFlight.tryAcquire` before `scoringGate.tryAcquire`,
+  with correct release-on-failure ordering in both the sequential (poller)
+  and fire-and-forget (watcher) paths, and that `onScored` only fires when
+  `feed.has()` is true after `add()` (so a zero-signal score, dropped by
+  `feed.add()`, never schedules a holder-concentration rescore for nothing).
+  No bug found.
+- Cross-checked the two holder-concentration code paths for a seam bug
+  (initial score via `data/holderConcentration.ts` + RPC's
+  `getTokenLargestAccounts`, vs. the later rescore via `rescore.ts` +
+  `BalanceIndex`): both exclude the bonding curve/known-program addresses
+  from the top-10 numerator only, never from the `totalSupply` denominator,
+  so the two paths score consistently despite excluding addresses at
+  different points (`BalanceIndex.getHolders()` filters before
+  `scoreHolderConcentration` even sees them, vs. the RPC path passing
+  `excludedAddresses` through to `scoreHolderConcentration` itself). Also
+  confirmed `holderRescore.ts`'s dev-bundled-buy seeding
+  (`balanceIndex.recordTrade(launch.bundledBuy)`) uses the same
+  `TradeInstruction` shape (`kind`/`mint`/`user`/`amount`) that live
+  buy/sell notifications use, so the seed trade isn't a special case the
+  index could misinterpret. No bug found.
+- Verified `knownAccounts.ts`'s four hardcoded program addresses (System,
+  Token, Token-2022, Associated Token Account) against their well-known
+  real values. All four correct.
+- Added one regression test that was missing given the above: `DeployerIndex`
+  re-tracking a mint after it's aged out of the FIFO (mirroring feed.ts's
+  existing eviction-then-readd test from session 91, which this index never
+  had its own version of).
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 234/234 passing (233 + 1 new test), offline.
+- `git status` before this edit: one file changed (`src/deployerIndex.test.ts`);
+  no source logic changed this session, only test coverage added.
+
+### Next
+- Second-pass candidates still unclaimed from session 92's list: the
+  "remaining modules" group (`server.ts`, `requestHandler.ts`, `config.ts`)
+  for a second from-scratch look (first pass was session 89); `pipeline.ts`
+  itself end-to-end beyond the deployer-history seam covered here. The
+  signal-scoring layer (two passes, 87 and 92) and now the deployer-history/
+  discovery seam, poller/watcher race-guards, and holder-concentration
+  dual-path seam (this session) are all confirmed correct and shouldn't be
+  re-run without new evidence.
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71), and the
+  speculative non-SOL-quote-mint risk (session 86; no action needed unless
+  live evidence appears).
+- All five TASK.md steps remain functionally complete.

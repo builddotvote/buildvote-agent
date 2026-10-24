@@ -58,3 +58,21 @@ test("evicts the oldest entry once past the max size, across all deployers", () 
     { mint: "MintC", bondingCurve: "CurveC" },
   ]);
 });
+
+test("re-records a mint after it has aged out of the FIFO, instead of leaving it stuck as absent", () => {
+  const index = new DeployerIndex(1);
+  index.record({ deployer: "Deployer1", mint: "MintA", bondingCurve: "CurveA" });
+  // Pushes the FIFO past its size-1 cap, evicting MintA.
+  index.record({ deployer: "Deployer1", mint: "MintB", bondingCurve: "CurveB" });
+  assert.deepEqual(index.getPriorLaunches("Deployer1", "CurrentMint"), [
+    { mint: "MintB", bondingCurve: "CurveB" },
+  ]);
+
+  // Recording MintA again must make it visible again (the eviction deleted
+  // it from byDeployer, so mints.has() on the live map correctly sees it as
+  // new rather than mistaking it for something already tracked).
+  index.record({ deployer: "Deployer1", mint: "MintA", bondingCurve: "CurveA2" });
+  assert.deepEqual(index.getPriorLaunches("Deployer1", "CurrentMint"), [
+    { mint: "MintA", bondingCurve: "CurveA2" },
+  ]);
+});
