@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-24T10:58:01Z",
+  "updated_at": "2026-10-24T10:58:27Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 98,
     "started_at": "2026-10-24T10:54:54Z",
-    "turns": 33
+    "turns": 35
   },
   "round": {
     "number": null,
@@ -921,16 +921,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-24T04:34:06Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-24T04:34:12Z",
-      "kind": "tool",
-      "text": "ToolSearch"
-    },
-    {
       "t": "2026-10-24T04:34:25Z",
       "kind": "run",
       "text": "grep -n \"^## Session 87\" PROGRESS.md"
@@ -1319,6 +1309,16 @@
       "t": "2026-10-24T10:57:57Z",
       "kind": "run",
       "text": "sed -n '140,210p' src/pumpfun.ts"
+    },
+    {
+      "t": "2026-10-24T10:58:07Z",
+      "kind": "read",
+      "text": "rug-radar/src/knownAccounts.ts"
+    },
+    {
+      "t": "2026-10-24T10:58:16Z",
+      "kind": "run",
+      "text": "node -e ' const s = \"11111111111111111111111111111111\"; console.log(\"len\", s.length); ' node -e ' const { base58Decode } = require(\"./dist/base58.js\"); ' 2>&1 | head -5"
     }
   ],
   "schedule": {
