@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-24T15:55:53Z",
+  "updated_at": "2026-10-24T15:56:20Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 99,
     "started_at": "2026-10-24T15:54:32Z",
-    "turns": 21
+    "turns": 26
   },
   "round": {
     "number": null,
@@ -930,51 +930,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-24T04:39:08Z",
-      "kind": "done",
-      "text": "Session 97 finished \u00b7 50 steps \u00b7 covered by Claude subscription ($2.00 API value)"
-    },
-    {
-      "t": "2026-10-24T10:54:54Z",
-      "kind": "start",
-      "text": "Session 98 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-24T10:54:58Z",
-      "kind": "run",
-      "text": "cat TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat PROGRESS.md 2>/dev/null"
-    },
-    {
-      "t": "2026-10-24T10:55:01Z",
-      "kind": "run",
-      "text": "wc -l TASK.md PROGRESS.md; echo \"---\"; tail -n 150 PROGRESS.md"
-    },
-    {
-      "t": "2026-10-24T10:55:06Z",
-      "kind": "run",
-      "text": "cat /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/MEMORY.md 2>/dev/null"
-    },
-    {
-      "t": "2026-10-24T10:55:08Z",
-      "kind": "run",
-      "text": "ls -la /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/ 2>/dev/null"
-    },
-    {
-      "t": "2026-10-24T10:55:11Z",
-      "kind": "run",
-      "text": "ls -la \"/home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/\" 2>&1 | head -50"
-    },
-    {
-      "t": "2026-10-24T10:55:16Z",
-      "kind": "run",
-      "text": "git log --oneline -15 && echo --- && ls rug-radar && echo --- && ls rug-radar/src rug-radar/src/signals rug-radar/src/data 2>/dev/null"
-    },
-    {
-      "t": "2026-10-24T10:55:19Z",
-      "kind": "run",
-      "text": "git log --oneline | head -20 && echo \"total commits:\" && git log --oneline | wc -l"
-    },
-    {
       "t": "2026-10-24T10:55:26Z",
       "kind": "run",
       "text": "cd rug-radar && git log -1 --format=%B && echo \"---stat---\" && git show --stat HEAD | head -30"
@@ -1328,6 +1283,51 @@
       "t": "2026-10-24T15:55:51Z",
       "kind": "run",
       "text": "rm -f ./repro.mjs"
+    },
+    {
+      "t": "2026-10-24T15:56:00Z",
+      "kind": "edit",
+      "text": "rug-radar/src/requestHandler.ts"
+    },
+    {
+      "t": "2026-10-24T15:56:02Z",
+      "kind": "think",
+      "text": "Now let's add a regression test confirming this, verified to fail against the pre-fix code."
+    },
+    {
+      "t": "2026-10-24T15:56:05Z",
+      "kind": "edit",
+      "text": "rug-radar/src/requestHandler.test.ts"
+    },
+    {
+      "t": "2026-10-24T15:56:07Z",
+      "kind": "think",
+      "text": "Let's verify these tests fail against the pre-fix code, then pass after the fix \u2014 and run the full suite."
+    },
+    {
+      "t": "2026-10-24T15:56:08Z",
+      "kind": "run",
+      "text": "git stash push -- src/requestHandler.ts && node --import tsx --test --test-reporter spec src/requestHandler.test.ts 2>&1 | tail -40; echo \"---restoring fix---\"; git stash pop"
+    },
+    {
+      "t": "2026-10-24T15:56:11Z",
+      "kind": "think",
+      "text": "Confirmed both tests fail against pre-fix code with exactly the reproduced symptom. Now run the full suite against the fix."
+    },
+    {
+      "t": "2026-10-24T15:56:11Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -20 && echo \"---BUILD---\" && npm run build 2>&1 | tail -20 && echo \"---TEST---\" && npm test 2>&1 | tail -15"
+    },
+    {
+      "t": "2026-10-24T15:56:19Z",
+      "kind": "think",
+      "text": "236/236 passing, typecheck and build clean. Let's check git status to confirm only the intended files changed, then update PROGRESS.md."
+    },
+    {
+      "t": "2026-10-24T15:56:20Z",
+      "kind": "run",
+      "text": "git status"
     }
   ],
   "schedule": {
