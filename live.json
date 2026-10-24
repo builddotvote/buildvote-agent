@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-24T20:48:42Z",
+  "updated_at": "2026-10-24T20:49:09Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 100,
     "started_at": "2026-10-24T20:45:59Z",
-    "turns": 30
+    "turns": 34
   },
   "round": {
     "number": null,
@@ -939,26 +939,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-24T11:00:02Z",
-      "kind": "run",
-      "text": "git status --short"
-    },
-    {
-      "t": "2026-10-24T11:00:08Z",
-      "kind": "think",
-      "text": "Clean working state with only the intended changes. Per CLAUDE.md rules, I won't commit or push \u2014 the runner handles that."
-    },
-    {
-      "t": "2026-10-24T11:00:09Z",
-      "kind": "done",
-      "text": "Session 98 finished \u00b7 43 steps \u00b7 covered by Claude subscription ($1.54 API value)"
-    },
-    {
-      "t": "2026-10-24T15:54:32Z",
-      "kind": "start",
-      "text": "Session 99 started: Rug radar: live launch scoring"
-    },
-    {
       "t": "2026-10-24T15:54:36Z",
       "kind": "run",
       "text": "cat PROGRESS.md 2>/dev/null; echo \"---TASK---\"; cat TASK.md 2>/dev/null"
@@ -1337,6 +1317,26 @@
       "t": "2026-10-24T20:48:34Z",
       "kind": "run",
       "text": "npm run typecheck 2>&1 | tail -20 && npm run build 2>&1 | tail -20 && npm test 2>&1 | tail -15"
+    },
+    {
+      "t": "2026-10-24T20:48:51Z",
+      "kind": "run",
+      "text": "node -e ' import(\"node:http\").then(({createServer}) => {   const s = createServer();   s.on(\"error\", (e) => console.log(\"error event:\", e.message));   try {     s.listen(-1, () =>\u2026"
+    },
+    {
+      "t": "2026-10-24T20:49:03Z",
+      "kind": "run",
+      "text": "grep -n \"^#\\|^##\" README.md | tail -40"
+    },
+    {
+      "t": "2026-10-24T20:49:04Z",
+      "kind": "run",
+      "text": "sed -n '589,660p' README.md"
+    },
+    {
+      "t": "2026-10-24T20:49:08Z",
+      "kind": "run",
+      "text": "grep -n \"race\\|overlap\\|watermark\\|unhandled rejection\\|crash\" README.md"
     }
   ],
   "schedule": {
