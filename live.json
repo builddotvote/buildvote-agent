@@ -1,10 +1,11 @@
 {
-  "updated_at": "2026-10-24T15:56:55Z",
+  "updated_at": "2026-10-24T20:45:59Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 99,
-    "turns": 30
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 100,
+    "started_at": "2026-10-24T20:45:59Z",
+    "turns": 0
   },
   "round": {
     "number": null,
@@ -938,11 +939,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-24T10:55:39Z",
-      "kind": "run",
-      "text": "for f in logs/session-0093.md logs/session-0094.md logs/session-0095.md logs/session-0096.md logs/session-0097.md; do echo \"=== $f ===\"; cat \"$f\"; echo; done"
-    },
-    {
       "t": "2026-10-24T10:55:56Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && (ls node_modules >/dev/null 2>&1 && echo \"node_modules present\") || (echo \"installing\" && npm install --silent 2>\u2026"
@@ -1336,11 +1332,16 @@
       "t": "2026-10-24T15:56:55Z",
       "kind": "done",
       "text": "Session 99 finished \u00b7 30 steps \u00b7 covered by Claude subscription ($0.91 API value)"
+    },
+    {
+      "t": "2026-10-24T20:45:59Z",
+      "kind": "start",
+      "text": "Session 100 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-10-24T18:54:32Z"
+    "next_run": "2026-10-24T23:45:59Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
