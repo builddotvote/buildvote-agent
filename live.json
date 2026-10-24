@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-24T23:15:26Z",
+  "updated_at": "2026-10-24T23:15:53Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 101,
     "started_at": "2026-10-24T23:10:55Z",
-    "turns": 35
+    "turns": 40
   },
   "round": {
     "number": null,
@@ -948,51 +948,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-24T20:48:02Z",
-      "kind": "run",
-      "text": "grep -rn \"process.exit\\|\\.on(\\\"error\\\"\\|\\.on('error'\" src | grep -v test"
-    },
-    {
-      "t": "2026-10-24T20:48:06Z",
-      "kind": "run",
-      "text": "cd rug-radar && grep -n \"const server\\|server.listen\\|server.on\" src/server.ts"
-    },
-    {
-      "t": "2026-10-24T20:48:09Z",
-      "kind": "run",
-      "text": "pwd"
-    },
-    {
-      "t": "2026-10-24T20:48:11Z",
-      "kind": "run",
-      "text": "grep -n \"const server\\|server.listen\\|server.on\" src/server.ts"
-    },
-    {
-      "t": "2026-10-24T20:48:17Z",
-      "kind": "run",
-      "text": "cat > /tmp/repro_post_listen_error.mjs <<'EOF' import { createServer } from \"node:http\";  const s = createServer((req, res) => res.end(\"ok\")); s.listen(5556, async () => {   conso\u2026"
-    },
-    {
-      "t": "2026-10-24T20:48:22Z",
-      "kind": "read",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-24T20:48:27Z",
-      "kind": "edit",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-24T20:48:29Z",
-      "kind": "think",
-      "text": "Now let's verify the fix actually prevents the crash, and run the full test suite."
-    },
-    {
-      "t": "2026-10-24T20:48:31Z",
-      "kind": "run",
-      "text": "cat > /tmp/repro_fix_check.mjs <<'EOF' import { createServer } from \"node:http\";  const s1 = createServer((req, res) => res.end(\"1\")); s1.listen(5557, () => {   const s2 = createS\u2026"
-    },
-    {
       "t": "2026-10-24T20:48:33Z",
       "kind": "think",
       "text": "Confirmed the fix pattern prevents the crash. Now let's check typecheck/build/tests, since `server.ts` has no dedicated test file (it's module-level wiring, consistent with prior \u2026"
@@ -1346,6 +1301,51 @@
       "t": "2026-10-24T23:15:26Z",
       "kind": "edit",
       "text": "rug-radar/src/rpc.test.ts"
+    },
+    {
+      "t": "2026-10-24T23:15:27Z",
+      "kind": "think",
+      "text": "Now let's verify this test fails against the pre-fix code, then passes with the fix (matching the project's established verification habit)."
+    },
+    {
+      "t": "2026-10-24T23:15:29Z",
+      "kind": "run",
+      "text": "git stash push -- src/rpc.ts && node --import tsx --test --test-reporter spec src/rpc.test.ts 2>&1 | grep -A5 \"429 retry still respects\" ; echo \"exit=$?\"; git stash pop"
+    },
+    {
+      "t": "2026-10-24T23:15:32Z",
+      "kind": "think",
+      "text": "Confirmed: fails against pre-fix code (1ms instead of \u226545ms), and the fix is restored. Now let's run the full test suite 3x to check stability (real timers involved)."
+    },
+    {
+      "t": "2026-10-24T23:15:32Z",
+      "kind": "run",
+      "text": "for i in 1 2 3; do npm test 2>&1 | tail -8; echo \"===run $i done===\"; done"
+    },
+    {
+      "t": "2026-10-24T23:15:43Z",
+      "kind": "think",
+      "text": "237/237 passing, stable across 3 runs. Let's also confirm typecheck/build are clean and clean up the repro scripts."
+    },
+    {
+      "t": "2026-10-24T23:15:44Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && rm -f /tmp/repro-pacer-retry*.mjs && git status --short"
+    },
+    {
+      "t": "2026-10-24T23:15:49Z",
+      "kind": "think",
+      "text": "Clean. Only `src/rpc.ts` and `src/rpc.test.ts` changed, no stray repro files. Now let's document the fix in the README, matching the established pattern of recording rate-limiting\u2026"
+    },
+    {
+      "t": "2026-10-24T23:15:50Z",
+      "kind": "run",
+      "text": "grep -n \"RequestPacer\\|minIntervalMs\\|methodIntervalsMs\\|## \" README.md | head -60"
+    },
+    {
+      "t": "2026-10-24T23:15:53Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
     }
   ],
   "schedule": {
