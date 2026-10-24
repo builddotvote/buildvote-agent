@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-24T23:13:08Z",
+  "updated_at": "2026-10-24T23:13:35Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 101,
     "started_at": "2026-10-24T23:10:55Z",
-    "turns": 18
+    "turns": 22
   },
   "round": {
     "number": null,
@@ -948,36 +948,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-24T15:56:49Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git status && echo \"---\" && git diff --stat"
-    },
-    {
-      "t": "2026-10-24T15:56:53Z",
-      "kind": "think",
-      "text": "Session complete. Summary:"
-    },
-    {
-      "t": "2026-10-24T15:56:55Z",
-      "kind": "done",
-      "text": "Session 99 finished \u00b7 30 steps \u00b7 covered by Claude subscription ($0.91 API value)"
-    },
-    {
-      "t": "2026-10-24T20:45:59Z",
-      "kind": "start",
-      "text": "Session 100 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-24T20:46:03Z",
-      "kind": "run",
-      "text": "cat PROGRESS.md 2>/dev/null; echo \"---TASK---\"; cat TASK.md 2>/dev/null"
-    },
-    {
-      "t": "2026-10-24T20:46:06Z",
-      "kind": "run",
-      "text": "wc -l PROGRESS.md TASK.md 2>/dev/null"
-    },
-    {
       "t": "2026-10-24T20:46:09Z",
       "kind": "read",
       "text": "TASK.md"
@@ -1346,6 +1316,36 @@
       "t": "2026-10-24T23:12:37Z",
       "kind": "run",
       "text": "cd rug-radar && wc -l src/rpc.test.ts && grep -n \"429\\|pacer\\|Pacer\\|minIntervalMs\\|methodIntervalsMs\\|describe\\|test(\" src/rpc.test.ts | head -100"
+    },
+    {
+      "t": "2026-10-24T23:13:20Z",
+      "kind": "run",
+      "text": "cd rug-radar && sed -n '380,465p' src/rpc.test.ts"
+    },
+    {
+      "t": "2026-10-24T23:13:23Z",
+      "kind": "run",
+      "text": "pwd"
+    },
+    {
+      "t": "2026-10-24T23:13:26Z",
+      "kind": "think",
+      "text": "Good, already in rug-radar. Let me look at the retry-related test and write a live repro script for the suspected pacer/retry gap."
+    },
+    {
+      "t": "2026-10-24T23:13:26Z",
+      "kind": "run",
+      "text": "sed -n '160,270p' src/rpc.test.ts"
+    },
+    {
+      "t": "2026-10-24T23:13:28Z",
+      "kind": "think",
+      "text": "Now let me write a quick live repro script to confirm pacer is not consulted on retries."
+    },
+    {
+      "t": "2026-10-24T23:13:33Z",
+      "kind": "run",
+      "text": "cat > /tmp/repro-pacer-retry.mjs <<'EOF' import { SolanaRpcClient } from \"/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/dist/rpc.js\";  const sendTimes = []; let call\u2026"
     }
   ],
   "schedule": {
