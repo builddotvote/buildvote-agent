@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-24T10:56:40Z",
+  "updated_at": "2026-10-24T10:57:08Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 98,
     "started_at": "2026-10-24T10:54:54Z",
-    "turns": 21
+    "turns": 24
   },
   "round": {
     "number": null,
@@ -921,21 +921,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-24T04:33:00Z",
-      "kind": "run",
-      "text": "wc -l /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md && echo \"---\" && tail -c 4000 /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
-    },
-    {
-      "t": "2026-10-24T04:33:05Z",
-      "kind": "run",
-      "text": "grep -n \"^## Session\" /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md | tail -20"
-    },
-    {
-      "t": "2026-10-24T04:33:08Z",
-      "kind": "run",
-      "text": "git log --oneline -20"
-    },
-    {
       "t": "2026-10-24T04:33:11Z",
       "kind": "run",
       "text": "git log --all --oneline | head -30 && echo --- && git log -1 --format=%ci"
@@ -1319,6 +1304,21 @@
       "t": "2026-10-24T10:56:32Z",
       "kind": "read",
       "text": "rug-radar/src/deployerIndex.test.ts"
+    },
+    {
+      "t": "2026-10-24T10:56:41Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/deployerHistory.test.ts"
+    },
+    {
+      "t": "2026-10-24T10:56:50Z",
+      "kind": "run",
+      "text": "grep -n \"decodeCreateInstruction\\|CREATE_DISCRIMINATOR\\|function decodeCreateInstruction\" -A 25 src/pumpfun.ts | head -60"
+    },
+    {
+      "t": "2026-10-24T10:57:06Z",
+      "kind": "read",
+      "text": "rug-radar/src/poller.ts"
     }
   ],
   "schedule": {
