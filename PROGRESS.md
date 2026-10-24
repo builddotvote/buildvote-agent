@@ -5987,3 +5987,76 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   speculative non-SOL-quote-mint risk (session 86; no action needed unless
   live evidence appears).
 - All five TASK.md steps remain functionally complete.
+
+## Session 94 — 2026-10-24
+
+### Done
+- Fresh checkout again had no `node_modules` — ran `npm install` before
+  typecheck/build/test (same recurring per-session environment step as
+  sessions 85-93; not a code issue).
+- Picked up session 93's unclaimed "remaining modules" second-pass pointer
+  (`server.ts`, `requestHandler.ts`, `config.ts`; first pass was session
+  89). Re-derived `requestHandler.ts`'s `handleRequest` from scratch rather
+  than re-reading session 89's conclusion first, this time tracing what
+  happens if `readIndexHtml`/`readFeedJs` (the two injected, fallible
+  dependencies) reject instead of only checking their success path.
+  - Found a real bug: `handleRequest` had no `try`/`catch` around its
+    route bodies, and `node:http`'s `createServer(handleRequest)` never
+    awaits or attaches a rejection handler to the promise an async request
+    listener returns. So a rejection from `readIndexHtml`/`readFeedJs`
+    (e.g. a transient disk read error, `EMFILE`, a permissions hiccup)
+    became an unhandled promise rejection at the process level.
+  - Reproduced live with a standalone script before touching the test
+    suite: a real `http.Server` wired to `createRequestHandler` with a
+    `readIndexHtml` that throws, hit with one real `fetch()` request —
+    confirmed the process terminates (Node 20's default
+    `--unhandled-rejections=throw` behavior) instead of the request
+    simply failing. One bad file read would have taken the whole server
+    down, dropping the live feed for every connected holder over a single
+    failed request, not just returning an error for that one request.
+  - Fix: wrapped the route bodies in `src/requestHandler.ts` in a
+    `try`/`catch`; a caught error now logs
+    (`console.error("request handler failed:", ...)`, matching the
+    `err instanceof Error ? err.message : err` convention used everywhere
+    else errors are logged in this codebase) and responds `500 internal
+    error` for that one request instead of crashing the process.
+  - Added two regression tests to `requestHandler.test.ts`, one per
+    fallible dependency (`readIndexHtml`, `readFeedJs`), each asserting
+    `handle(...)` does not reject and that the response is a 500.
+    Verified both fail against the pre-fix code (confirmed via `git
+    stash` on `src/requestHandler.ts` alone, re-running just these two
+    tests, then restoring the fix) with the exact pre-fix symptom: the
+    returned promise rejects with the injected error instead of
+    resolving. Both pass cleanly after the fix.
+  - Did not get to `server.ts`'s own wiring or `config.ts` this session
+    (budget spent on tracing and fixing the `requestHandler.ts` bug) —
+    still open for a future from-scratch pass.
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 236/236 passing (234 + 2 new regression tests), offline.
+- `git status` before this edit: two files changed
+  (`src/requestHandler.ts`, `src/requestHandler.test.ts`); no stray repro
+  scripts left behind (written to the repo root during investigation,
+  deleted before this commit).
+
+### Next
+- `server.ts`'s own wiring and `config.ts` still haven't had their second
+  from-scratch pass (session 89 was the only pair of eyes so far) —
+  natural next candidate, especially `server.ts` given how much
+  session-accumulated rationale lives in its comments versus how little
+  of it has been independently re-derived a second time.
+- Six real bugs found and fixed total across sessions 84-94 now (84's
+  `wsLogParser.ts`, 88's `wsDiscovery.ts` stale-close race, 89's and 90's
+  two `rpc.ts`/`RequestPacer` issues, this session's `requestHandler.ts`
+  unhandled-rejection crash). `requestHandler.ts` had one prior pass
+  (session 89) that missed this — a reminder that "walked it against its
+  tests" isn't the same as tracing the failure path of every injected
+  dependency, worth keeping in mind for future passes over modules
+  already marked "no bug found."
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71), and the
+  speculative non-SOL-quote-mint risk (session 86; no action needed
+  unless live evidence appears).
+- All five TASK.md steps remain functionally complete.

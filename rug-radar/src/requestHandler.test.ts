@@ -100,6 +100,38 @@ test("createRequestHandler: GET /api/feed on an empty feed returns an empty list
   assert.deepEqual(JSON.parse(calls.body ?? "{}"), { launches: [] });
 });
 
+test("createRequestHandler: a readIndexHtml rejection returns a 500 instead of throwing", async () => {
+  const feed = new LiveFeed();
+  const handle = createRequestHandler({
+    feed,
+    readIndexHtml: async () => {
+      throw new Error("disk read failed");
+    },
+    readFeedJs: async () => "unused",
+  });
+  const { res, calls } = fakeRes();
+
+  await assert.doesNotReject(handle(fakeReq("/"), res));
+
+  assert.equal(calls.status, 500);
+});
+
+test("createRequestHandler: a readFeedJs rejection returns a 500 instead of throwing", async () => {
+  const feed = new LiveFeed();
+  const handle = createRequestHandler({
+    feed,
+    readIndexHtml: async () => "unused",
+    readFeedJs: async () => {
+      throw new Error("disk read failed");
+    },
+  });
+  const { res, calls } = fakeRes();
+
+  await assert.doesNotReject(handle(fakeReq("/feed.js"), res));
+
+  assert.equal(calls.status, 500);
+});
+
 test("createRequestHandler: unknown routes get a 404", async () => {
   const feed = new LiveFeed();
   const handle = createRequestHandler({ feed, readIndexHtml: async () => "unused", readFeedJs: async () => "unused" });
