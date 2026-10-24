@@ -1,10 +1,11 @@
 {
-  "updated_at": "2026-10-24T20:50:53Z",
+  "updated_at": "2026-10-24T23:10:55Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 100,
-    "turns": 46
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 101,
+    "started_at": "2026-10-24T23:10:55Z",
+    "turns": 0
   },
   "round": {
     "number": null,
@@ -947,11 +948,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-24T15:55:28Z",
-      "kind": "run",
-      "text": "sed -n '5560,5660p' ../PROGRESS.md"
-    },
-    {
       "t": "2026-10-24T15:55:31Z",
       "kind": "read",
       "text": "rug-radar/src/requestHandler.test.ts"
@@ -1345,11 +1341,16 @@
       "t": "2026-10-24T20:50:53Z",
       "kind": "done",
       "text": "Session 100 finished \u00b7 46 steps \u00b7 covered by Claude subscription ($1.42 API value)"
+    },
+    {
+      "t": "2026-10-24T23:10:55Z",
+      "kind": "start",
+      "text": "Session 101 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-10-24T23:45:59Z"
+    "next_run": "2026-10-25T02:10:55Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
