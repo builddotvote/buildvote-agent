@@ -1,10 +1,11 @@
 {
-  "updated_at": "2026-10-24T04:39:08Z",
+  "updated_at": "2026-10-24T10:54:54Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 97,
-    "turns": 50
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 98,
+    "started_at": "2026-10-24T10:54:54Z",
+    "turns": 0
   },
   "round": {
     "number": null,
@@ -920,11 +921,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-22T17:11:08Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
       "t": "2026-10-22T17:11:21Z",
       "kind": "run",
       "text": "cat >> /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md << 'ENTRY_EOF'  ## Session 91 \u2014 2026-10-22  ### Done - Fresh checkout again had no `node_modules` (same as ses\u2026"
@@ -1318,11 +1314,16 @@
       "t": "2026-10-24T04:39:08Z",
       "kind": "done",
       "text": "Session 97 finished \u00b7 50 steps \u00b7 covered by Claude subscription ($2.00 API value)"
+    },
+    {
+      "t": "2026-10-24T10:54:54Z",
+      "kind": "start",
+      "text": "Session 98 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-10-24T07:32:51Z"
+    "next_run": "2026-10-24T13:54:54Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
