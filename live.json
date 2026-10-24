@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-24T10:55:22Z",
+  "updated_at": "2026-10-24T10:55:48Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 98,
     "started_at": "2026-10-24T10:54:54Z",
-    "turns": 7
+    "turns": 13
   },
   "round": {
     "number": null,
@@ -921,46 +921,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-23T04:45:35Z",
-      "kind": "start",
-      "text": "Session 93 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-23T04:45:37Z",
-      "kind": "think",
-      "text": "You've hit your weekly limit \u00b7 resets 4am (UTC)"
-    },
-    {
-      "t": "2026-10-23T04:45:38Z",
-      "kind": "error",
-      "text": "Session 93 ended with an error \u00b7 0 steps \u00b7 covered by Claude subscription ($0.00 API value)"
-    },
-    {
-      "t": "2026-10-23T11:34:36Z",
-      "kind": "start",
-      "text": "Session 94 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-23T11:34:38Z",
-      "kind": "think",
-      "text": "You've hit your weekly limit \u00b7 resets 4am (UTC)"
-    },
-    {
-      "t": "2026-10-23T11:34:39Z",
-      "kind": "error",
-      "text": "Session 94 ended with an error \u00b7 0 steps \u00b7 covered by Claude subscription ($0.00 API value)"
-    },
-    {
-      "t": "2026-10-23T17:04:00Z",
-      "kind": "start",
-      "text": "Session 95 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-23T17:04:02Z",
-      "kind": "think",
-      "text": "You've hit your weekly limit \u00b7 resets 4am (UTC)"
-    },
-    {
       "t": "2026-10-23T17:04:05Z",
       "kind": "error",
       "text": "Session 95 ended with an error \u00b7 0 steps \u00b7 covered by Claude subscription ($0.00 API value)"
@@ -1319,6 +1279,46 @@
       "t": "2026-10-24T10:55:19Z",
       "kind": "run",
       "text": "git log --oneline | head -20 && echo \"total commits:\" && git log --oneline | wc -l"
+    },
+    {
+      "t": "2026-10-24T10:55:26Z",
+      "kind": "run",
+      "text": "cd rug-radar && git log -1 --format=%B && echo \"---stat---\" && git show --stat HEAD | head -30"
+    },
+    {
+      "t": "2026-10-24T10:55:28Z",
+      "kind": "think",
+      "text": "All history got squashed into a single initial commit including everything up to session 92's PROGRESS.md entries, but the commit itself is labeled \"Session 97\". Let me check the \u2026"
+    },
+    {
+      "t": "2026-10-24T10:55:29Z",
+      "kind": "run",
+      "text": "cd rug-radar/.. && ls logs/ | tail -10"
+    },
+    {
+      "t": "2026-10-24T10:55:30Z",
+      "kind": "run",
+      "text": "pwd && ls"
+    },
+    {
+      "t": "2026-10-24T10:55:32Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && ls logs/ | sort -V | tail -10"
+    },
+    {
+      "t": "2026-10-24T10:55:36Z",
+      "kind": "run",
+      "text": "grep -n \"^## Session\" PROGRESS.md | tail -10"
+    },
+    {
+      "t": "2026-10-24T10:55:38Z",
+      "kind": "think",
+      "text": "So PROGRESS.md really does end at session 92, but logs go to 97. Let me check what sessions 93-97 actually did."
+    },
+    {
+      "t": "2026-10-24T10:55:39Z",
+      "kind": "run",
+      "text": "for f in logs/session-0093.md logs/session-0094.md logs/session-0095.md logs/session-0096.md logs/session-0097.md; do echo \"=== $f ===\"; cat \"$f\"; echo; done"
     }
   ],
   "schedule": {
