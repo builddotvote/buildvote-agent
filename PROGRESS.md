@@ -5833,3 +5833,86 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   speculative non-SOL-quote-mint risk (session 86; no action needed
   unless live evidence appears).
 - All five TASK.md steps remain functionally complete.
+
+## Session 92 — 2026-10-24
+
+### Done
+- Fresh checkout again had no `node_modules` (same as sessions 85-91) — ran
+  `npm install` before typecheck/build/test; recurring per-session
+  environment step, not a code issue. (Sessions 92-96's runner logs show
+  five prior attempts this cycle hit the weekly subscription limit before
+  taking any steps — this is the first session since 91 to actually run.)
+- Took up session 91's pointer: gave the signal-scoring layer
+  (`signals/*.ts` + `scorer.ts`, last independently re-derived in session
+  87) a second pass, since it's the one module class that directly
+  produces the number holders see and had only one pair of eyes on it.
+  Re-derived each module's thresholds, rounding, and dedup behavior from
+  the code itself rather than re-reading session 87's conclusions first:
+  - `deployerHistory.ts`/`bundledBuys.ts`/`holderConcentration.ts`: all
+    three share the same band shape (thin-data cap or continuous-below,
+    flat-moderate, flat-high) — walked the boundary arithmetic by hand
+    (e.g. a share of exactly 0.2999995 rounds to a continuous score of 30,
+    then the very next value at the 0.3 threshold jumps to a flat 55; not
+    a bug, since scores still strictly increase with risk, just a visible
+    gap in the score range 31-54 that no input can ever produce). Matches
+    session 87's conclusion independently.
+  - `liquidity.ts`: pure threshold ladder, `complete` short-circuits
+    regardless of reserves — confirmed a curve with `complete: true` and
+    `realSolReserves: 0n` still scores 10 (by design: migration status is
+    the signal, not the last reserve snapshot). No bug.
+  - `scorer.ts`: confirmed `totalWeight` can never be zero when
+    `signals.length > 0` (every signal name defaults to weight 1), and
+    traced `pipeline.ts`'s `safeSignal` wrapper again to confirm a thrown
+    signal is dropped before `combineSignals` ever sees it (so a failed
+    fetch can't zero-weight into the average). No bug.
+  - Extended the pass to the data-fetch side of the two most complex
+    signals, since boundary math alone wasn't the only place a second
+    reviewer could add value: `data/bundledBuys.ts`'s `findFundingSource`/
+    `findSolSender` heuristics (largest-balance-decrease sender, oldest-
+    to-newest funding walk) and the `knownBundledBuy`-vs-scan interaction.
+    Considered whether a dev who buys a second time (a separate signature)
+    within the early window could double-count: `fetchBundledBuysInput`
+    would return two `EarlyBuy` entries for the same buyer address (one
+    from `knownBundledBuy` at `secondsAfterLaunch: 0`, one from the scan),
+    but `scoreBundledBuys`'s denominator (`uniqueBuyerCount`, a `Set`) and
+    its `bySource` aggregation (also `Set`-valued) both dedupe by buyer
+    address, so the duplicate entry is inert for scoring — the same
+    dedup-by-Set pattern `bundledBuys.test.ts`'s existing "caches the
+    funding-source lookup when the same buyer appears twice" test already
+    exercises for the pure-scan case. Confirmed, not a new gap worth a
+    dedicated test of its own since it's the identical mechanism already
+    covered. `data/holderConcentration.ts`, `data/liquidity.ts`,
+    `data/bondingCurve.ts`: re-confirmed as straightforward pass-throughs
+    over `rpc.ts`/`decodeBondingCurve`, matching session 86's read.
+  - Conclusion: no bug found anywhere in this pass. Made no code changes —
+    consistent with sessions 85/86/87's own discipline of not inventing a
+    fix for a non-problem just to show activity.
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 233/233 passing, offline, no source code changed this
+  session.
+- `git status` before this edit: clean, only this `PROGRESS.md` update.
+
+### Next
+- The signal-scoring layer has now had two independent "re-derive from
+  scratch" passes (87, this session) with no bug found either time —
+  don't re-run this exact pass again without new evidence. Five real bugs
+  remain the total found across sessions 84-90; this session and 85/86/87
+  are the four that found nothing.
+- Second-pass candidates still unclaimed: the data layer's deployer-
+  history/discovery seam (`data/deployerHistory.ts`'s retroactive scan
+  cross-checked against `deployerIndex.ts`'s live-observed supplement —
+  touched lightly here, but not given the same from-scratch treatment as
+  the files that already got one), the orchestration layer beyond
+  `wsDiscovery.ts`'s one fixed bug (`pipeline.ts`, `poller.ts`,
+  `watcherOnLaunch.ts`, `rescore.ts`/`holderRescore.ts`), and the
+  "remaining modules" group (`server.ts`, `requestHandler.ts`,
+  `config.ts`, `knownAccounts.ts`). A future session could pick any of
+  these, or fall back to the standing low-priority items below.
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71), and the
+  speculative non-SOL-quote-mint risk (session 86; no action needed
+  unless live evidence appears).
+- All five TASK.md steps remain functionally complete.
