@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-24T15:54:59Z",
+  "updated_at": "2026-10-24T15:55:27Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 99,
     "started_at": "2026-10-24T15:54:32Z",
-    "turns": 9
+    "turns": 15
   },
   "round": {
     "number": null,
@@ -930,46 +930,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-24T04:37:10Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/bundledBuys.test.ts"
-    },
-    {
-      "t": "2026-10-24T04:37:14Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/bundledBuys.test.ts"
-    },
-    {
-      "t": "2026-10-24T04:37:32Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && ls -la && echo --- && head -5 PROGRESS.md"
-    },
-    {
-      "t": "2026-10-24T04:37:38Z",
-      "kind": "run",
-      "text": "cat README.md && echo --- && cat queue.json && echo --- && ls agent logs"
-    },
-    {
-      "t": "2026-10-24T04:37:50Z",
-      "kind": "run",
-      "text": "wc -l logs/session-0092.md logs/session-0093.md logs/session-0094.md logs/session-0095.md logs/session-0096.md && echo --- && tail -c 3000 logs/session-0096.md"
-    },
-    {
-      "t": "2026-10-24T04:38:07Z",
-      "kind": "think",
-      "text": "All signal-scoring and related data-fetch modules check out correct \u2014 no new bugs found. Since the file is too large to read in full, I'll append my findings directly to PROGRESS.\u2026"
-    },
-    {
-      "t": "2026-10-24T04:38:07Z",
-      "kind": "run",
-      "text": "tail -c 200 PROGRESS.md | cat -A | tail -3"
-    },
-    {
-      "t": "2026-10-24T04:38:10Z",
-      "kind": "run",
-      "text": "tail -c 1 PROGRESS.md | xxd"
-    },
-    {
       "t": "2026-10-24T04:38:12Z",
       "kind": "think",
       "text": "Good, file ends with a newline. Now I'll append the new session entry."
@@ -1328,6 +1288,46 @@
       "t": "2026-10-24T15:54:58Z",
       "kind": "run",
       "text": "npm install --silent 2>&1 | tail -20"
+    },
+    {
+      "t": "2026-10-24T15:55:01Z",
+      "kind": "run",
+      "text": "pwd"
+    },
+    {
+      "t": "2026-10-24T15:55:03Z",
+      "kind": "think",
+      "text": "Good, cwd persisted. Now run typecheck/build/test to confirm baseline before auditing."
+    },
+    {
+      "t": "2026-10-24T15:55:03Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -30 && echo \"---BUILD---\" && npm run build 2>&1 | tail -30 && echo \"---TEST---\" && npm test 2>&1 | tail -40"
+    },
+    {
+      "t": "2026-10-24T15:55:12Z",
+      "kind": "think",
+      "text": "Baseline confirmed clean: 234/234 tests pass, typecheck and build clean. Now let's audit `pipeline.ts` end-to-end plus `server.ts`/`requestHandler.ts`/`config.ts`, per session 93'\u2026"
+    },
+    {
+      "t": "2026-10-24T15:55:13Z",
+      "kind": "read",
+      "text": "rug-radar/src/pipeline.ts"
+    },
+    {
+      "t": "2026-10-24T15:55:16Z",
+      "kind": "read",
+      "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-24T15:55:18Z",
+      "kind": "read",
+      "text": "rug-radar/src/requestHandler.ts"
+    },
+    {
+      "t": "2026-10-24T15:55:25Z",
+      "kind": "run",
+      "text": "grep -n \"unhandled\\|readIndexHtml\\|readFeedJs\\|requestHandler\" ../PROGRESS.md | head -60"
     }
   ],
   "schedule": {
