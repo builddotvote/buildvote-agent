@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-24T23:14:55Z",
+  "updated_at": "2026-10-24T23:15:26Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 101,
     "started_at": "2026-10-24T23:10:55Z",
-    "turns": 30
+    "turns": 35
   },
   "round": {
     "number": null,
@@ -948,36 +948,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-24T20:46:57Z",
-      "kind": "run",
-      "text": "cat src/watcherOnLaunch.ts"
-    },
-    {
-      "t": "2026-10-24T20:47:09Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"EADDRINUSE\\|server.on(.error\\|listen.*error\\|server\\.ts.*wiring\" PROGRESS.md | tail -30"
-    },
-    {
-      "t": "2026-10-24T20:47:12Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-24T20:47:17Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-24T20:47:30Z",
-      "kind": "run",
-      "text": "grep -n \"EADDRINUSE\\|server\\.on\\|listen(\" PROGRESS.md README.md rug-radar/README.md rug-radar/src/server.ts 2>/dev/null"
-    },
-    {
-      "t": "2026-10-24T20:47:38Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && cat > /tmp/repro_port.mjs <<'EOF' import { createServer } from \"node:http\";  const s1 = createServer((req, res) =\u2026"
-    },
-    {
       "t": "2026-10-24T20:48:02Z",
       "kind": "run",
       "text": "grep -rn \"process.exit\\|\\.on(\\\"error\\\"\\|\\.on('error'\" src | grep -v test"
@@ -1346,6 +1316,36 @@
       "t": "2026-10-24T23:14:55Z",
       "kind": "think",
       "text": "Still 236/236 passing, no regression. Now let's add a regression test that fails against the pre-fix code, matching this project's established practice."
+    },
+    {
+      "t": "2026-10-24T23:14:56Z",
+      "kind": "run",
+      "text": "sed -n '1,35p' /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/rpc.test.ts"
+    },
+    {
+      "t": "2026-10-24T23:14:59Z",
+      "kind": "run",
+      "text": "sed -n '335,465p' /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/rpc.test.ts"
+    },
+    {
+      "t": "2026-10-24T23:15:09Z",
+      "kind": "run",
+      "text": "sed -n '505,545p' /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/rpc.test.ts"
+    },
+    {
+      "t": "2026-10-24T23:15:17Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.test.ts"
+    },
+    {
+      "t": "2026-10-24T23:15:19Z",
+      "kind": "think",
+      "text": "Now let's add the regression test right after the `minIntervalMs` tests:"
+    },
+    {
+      "t": "2026-10-24T23:15:26Z",
+      "kind": "edit",
+      "text": "rug-radar/src/rpc.test.ts"
     }
   ],
   "schedule": {
