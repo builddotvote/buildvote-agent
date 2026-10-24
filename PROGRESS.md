@@ -6060,3 +6060,100 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   speculative non-SOL-quote-mint risk (session 86; no action needed
   unless live evidence appears).
 - All five TASK.md steps remain functionally complete.
+
+## Session 95 — 2026-10-24
+
+### Done
+- Fresh checkout again had no `node_modules` — ran `npm install` before
+  typecheck/build/test (same recurring per-session environment step as
+  sessions 85-94; not a code issue).
+- Picked up session 94's pointer: gave `server.ts`'s own wiring a
+  from-scratch second pass (first pass was session 89, no bug found).
+  Walked the module focusing on what's unique to `server.ts` itself rather
+  than re-tracing logic already owned and tested by the modules it wires
+  together (`pollOnce`, `handleDiscoveredLaunch`, `RequestPacer`, etc. all
+  already had their own from-scratch passes in sessions 84-91).
+  - Found a real bug: `server.ts` builds the `http.Server` and calls
+    `server.listen(config.port, ...)` with no `server.on("error", ...)`
+    handler. Node's `net`/`http` layer emits `error` on the server itself
+    both at startup (`EADDRINUSE` if the configured port is already taken)
+    and afterward during normal operation (e.g. `EMFILE` if `accept()`
+    fails from running out of file descriptors) — an `EventEmitter` with
+    no `error` listener throws by default, crashing the whole process over
+    one failure instead of the error being handled. Same shape as session
+    94's `requestHandler.ts` finding (an unhandled async error taking down
+    every connected holder's live feed over one isolated failure), just at
+    the socket level instead of a single request.
+  - Reproduced live with two standalone scripts before touching
+    `server.ts`: (1) two `http.Server`s bound to the same port, the second
+    with no `error` listener — crashed with an uncaught `EADDRINUSE`
+    instead of failing cleanly (exit code 1, full stack trace to stderr);
+    (2) a single already-listening server with `.emit("error", ...)`
+    called on it directly (simulating a post-listen accept failure like
+    `EMFILE`) — crashed identically. Then confirmed adding
+    `server.on("error", ...)` makes both cases just log instead of
+    crashing (checked with a throwaway repro script, deleted before
+    finishing — same habit as sessions 34/79/80/81).
+  - Fix: added `server.on("error", (err) => console.error(...))` in
+    `src/server.ts` right after `const server = createServer(...)`,
+    before `server.listen(...)`, matching the `err instanceof Error ?
+    err.message : err` logging convention used everywhere else in this
+    codebase. No `process.exit` added — nothing else in the codebase calls
+    it, and for the post-listen case (`EMFILE` on one `accept()`) the
+    server should keep serving other connections, not exit; for the
+    startup case (`EADDRINUSE`) the process stays alive but idle, which is
+    a clear, loggable state rather than a silent one, still strictly
+    better than the prior uncaught-crash behavior.
+  - No automated test added — consistent with prior sessions' conclusion
+    that `server.ts`'s literal module-level wiring (constructing clients,
+    calling `.listen()`) has no exported, unit-testable surface of its own
+    (sessions 59-61, 81, 89); verified by hand with the repro scripts
+    above instead, same as how this specific wiring has always been
+    checked.
+  - Documented the fix in `rug-radar/README.md`'s "Live feed" section,
+    right after session 81's overlapping-polls writeup (same section, same
+    style).
+  - Also reviewed `config.ts` fresh (second pass, first pass was session
+    89): traced `Number.parseInt`/`Number.isFinite` behavior for `PORT`
+    against edge cases (empty string, non-numeric, negative, decimal) by
+    hand. Confirmed the existing `Number.isFinite` guard correctly catches
+    non-numeric input (`NaN`) and falls back to the default port, matching
+    its test coverage. Found one theoretical gap — a negative `PORT`
+    (e.g. `"-1"`) passes `Number.isFinite` and reaches `server.listen`,
+    which throws synchronously (a `RangeError`, not an `error` event, so
+    this session's new handler doesn't catch it) — but this requires an
+    operator typo in an env var, not any live/external data path, and only
+    affects the operator's own startup, not connected holders. Left
+    unfixed as out of scope for this pass; noted here rather than silently
+    dropped.
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 236/236 passing, offline, unchanged (this fix has no
+  unit-testable surface, see above).
+- `git status` before this edit: one source file changed
+  (`src/server.ts`), plus `README.md` and `PROGRESS.md`; no stray repro
+  scripts left behind (written to `/tmp`, deleted before finishing).
+
+### Next
+- `config.ts`'s negative-`PORT` gap above is the only open thread from
+  this session's pass — low priority (operator-typo-only, no live-data
+  path), listed here so a future session doesn't have to rediscover it.
+- Every module has now had at least one from-scratch pass (sessions
+  84-95). Seven real bugs found and fixed total across that effort now
+  (84's `wsLogParser.ts`, 88's `wsDiscovery.ts` stale-close race, 89's and
+  90's two `rpc.ts`/`RequestPacer` issues, 94's `requestHandler.ts`
+  unhandled-rejection crash, this session's `server.ts` unhandled
+  `error`-event crash). A good next angle: a third pass over a module
+  that's had exactly one bug found and fixed (rather than "no bug found"),
+  checking whether the fix fully closed the issue or just the one
+  symptom that was found — `rpc.ts`'s `RequestPacer` is the strongest
+  candidate, since sessions 89 and 90 together already found two distinct
+  ordering bugs in it, suggesting the area has had more than its share of
+  subtlety.
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71), and the
+  speculative non-SOL-quote-mint risk (session 86; no action needed
+  unless live evidence appears).
+- All five TASK.md steps remain functionally complete.

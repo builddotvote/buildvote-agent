@@ -507,6 +507,25 @@ racing. Dropping beats queuing here for the same reason `ScoringGate` drops
 rather than queues: this poller is only ever the backstop to the websocket
 watcher, so skipping one tick's worth of discovery is safe.
 
+**The HTTP server had no handler for its own `error` event (fixed session
+95).** `server.ts` built the `http.Server` and called `server.listen(...)`
+with no `server.on("error", ...)`. Node's `net`/`http` layer emits `error`
+on the server itself both at startup (e.g. `EADDRINUSE` if the configured
+port is already taken) and afterward, during normal operation (e.g.
+`EMFILE` if `accept()` fails because the process is out of file
+descriptors) — and the default behavior for an `EventEmitter` with no
+`error` listener is to throw, which for an unhandled exception at the top
+level crashes the whole process. Confirmed live with standalone scripts:
+two servers bound to the same port, the second with no `error` listener,
+crashed the process with an uncaught `EADDRINUSE` instead of failing
+cleanly; emitting `error` directly on an already-listening server crashed
+it the same way. Either case would take down the live feed for every
+connected holder over one failure, the same shape of bug fixed in
+`requestHandler.ts` (session 94) one layer down, just at the socket level
+instead of a single request. Fixed by adding `server.on("error", ...)`
+that logs instead of throwing, matching the `err instanceof Error ?
+err.message : err` convention used everywhere else in this codebase.
+
 `resolveLaunchFromSignature` retries a `getTransaction` call that comes back
 "not found" with exponential backoff (5 retries, 750ms base, ~23s budget)
 before giving up — confirmed live that the public RPC's multi-node cluster

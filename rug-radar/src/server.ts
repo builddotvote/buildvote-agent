@@ -211,6 +211,17 @@ const handleRequest = createRequestHandler({
 });
 const server = createServer(handleRequest);
 
+// Without this, any error the underlying socket emits (EADDRINUSE at
+// startup if the port is already taken, or e.g. EMFILE on accept() once
+// already serving) has no listener, and node:net's default behavior for an
+// unhandled 'error' event is to throw, crashing the whole process — taking
+// down the live feed for every connected holder over one failure, the same
+// shape of bug fixed in requestHandler.ts (session 94) one layer down, just
+// at the server/socket level instead of a single request.
+server.on("error", (err) => {
+  console.error("server error:", err instanceof Error ? err.message : err);
+});
+
 server.listen(config.port, () => {
   console.log(`rug-radar listening on http://localhost:${config.port}`);
   console.log(`using data RPC: ${config.rpcUrl}`);
