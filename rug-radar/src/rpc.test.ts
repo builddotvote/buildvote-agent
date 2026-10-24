@@ -370,6 +370,44 @@ test("minIntervalMs spaces consecutive request starts by at least that much", as
   assert.ok(elapsed >= 70, `expected >=70ms elapsed from pacing, got ${elapsed}ms`);
 });
 
+test("a 429 retry still respects the lane's own minIntervalMs, not just the backoff delay", async () => {
+  // A 429 retry is a real request hitting the same rate-limited endpoint as
+  // any other, so it must also wait for the lane's own spacing -- not just
+  // the (much shorter) exponential backoff delay. Real timers, same
+  // reasoning as the other pacing tests above: minIntervalMs is set well
+  // above baseDelayMs so the assertion only passes if the retry's *second*
+  // real request also went through the pacer.
+  let calls = 0;
+  const fetchImpl: FetchLike = (async () => {
+    calls++;
+    if (calls === 1) {
+      return new Response("", { status: 429 });
+    }
+    return new Response(
+      JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        result: { context: { slot: 1 }, value: { amount: "1", decimals: 0, uiAmount: 1, uiAmountString: "1" } },
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    );
+  }) as FetchLike;
+
+  const client = new SolanaRpcClient("https://example.test/rpc", fetchImpl, {
+    minIntervalMs: 60,
+    baseDelayMs: 1,
+  });
+
+  const start = Date.now();
+  await client.getTokenSupply("Mint1");
+  const elapsed = Date.now() - start;
+
+  assert.equal(calls, 2);
+  // Backoff alone (baseDelayMs: 1) would finish in ~1ms; only the lane's own
+  // 60ms spacing explains anything close to 60ms elapsed.
+  assert.ok(elapsed >= 45, `expected >=45ms from the retry also respecting minIntervalMs, got ${elapsed}ms`);
+});
+
 test("minIntervalMs of 0 (the default) does not space requests at all", async () => {
   let calls = 0;
   const fetchImpl: FetchLike = (async () => {

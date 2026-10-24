@@ -526,6 +526,25 @@ instead of a single request. Fixed by adding `server.on("error", ...)`
 that logs instead of throwing, matching the `err instanceof Error ?
 err.message : err` convention used everywhere else in this codebase.
 
+**A 429 retry skipped the pacer entirely (fixed session 96).**
+`SolanaRpcClient.request()` called `pacer.reserve(method)` once, before the
+retry loop, instead of once per attempt. That reservation spaces out the
+*first* attempt correctly, but a 429 retry is also a real request hitting
+the same rate-limited endpoint — and it fired after only the exponential
+backoff delay (`baseDelayMs * 2 ** attempt`, as little as 300ms), ignoring
+whatever interval the method's own pacer lane requires (e.g.
+`getTransaction`'s 2000ms lane above). Confirmed live with a standalone
+script: a lane configured for 2000ms spacing sent its retry only ~317ms
+after the first attempt, and a run with two consecutive 429s sent three
+real requests 317ms and 601ms apart — both far under the lane's own
+measured-safe rate, hammering the endpoint again right when it had just
+asked for backoff. Fixed by moving `pacer.reserve(method)` inside the retry
+loop so every real request, retries included, waits for the lane's own
+spacing; re-running the same repro afterward showed every real request
+landing ~2000ms apart as configured. Regression test in `rpc.test.ts`
+confirms a retry now takes as long as `minIntervalMs` requires, not just
+`baseDelayMs`.
+
 `resolveLaunchFromSignature` retries a `getTransaction` call that comes back
 "not found" with exponential backoff (5 retries, 750ms base, ~23s budget)
 before giving up — confirmed live that the public RPC's multi-node cluster

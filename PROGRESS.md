@@ -6157,3 +6157,75 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   speculative non-SOL-quote-mint risk (session 86; no action needed
   unless live evidence appears).
 - All five TASK.md steps remain functionally complete.
+
+## Session 96 — 2026-10-24
+
+### Done
+- Fresh checkout again had no `node_modules` (same as sessions 85-95) — ran
+  `npm install` before typecheck/build/test; recurring per-session
+  environment step, not a code issue.
+- Took up session 95's pointer: gave `rpc.ts`'s `RequestPacer`/
+  `SolanaRpcClient.request()` area a third from-scratch pass (sessions 89
+  and 90 each found one real bug there already). Found and fixed a third
+  real bug in the same area:
+  - `request<T>()` called `pacer.reserve(method)` exactly once, before the
+    retry loop, not once per attempt. A 429 retry is still a real request
+    hitting the same rate-limited endpoint, but it only waited for the
+    exponential backoff delay (`baseDelayMs * 2 ** attempt`, as little as
+    300ms) and never consulted the method's own pacer lane — the lane
+    specifically tuned (session 44, `methodIntervalsMs: { getTransaction:
+    2000 }`) to the measured-safe rate for that method. So the exact
+    condition the pacer exists to prevent (hitting 429) left its own
+    retries unpaced.
+  - Reproduced live with standalone scripts before touching `rpc.ts`: a
+    client with a 2000ms lane, fetch 429ing once then succeeding, sent its
+    retry only ~317ms after the first attempt (not ~2000ms); a second repro
+    with two consecutive 429s sent three real requests at 317ms and 601ms
+    gaps, both far under the lane's configured spacing — i.e. during a 429
+    storm the client hammers the endpoint faster, not slower, than its own
+    tuned-safe rate.
+  - Fix: moved `await this.pacer.reserve(method)` from once before the `for`
+    loop to the top of each loop iteration, so every real request attempt
+    (first try and every retry) goes through the lane's pacing, not just
+    the first. Re-ran both repro scripts after the fix: every real request
+    landed ~2000ms apart as configured, retries included.
+  - Added a regression test (`rpc.test.ts`) using real timers (same pattern
+    as the existing `minIntervalMs`/`methodIntervalsMs` pacing tests):
+    `minIntervalMs: 60`, `baseDelayMs: 1`, one 429 then success. Confirmed
+    it fails pre-fix (`git stash` on `src/rpc.ts` alone, 1ms elapsed — just
+    the backoff) and passes post-fix (>=45ms, the lane's own spacing).
+  - Documented the fix in `rug-radar/README.md`'s "Live feed" section,
+    right after session 95's `server.ts` write-up (same section, same
+    style).
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 237/237 passing (236 + 1 new regression test), offline, run
+  3x to check for flakiness (real timers involved) — stable each time.
+- `git status` before this edit: three files changed (`src/rpc.ts`,
+  `src/rpc.test.ts`, `README.md`); no stray repro scripts left behind
+  (written to `/tmp`, deleted before finishing).
+
+### Next
+- `rpc.ts`'s `RequestPacer`/`SolanaRpcClient.request()` area has now had
+  three independent from-scratch passes (sessions 89, 90, 96) and found a
+  real bug every time — if a future session returns here, check whether
+  this fix fully closes the gap (e.g. does a *non-429* retry path, if one
+  is ever added, need the same treatment?) rather than assuming the area is
+  now exhausted.
+- Eight real bugs found and fixed total across sessions 84-96 now (84's
+  `wsLogParser.ts`, 88's `wsDiscovery.ts` stale-close race, 89's and 90's
+  two `rpc.ts`/`RequestPacer` issues, 94's `requestHandler.ts`
+  unhandled-rejection crash, 95's `server.ts` unhandled `error`-event
+  crash, this session's pacer-skips-retries gap).
+- A future session has no obvious next "fresh module" to sweep a third
+  time with fresh evidence — options: pick up a standing low-priority item
+  below, or look for a module that's only had one pass so far (most have
+  had one or two by now).
+- Standing low-priority items unchanged: the negative-`PORT` gap in
+  `config.ts` (session 95), `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71), and the
+  speculative non-SOL-quote-mint risk (session 86; no action needed
+  unless live evidence appears).
+- All five TASK.md steps remain functionally complete.

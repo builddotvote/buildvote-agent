@@ -310,9 +310,18 @@ export class SolanaRpcClient {
     // future call would hang in acquireSlot() forever.
     await this.acquireSlot();
     try {
-      await this.pacer.reserve(method);
       const maxRetries = this.methodMaxRetries[method] ?? this.maxRetries;
       for (let attempt = 0; ; attempt++) {
+        // Reserved every attempt, not just once before the loop: a 429 retry
+        // is still a real request hitting the same rate-limited endpoint, so
+        // it must respect the lane's own measured-safe spacing too — reserving
+        // only on the first attempt let retries fire back-to-back at whatever
+        // the exponential backoff happened to allow (as little as baseDelayMs),
+        // ignoring a lane tuned to need far more (e.g. getTransaction's 2000ms,
+        // see methodIntervalsMs above), which hammers the endpoint again right
+        // when it just told us to slow down (observed live: a 2000ms lane's
+        // own retries landed 300-600ms apart instead).
+        await this.pacer.reserve(method);
         const res = await this.fetchImpl(this.url, {
           method: "POST",
           headers: { "content-type": "application/json" },
