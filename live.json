@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T16:14:36Z",
+  "updated_at": "2026-10-25T16:15:04Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 104,
     "started_at": "2026-10-25T16:13:42Z",
-    "turns": 13
+    "turns": 19
   },
   "round": {
     "number": null,
@@ -975,36 +975,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T11:22:18Z",
-      "kind": "run",
-      "text": "wc -l /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md; tail -c 6000 /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
-    },
-    {
-      "t": "2026-10-25T11:22:22Z",
-      "kind": "run",
-      "text": "git log --oneline -5 && echo --- && git show --stat HEAD | head -30"
-    },
-    {
-      "t": "2026-10-25T11:22:28Z",
-      "kind": "run",
-      "text": "grep -n \"^## Session\" /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md | tail -10"
-    },
-    {
-      "t": "2026-10-25T11:22:35Z",
-      "kind": "run",
-      "text": "ls rug-radar/src rug-radar/src/signals 2>/dev/null; echo ---; find rug-radar/src -name \"*.ts\" | xargs -I{} wc -l {} | sort -n"
-    },
-    {
-      "t": "2026-10-25T11:22:38Z",
-      "kind": "run",
-      "text": "cd rug-radar && npm install --silent 2>&1 | tail -20"
-    },
-    {
-      "t": "2026-10-25T11:22:40Z",
-      "kind": "run",
-      "text": "cd rug-radar && npm run typecheck 2>&1 | tail -30 && echo \"---BUILD---\" && npm run build 2>&1 | tail -30 && echo \"---TEST---\" && npm test 2>&1 | tail -40"
-    },
-    {
       "t": "2026-10-25T11:22:42Z",
       "kind": "run",
       "text": "pwd; ls"
@@ -1373,6 +1343,36 @@
       "t": "2026-10-25T16:14:35Z",
       "kind": "read",
       "text": "rug-radar/src/data/liquidity.ts"
+    },
+    {
+      "t": "2026-10-25T16:14:40Z",
+      "kind": "run",
+      "text": "cd rug-radar && grep -n \"getTokenLargestAccounts\\|getTokenSupply\\|getSignaturesForAddress\\|interface TokenAmount\\|interface LargestAccount\\|interface SignatureInfo\\|TokenBalance\\b\u2026"
+    },
+    {
+      "t": "2026-10-25T16:14:43Z",
+      "kind": "run",
+      "text": "pwd; grep -n \"getTokenLargestAccounts\\|getTokenSupply\\|getSignaturesForAddress\\|interface TokenAmount\\|LargestAccount\\|SignatureInfo\\|TokenBalance\\b\" src/rpc.ts"
+    },
+    {
+      "t": "2026-10-25T16:14:45Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.ts"
+    },
+    {
+      "t": "2026-10-25T16:14:52Z",
+      "kind": "run",
+      "text": "curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H \"content-type: application/json\" \\   -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getSignaturesForAddress\",\"params\":[\u2026"
+    },
+    {
+      "t": "2026-10-25T16:14:57Z",
+      "kind": "run",
+      "text": "sleep 1; curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H \"content-type: application/json\" \\   -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getSignaturesForAddress\",\"\u2026"
+    },
+    {
+      "t": "2026-10-25T16:15:04Z",
+      "kind": "run",
+      "text": "sleep 2; curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H \"content-type: application/json\" \\   -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getTransaction\",\"params\":[\u2026"
     }
   ],
   "schedule": {
