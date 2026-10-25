@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T20:49:03Z",
+  "updated_at": "2026-10-25T20:49:30Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 105,
     "started_at": "2026-10-25T20:48:09Z",
-    "turns": 11
+    "turns": 13
   },
   "round": {
     "number": null,
@@ -984,16 +984,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T16:14:05Z",
-      "kind": "run",
-      "text": "ls -la /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/ 2>&1"
-    },
-    {
-      "t": "2026-10-25T16:14:12Z",
-      "kind": "run",
-      "text": "cd rug-radar && npm install --silent 2>&1 | tail -20"
-    },
-    {
       "t": "2026-10-25T16:14:15Z",
       "kind": "run",
       "text": "cd rug-radar && npm run typecheck 2>&1 | tail -30 && echo \"---BUILD---\" && npm run build 2>&1 | tail -30 && echo \"---TEST---\" && npm test 2>&1 | tail -20"
@@ -1382,6 +1372,16 @@
       "t": "2026-10-25T20:48:52Z",
       "kind": "run",
       "text": "npm run build 2>&1 | tail -30 && echo \"---test---\" && npm test 2>&1 | tail -60"
+    },
+    {
+      "t": "2026-10-25T20:49:10Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"^## Session\" PROGRESS.md | tail -10"
+    },
+    {
+      "t": "2026-10-25T20:49:18Z",
+      "kind": "run",
+      "text": "find . -maxdepth 2 -iname \"TASK.md\" -o -iname \"PROGRESS.md\" | grep -v node_modules"
     }
   ],
   "schedule": {
