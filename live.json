@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T16:19:16Z",
+  "updated_at": "2026-10-25T16:19:43Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 104,
     "started_at": "2026-10-25T16:13:42Z",
-    "turns": 40
+    "turns": 42
   },
   "round": {
     "number": null,
@@ -975,16 +975,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T11:24:37Z",
-      "kind": "run",
-      "text": "grep -n \"RESCORE_DELAY_MS\" PROGRESS.md | head -20"
-    },
-    {
-      "t": "2026-10-25T11:24:41Z",
-      "kind": "run",
-      "text": "curl -s --max-time 5 -X POST https://api.mainnet-beta.solana.com -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getSlot\",\"params\":[]}' ; echo; echo \"exi\u2026"
-    },
-    {
       "t": "2026-10-25T11:25:17Z",
       "kind": "run",
       "text": "grep -n \"backoff.*slot\\|slot.*backoff\\|holds.*slot.*sleep\\|sleep.*holds\\|holding.*slot\" PROGRESS.md"
@@ -1373,6 +1363,16 @@
       "t": "2026-10-25T16:19:00Z",
       "kind": "run",
       "text": "node -e \" const { base58Decode } = require('./dist/base58.js'); \" 2>&1 | head -5 node --input-type=module -e \" import { base58Decode } from '/home/runner/work/buildvote-agent/buil\u2026"
+    },
+    {
+      "t": "2026-10-25T16:19:21Z",
+      "kind": "run",
+      "text": "sed -n '1,250p' src/pumpfun.test.ts"
+    },
+    {
+      "t": "2026-10-25T16:19:25Z",
+      "kind": "run",
+      "text": "cat src/wsLogParser.test.ts"
     }
   ],
   "schedule": {
