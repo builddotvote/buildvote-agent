@@ -140,8 +140,23 @@ const BUY_DISCRIMINATOR = [102, 6, 61, 18, 1, 218, 235, 234];
 const SELL_DISCRIMINATOR = [51, 230, 133, 164, 1, 127, 131, 173];
 const BUY_V2_DISCRIMINATOR = [184, 23, 238, 97, 103, 197, 211, 61];
 const SELL_V2_DISCRIMINATOR = [93, 246, 130, 60, 231, 233, 64, 178];
+// buy_v3/sell_v3 (confirmed live, session 104: a real BuyV3 invoke/log pair
+// against a mainnet mint, re-parsed straight from the public IDL JSON at
+// github.com/pump-fun/pump-public-docs, same no-webfetch-summary caution as
+// buy_v2/sell_v2 above). Account layout is buy_v2/sell_v2's shape minus the
+// now-unused fee/associated-token-program accounts: mint is `base_mint` at
+// index 1, bonding_curve at 5, user at 8 — distinct from both the v1 and v2
+// layouts, not a re-use of either. The live BuyV3 instruction's own
+// quote_mint account (index 2) was SOL, same as every non-V3 trade this
+// codebase has seen so far, but the IDL also lists quote-mint-management
+// instructions (add_quote_mint, remove_quote_mint, ...) alongside buy_v3 —
+// the account layout now has a place for a quote mint, even though this one
+// sample used SOL there.
+const BUY_V3_DISCRIMINATOR = [7, 5, 29, 196, 245, 23, 101, 80];
+const SELL_V3_DISCRIMINATOR = [28, 146, 222, 119, 38, 196, 105, 213];
 const TRADE_ACCOUNT_INDEX = { mint: 2, bondingCurve: 3, user: 6 };
 const TRADE_V2_ACCOUNT_INDEX = { mint: 1, bondingCurve: 10, user: 13 };
+const TRADE_V3_ACCOUNT_INDEX = { mint: 1, bondingCurve: 5, user: 8 };
 
 export interface TradeInstruction {
   kind: "buy" | "sell";
@@ -152,10 +167,10 @@ export interface TradeInstruction {
 }
 
 // Reads the kind (buy/sell), mint/bondingCurve/user accounts, and token
-// amount out of a pump.fun "buy", "sell", "buy_v2", or "sell_v2" instruction.
-// Returns null if the discriminator doesn't match any of the four variants,
-// the account list is too short, or the data is too short to contain the
-// amount arg.
+// amount out of a pump.fun "buy", "sell", "buy_v2", "sell_v2", "buy_v3", or
+// "sell_v3" instruction. Returns null if the discriminator doesn't match any
+// of the six variants, the account list is too short, or the data is too
+// short to contain the amount arg.
 export function decodeTradeInstruction(
   dataBase58: string,
   accounts: string[],
@@ -175,7 +190,11 @@ export function decodeTradeInstruction(
         ? { kind: "buy" as const, layout: TRADE_V2_ACCOUNT_INDEX }
         : matchesDiscriminator(data, SELL_V2_DISCRIMINATOR)
           ? { kind: "sell" as const, layout: TRADE_V2_ACCOUNT_INDEX }
-          : null;
+          : matchesDiscriminator(data, BUY_V3_DISCRIMINATOR)
+            ? { kind: "buy" as const, layout: TRADE_V3_ACCOUNT_INDEX }
+            : matchesDiscriminator(data, SELL_V3_DISCRIMINATOR)
+              ? { kind: "sell" as const, layout: TRADE_V3_ACCOUNT_INDEX }
+              : null;
   if (!match) return null;
 
   const mint = accounts[match.layout.mint];

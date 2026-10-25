@@ -59,17 +59,30 @@ export function detectCreateInstruction(programId: string, logs: string[]): Crea
   return found;
 }
 
-// Buy/BuyV2 and Sell/SellV2 are distinct account layouts (see pumpfun.ts's
-// decodeTradeInstruction) but collapse to the same trade direction here,
-// same as decodeTradeInstruction's own kind field — a log-line detector only
-// needs to decide whether a getTransaction call is worth making, not which
-// variant moved the tokens.
+// Buy/BuyV2/BuyV3 and Sell/SellV2/SellV3 are distinct account layouts (see
+// pumpfun.ts's decodeTradeInstruction) but collapse to the same trade
+// direction here, same as decodeTradeInstruction's own kind field — a
+// log-line detector only needs to decide whether a getTransaction call is
+// worth making, not which variant moved the tokens. BuyV3 confirmed live
+// (session 104) logging exactly "Instruction: BuyV3", same Anchor
+// snake_case-to-PascalCase naming as every other variant here; SellV3
+// follows the same pattern per the public IDL (buy_v3/sell_v3).
 export function detectTradeInstruction(programId: string, logs: string[]): TradeKind | null {
   let found: TradeKind | null = null;
 
   for (const line of ownLogLines(programId, logs)) {
-    if (line === "Program log: Instruction: Buy" || line === "Program log: Instruction: BuyV2") found = "buy";
-    else if (line === "Program log: Instruction: Sell" || line === "Program log: Instruction: SellV2") found = "sell";
+    if (
+      line === "Program log: Instruction: Buy" ||
+      line === "Program log: Instruction: BuyV2" ||
+      line === "Program log: Instruction: BuyV3"
+    )
+      found = "buy";
+    else if (
+      line === "Program log: Instruction: Sell" ||
+      line === "Program log: Instruction: SellV2" ||
+      line === "Program log: Instruction: SellV3"
+    )
+      found = "sell";
   }
 
   return found;

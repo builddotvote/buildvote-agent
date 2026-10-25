@@ -1,0 +1,81 @@
+# Session 104: Rug radar: live launch scoring
+
+- Started: 2026-10-25T16:13:42Z
+- Ended: 2026-10-25T16:22:32Z
+- Steps: 60
+- Model turns: 61
+- Billing: Claude subscription (API value $2.5488, not billed)
+- Outcome: step limit reached
+
+## Steps
+
+- `think` I'll start by reading PROGRESS.md and TASK.md to understand the current state and task.
+- `run` cat PROGRESS.md 2>/dev/null; echo "---TASK---"; cat TASK.md 2>/dev/null
+- `run` echo "=== TASK.md ==="; cat TASK.md; echo; echo "=== PROGRESS.md tail (last 200 lines) ==="; tail -n 250 PROGRESS.md
+- `run` wc -l PROGRESS.md; grep -n "^## Session 103" PROGRESS.md
+- `run` git log -3 --stat; echo "---"; git show --stat e712db4 | head -50
+- `run` cat logs/session-0103.md 2>/dev/null; echo "---check memory for prior context---"; cat /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/MEMORY.md 2>/dev/null
+- `run` ls -la /home/runner/.claude/projects/-home-runner-work-buildvote-agent-buildvote-agent/memory/ 2>&1
+- `run` cd rug-radar && npm install --silent 2>&1 | tail -20
+- `run` cd rug-radar && npm run typecheck 2>&1 | tail -30 && echo "---BUILD---" && npm run build 2>&1 | tail -30 && echo "---TEST---" && npm test 2>&1 | tail -20
+- `run` pwd && ls
+- `think` Already in rug-radar. Let me run the baseline checks.
+- `run` npm run typecheck 2>&1 | tail -30 && echo "---BUILD---" && npm run build 2>&1 | tail -30 && echo "---TEST---" && npm test 2>&1 | tail -20
+- `think` Baseline confirmed: typecheck/build clean, 240/240 tests pass, matching session 102/103's state. Now let's pursue session 102's "Next" pointer: apply the live-data cross-check technique to `data/holderConcentration.ts`, `data/bundledBuys.ts`, and `data/liquidity.ts`, which have only had code-level review so far.
+- `read` rug-radar/src/data/holderConcentration.ts
+- `read` rug-radar/src/data/bundledBuys.ts
+- `read` rug-radar/src/data/liquidity.ts
+- `run` cd rug-radar && grep -n "getTokenLargestAccounts\|getTokenSupply\|getSignaturesForAddress\|interface TokenAmount\|interface LargestAccount\|interface SignatureInfo\|TokenBalance\b" src/rpc.ts
+- `run` pwd; grep -n "getTokenLargestAccounts\|getTokenSupply\|getSignaturesForAddress\|interface TokenAmount\|LargestAccount\|SignatureInfo\|TokenBalance\b" src/rpc.ts
+- `read` rug-radar/src/rpc.ts
+- `run` curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H "content-type: application/json" \   -d '{"jsonrpc":"2.0","id":1,"method":"getSignaturesForAddress","params":["6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",{"limit":5}]}' | python3 -m json.tool
+- `run` sleep 1; curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H "content-type: application/json" \   -d '{"jsonrpc":"2.0","id":1,"method":"getSignaturesForAddress","params":["6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",{"limit":100}]}' > /tmp/sigs.json python3 -c " import json d = json.load(open('/tmp/sigs.json')) ok = [s for s in d['result'] if s['err'] is None] print(len(ok), 'ok…
+- `run` sleep 2; curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H "content-type: application/json" \   -d '{"jsonrpc":"2.0","id":1,"method":"getTransaction","params":["[redacted]",{"encoding":"jsonParsed","maxSupportedTransactionVersion":1}]}' > /tmp/tx.json python3 -c " import json d = json.load(open('/tmp/tx.json')) r = d['result'] m = r['meta'] print('preTokenBalances:', json.dumps…
+- `run` python3 -c " import json d = json.load(open('/tmp/tx.json')) r = d['result'] msg = r['transaction']['message'] print('accountKeys sample:', json.dumps(msg['accountKeys'][:3], indent=2)) print('num accountKeys:', len(msg['accountKeys'])) print('num preBalances:', len(r['meta']['preBalances'])) print('num postBalances:', len(r['meta']['postBalances'])) "
+- `run` sleep 2; curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H "content-type: application/json" \   -d '{"jsonrpc":"2.0","id":1,"method":"getTokenLargestAccounts","params":["BUp9QZG3GFpVKf4zL8dak286csGrwGT6nLu7bXeopump"]}' | python3 -m json.tool echo "---supply---" sleep 2 curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H "content-type: application/json" \   -d '…
+- `run` sleep 5; curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H "content-type: application/json" \   -d '{"jsonrpc":"2.0","id":1,"method":"getTokenLargestAccounts","params":["BUp9QZG3GFpVKf4zL8dak286csGrwGT6nLu7bXeopump"]}' | python3 -m json.tool
+- `run` sleep 15; curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H "content-type: application/json" \   -d '{"jsonrpc":"2.0","id":1,"method":"getTokenLargestAccounts","params":["BUp9QZG3GFpVKf4zL8dak286csGrwGT6nLu7bXeopump"]}' | python3 -m json.tool
+- `read` rug-radar/src/rpc.ts
+- `run` cat src/pipeline.ts
+- `run` cat src/scorer.ts
+- `run` ls src/data/; echo "---"; cat src/data/deployerHistory.ts 2>/dev/null | head -60
+- `run` sed -n '60,120p' src/data/deployerHistory.ts
+- `run` python3 -c " import json d = json.load(open('/tmp/tx.json')) logs = d['result']['meta'].get('logMessages', []) for l in logs:     print(l) " | head -40
+- `run` python3 -c " import json d = json.load(open('/tmp/sigs.json')) ok = [s['signature'] for s in d['result'] if s['err'] is None] print('\n'.join(ok[1:10])) "
+- `run` cd /tmp sigs=("[redacted]" "[redacted]" "[redacted]" "[redacted]" "[redacted]") i=0 for s in "${sigs[@]}"; do   sleep 3   curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H "content-type: application/json" \     -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getTransaction\",\"params\":[\"$s\",{\"encoding\":\"jsonParsed\",\"maxSupportedTransactionVersion\":1}]}" > /tmp/txA_$i.js…
+- `run` cd /tmp for i in 0 1 2 3 4; do python3 -c " import json d = json.load(open('/tmp/txA_$i.json')) msg = d['result']['transaction']['message'] ins = msg.get('instructions', []) print('--- tx$i top-level instructions ---') for x in ins:     print(x.get('programId'), x.get('program'), list(x.get('parsed',{}).keys()) if isinstance(x.get('parsed'),dict) else x.get('data','')[:20]) inner = d['result']['m…
+- `run` python3 -c " import json d = json.load(open('/tmp/txA_2.json')) for l in d['result']['meta']['logMessages']:     print(l) "
+- `run` cat src/wsLogParser.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && cat src/wsLogParser.ts
+- `run` cat src/pumpfun.ts
+- `run` python3 -c " import json d = json.load(open('/tmp/txA_2.json')) r = d['result'] msg = r['transaction']['message'] keys = [k['pubkey'] for k in msg['accountKeys']] inner = r['meta']['innerInstructions'] for grp in inner:     for ix in grp['instructions']:         if ix.get('programId') == '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P':             print('accounts (indices):', ix.get('accounts'))   …
+- `run` curl -s --max-time 10 "https://raw.githubusercontent.com/pump-fun/pump-public-docs/main/idl/pump.json" -o /tmp/pump_idl.json; echo "exit $?"; wc -c /tmp/pump_idl.json; python3 -c " import json try:     d = json.load(open('/tmp/pump_idl.json'))     print('instructions:', [i['name'] for i in d.get('instructions',[])]) except Exception as e:     print('ERR', e)     print(open('/tmp/pump_idl.json').r…
+- `run` python3 -c " import json d = json.load(open('/tmp/pump_idl.json')) for i in d['instructions']:     if i['name'] in ('buy_v3','sell_v3','buy_v2','sell_v2','buy','sell'):         print('===', i['name'], '===')         print('discriminator:', i.get('discriminator'))         print('accounts:', [a['name'] for a in i['accounts']])         print('args:', [(a['name'], a['type']) for a in i['args']])     …
+- `run` node -e " const { base58Decode } = require('./dist/base58.js'); " 2>&1 | head -5 node --input-type=module -e " import { base58Decode } from '/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/dist/base58.js'; const data = base58Decode('e7rq4XxkssNVBvRMEGaEv95qn5yovDCj'); console.log('bytes:', Array.from(data.slice(0,8))); console.log('amount u64LE:', Buffer.from(data).readBigUInt64LE(8))…
+- `run` sed -n '1,250p' src/pumpfun.test.ts
+- `run` cat src/wsLogParser.test.ts
+- `run` grep -rln "decodeTradeInstruction\|detectTradeInstruction" src/*.ts | grep -v test
+- `run` grep -n "decodeTradeInstruction\|detectTradeInstruction" src/balanceIndex.ts src/discovery.ts src/wsDiscovery.ts
+- `read` rug-radar/src/pumpfun.ts
+- `think` Now implementing the fix. First, `pumpfun.ts`:
+- `edit` rug-radar/src/pumpfun.ts
+- `edit` rug-radar/src/pumpfun.ts
+- `edit` rug-radar/src/pumpfun.ts
+- `run` grep -n "match = matchesDiscriminator" -A 12 src/pumpfun.ts
+- `edit` rug-radar/src/pumpfun.ts
+- `think` Now `wsLogParser.ts`:
+- `edit` rug-radar/src/wsLogParser.ts
+- `read` rug-radar/src/wsLogParser.ts
+- `edit` rug-radar/src/wsLogParser.ts
+- `think` Now let's add tests. First, reproduce the pre-fix bug with the live-captured data, then add regression tests.
+- `run` npm run build 2>&1 | tail -30
+- `run` node --input-type=module -e " import { decodeTradeInstruction } from '/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/dist/pumpfun.js'; const data = 'e7rq4XxkssNVBvRMEGaEv95qn5yovDCj'; const accounts = [   '4wTV1YmiEkRvAtNtsSGPtUrqRYQMe5SKy2uB4Jjaxnjf',   'AQGrEzVDLEnHYYZNYN9MDiQHeWZHsRUGotyC118Upump',   'So11111111111111111111111111111111111111112',   'TokenzQdBNbLqP5VEhdkAS6EPFLC1PH…
+- `think` Post-fix decode works correctly against the live-captured BuyV3 instruction. Let me quickly confirm it returned `null` pre-fix by checking out the old code.
+- `run` git stash push -- src/pumpfun.ts && npm run build 2>&1 | tail -10 && node --input-type=module -e " import { decodeTradeInstruction } from '/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/dist/pumpfun.js'; const data = 'e7rq4XxkssNVBvRMEGaEv95qn5yovDCj'; const accounts = ['4wTV1YmiEkRvAtNtsSGPtUrqRYQMe5SKy2uB4Jjaxnjf','AQGrEzVDLEnHYYZNYN9MDiQHeWZHsRUGotyC118Upump','So111111111111111111…
+- `think` Confirmed: pre-fix returns `null` (trade silently dropped), post-fix decodes correctly. Now let's add regression tests to `pumpfun.test.ts` and `wsLogParser.test.ts`.
+- `edit` rug-radar/src/pumpfun.test.ts
+- `think` Now `wsLogParser.test.ts`:
+- `edit` rug-radar/src/wsLogParser.test.ts
+- `think` Now let's run the full test suite, typecheck, and build to confirm everything passes.
+- `run` npm run typecheck 2>&1 | tail -30 && echo "---BUILD---" && npm run build 2>&1 | tail -30 && echo "---TEST---" && npm test 2>&1 | tail -20
+- `run` grep -rn "four variants\|buy_v2.*sell_v2\|BuyV2.*SellV2" src/*.ts src/**/*.ts 2>/dev/null | grep -v test

@@ -177,6 +177,52 @@ test("decodes a sell_v2 instruction's accounts and amount", () => {
   assert.deepEqual(decoded, { kind: "sell", mint, bondingCurve, user, amount: 7n });
 });
 
+test("decodes a buy_v3 instruction's accounts and amount, captured live from mainnet", () => {
+  // Captured live (session 104) via getTransaction on a real BuyV3 CPI'd
+  // into pump.fun from an aggregator — not a synthetic fixture, unlike the
+  // other decode tests here, because buy_v3/sell_v3 are new enough that
+  // this is the first time this codebase has seen one. accounts/data below
+  // are verbatim from that transaction's inner instruction.
+  const mint = "AQGrEzVDLEnHYYZNYN9MDiQHeWZHsRUGotyC118Upump";
+  const bondingCurve = "ARGnwG8L7n7nMKQ7owpyrHtKiLPEJg11T6r5M3E5P3yQ";
+  const user = "omegoMAe1AMY5MFKQQr3JwXVy8F4eCvmBAfcpo8XAfq";
+  const accounts = [
+    "4wTV1YmiEkRvAtNtsSGPtUrqRYQMe5SKy2uB4Jjaxnjf",
+    mint,
+    "So11111111111111111111111111111111111111112",
+    "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    bondingCurve,
+    "36mqadGy7CbVRZMY2qienQGf7xEzwJt1mxpHQbxJUEKM",
+    "7dbfy4MqZ5KSaAYat2XGrqGVTj1BnR3GZeQnmqxFFHyM",
+    user,
+    "7vipVPSZFPrzJg4tDDnX8LzMZ6TQpJAEFRh9uspSy9iH",
+    "7LeygetEQdu42rzwtVz9U9Ra2AEp2xxf5eWWJbTmKgM2",
+    "CKFkZtNhXUY1BTyNCAQq7NrfbHBTYLJ1GMAjvdkhRKBB",
+    "8Wf5TiAheLUqBrKXeYg2JtAFFMWtKdG2BSFgqUcPVwTt",
+    "9M4giFFMxmFGXtc3feFzRai56WbBqehoSeRE5GK7gf7",
+    "11111111111111111111111111111111",
+    "Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1",
+    "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+  ];
+
+  const decoded = decodeTradeInstruction("e7rq4XxkssNVBvRMEGaEv95qn5yovDCj", accounts);
+  assert.deepEqual(decoded, { kind: "buy", mint, bondingCurve, user, amount: 11_016_947_562_106n });
+});
+
+test("decodes a sell_v3 instruction's accounts and amount", () => {
+  const mint = "Mint11111111111111111111111111111111111111";
+  const bondingCurve = "BondingCurve111111111111111111111111111111";
+  const user = "Seller11111111111111111111111111111111111";
+  const accounts = buildAccounts(17, { 1: mint, 5: bondingCurve, 8: user });
+
+  const decoded = decodeTradeInstruction(
+    tradeInstructionData([28, 146, 222, 119, 38, 196, 105, 213], 555_000n),
+    accounts,
+  );
+  assert.deepEqual(decoded, { kind: "sell", mint, bondingCurve, user, amount: 555_000n });
+});
+
 test("returns null for a trade instruction with an unrelated discriminator", () => {
   const accounts = buildAccounts(16, {});
   const decoded = decodeTradeInstruction(tradeInstructionData([1, 2, 3, 4, 5, 6, 7, 8], 1n), accounts);

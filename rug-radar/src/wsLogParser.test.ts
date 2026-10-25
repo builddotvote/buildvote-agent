@@ -127,6 +127,27 @@ test("detects SellV2", () => {
   assert.equal(detectTradeInstruction(PUMP_FUN_PROGRAM_ID, logs), "sell");
 });
 
+test("detects BuyV3", () => {
+  // "Program log: Instruction: BuyV3" confirmed live (session 104) inside
+  // the pump.fun program's own invoke frame, CPI'd into from an aggregator —
+  // the exact scenario this stack-aware parser exists for.
+  const logs = [
+    "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [1]",
+    "Program log: Instruction: BuyV3",
+    "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success",
+  ];
+  assert.equal(detectTradeInstruction(PUMP_FUN_PROGRAM_ID, logs), "buy");
+});
+
+test("detects SellV3", () => {
+  const logs = [
+    "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [1]",
+    "Program log: Instruction: SellV3",
+    "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success",
+  ];
+  assert.equal(detectTradeInstruction(PUMP_FUN_PROGRAM_ID, logs), "sell");
+});
+
 test("ignores a same-looking Buy instruction name under an unrelated program", () => {
   const logs = [
     "Program 11111111111111111111111111111111 invoke [1]",
