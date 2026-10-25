@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T11:29:25Z",
+  "updated_at": "2026-10-25T11:29:52Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 103,
     "started_at": "2026-10-25T11:22:10Z",
-    "turns": 49
+    "turns": 50
   },
   "round": {
     "number": null,
@@ -966,11 +966,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T04:38:15Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
       "t": "2026-10-25T04:38:18Z",
       "kind": "read",
       "text": "rug-radar/src/config.test.ts"
@@ -1364,6 +1359,11 @@
       "t": "2026-10-25T11:29:25Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar for sig in [redacted] [redacted] [redacted]; do   sleep 2   curl -s --max-time 10 -X POST https://api.mainnet-beta.s\u2026"
+    },
+    {
+      "t": "2026-10-25T11:29:50Z",
+      "kind": "read",
+      "text": "rug-radar/src/signals/liquidity.ts"
     }
   ],
   "schedule": {
