@@ -6462,3 +6462,74 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
   endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
 - All five TASK.md steps remain functionally complete.
+
+## Session 104 — 2026-10-25
+
+### Done
+- Fresh checkout; `npm install` (no `node_modules` yet), then
+  `npm run typecheck`/`npm run build` clean, `npm test` 245/245 — matches
+  session 103's count exactly, no drift.
+- Took up session 103's own suggested next step: ran the real `data/*.ts`
+  fetchers against freshly fetched live mainnet data for
+  `holderConcentration.ts` and `liquidity.ts` (session 102 did
+  `rpc.ts`/`pumpfun.ts`, session 103 did `bundledBuys.ts`; these two were
+  the last `data/*.ts` modules without this treatment).
+  - Found a live pump.fun trade via `solana-rpc.publicnode.com`
+    (`getSignaturesForAddress` + `getTransaction` against
+    `PUMP_FUN_PROGRAM_ID`, decoding outer instructions with
+    `decodeTradeInstruction` the same way `discovery.ts`'s
+    `findTradeInstruction` does) to get a real mint + bonding-curve pair.
+  - Ran `fetchBondingCurveAccount` and `fetchLiquidityInput` against the
+    official scoring endpoint (`api.mainnet-beta.solana.com`, same as
+    `server.ts`'s scoring clients) for that bonding curve: decode
+    succeeded, fields sane (`tokenTotalSupply` 1e15 at 6 decimals,
+    `complete: false`, real SOL reserves in a plausible range).
+  - Ran `rpc.getTokenSupply` directly and cross-checked its `amount`
+    against the same curve's decoded `tokenTotalSupply`: equal, on two
+    separate live mints — confirms `fetchHolderConcentrationInput`'s
+    `knownTotalSupply`-skip optimization (comment in
+    `src/data/holderConcentration.ts`) is decoding the same value either
+    path takes.
+  - Called `fetchLiquidityInput` twice in a row (shared-curve path, then
+    standalone re-fetch with no `knownCurve`) against an actively-trading
+    curve: `realSolReserves` differed slightly between the two calls.
+    Confirmed this is real trading activity between the two RPC calls, not
+    a bug — re-ran decode manually and the curve's `virtualSolReserves`/
+    `realSolReserves` had both moved consistently with a trade happening
+    in between, not a decode inconsistency.
+  - Tried `rpc.getTokenLargestAccounts` directly (the call
+    `fetchHolderConcentrationInput`'s other half depends on): still 429s,
+    matching README's "Known limitations" (`getTokenLargestAccounts`
+    confirmed ~100% failure on the official endpoint back in session 45).
+    This was a single re-check against today's live endpoint, not a
+    re-run of session 45's full measurement — it still holds, nothing new
+    to act on, so didn't chase it further.
+  - **No bugs found.** Both fetchers' live-data behavior matches what the
+    code/tests already assume. Unlike session 103's `bundledBuys.ts` bug,
+    this is a clean result, not a miss — `holderConcentration.ts` and
+    `liquidity.ts` are both thin wrappers around `rpc.ts` calls with little
+    custom logic (matches session 103's "may be lower-yield" prediction).
+  - No source files changed — audit/verification-only. Temporary repro
+    script (`/tmp/live-check.ts`) deleted before finishing.
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 245/245 passing, offline, unchanged from session 103 (no
+  tests added or modified this session).
+- `git status` before this edit: clean except this `PROGRESS.md` update.
+
+### Next
+- Session 102's live-data cross-check technique has now been applied to
+  all four `data/*.ts` fetchers (`rpc.ts`/`pumpfun.ts` session 102,
+  `bundledBuys.ts` session 103, `holderConcentration.ts`/`liquidity.ts`
+  this session). No obvious remaining candidate module for this specific
+  technique — a future session could instead apply it to the discovery
+  path (`discovery.ts`/`wsDiscovery.ts`'s own live create/trade handling)
+  if it hasn't had an equivalent live check yet.
+- The non-SOL-quote-mint question from session 102 (deriving the pump.fun
+  `Global` PDA properly, or catching a live `create`/`create_v2` to read
+  its `global` account) is still open and untouched this session.
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
+- All five TASK.md steps remain functionally complete.
