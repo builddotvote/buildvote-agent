@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T20:54:31Z",
+  "updated_at": "2026-10-25T20:54:59Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 105,
     "started_at": "2026-10-25T20:48:09Z",
-    "turns": 48
+    "turns": 54
   },
   "round": {
     "number": null,
@@ -984,51 +984,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T16:20:28Z",
-      "kind": "edit",
-      "text": "rug-radar/src/pumpfun.ts"
-    },
-    {
-      "t": "2026-10-25T16:20:30Z",
-      "kind": "run",
-      "text": "grep -n \"match = matchesDiscriminator\" -A 12 src/pumpfun.ts"
-    },
-    {
-      "t": "2026-10-25T16:20:35Z",
-      "kind": "edit",
-      "text": "rug-radar/src/pumpfun.ts"
-    },
-    {
-      "t": "2026-10-25T16:20:36Z",
-      "kind": "think",
-      "text": "Now `wsLogParser.ts`:"
-    },
-    {
-      "t": "2026-10-25T16:20:39Z",
-      "kind": "edit",
-      "text": "rug-radar/src/wsLogParser.ts"
-    },
-    {
-      "t": "2026-10-25T16:20:41Z",
-      "kind": "read",
-      "text": "rug-radar/src/wsLogParser.ts"
-    },
-    {
-      "t": "2026-10-25T16:20:49Z",
-      "kind": "edit",
-      "text": "rug-radar/src/wsLogParser.ts"
-    },
-    {
-      "t": "2026-10-25T16:20:50Z",
-      "kind": "think",
-      "text": "Now let's add tests. First, reproduce the pre-fix bug with the live-captured data, then add regression tests."
-    },
-    {
-      "t": "2026-10-25T16:20:51Z",
-      "kind": "run",
-      "text": "npm run build 2>&1 | tail -30"
-    },
-    {
       "t": "2026-10-25T16:21:16Z",
       "kind": "run",
       "text": "node --input-type=module -e \" import { decodeTradeInstruction } from '/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/dist/pumpfun.js'; const data = 'e7rq4XxkssNVBvRME\u2026"
@@ -1382,6 +1337,51 @@
       "t": "2026-10-25T20:54:31Z",
       "kind": "think",
       "text": "Now add the regression test, following the file's existing style."
+    },
+    {
+      "t": "2026-10-25T20:54:38Z",
+      "kind": "edit",
+      "text": "rug-radar/src/data/bundledBuys.test.ts"
+    },
+    {
+      "t": "2026-10-25T20:54:42Z",
+      "kind": "edit",
+      "text": "rug-radar/src/data/bundledBuys.test.ts"
+    },
+    {
+      "t": "2026-10-25T20:54:44Z",
+      "kind": "think",
+      "text": "Let's verify the test fails pre-fix (per project discipline) and passes post-fix."
+    },
+    {
+      "t": "2026-10-25T20:54:45Z",
+      "kind": "run",
+      "text": "git stash push -- src/data/bundledBuys.ts && node --import tsx --test --test-reporter spec src/data/bundledBuys.test.ts 2>&1 | tail -40; echo \"---restoring fix---\"; git stash pop"
+    },
+    {
+      "t": "2026-10-25T20:54:47Z",
+      "kind": "think",
+      "text": "Confirmed it fails pre-fix. Now run the full suite with the fix in place."
+    },
+    {
+      "t": "2026-10-25T20:54:48Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -20 && npm run build 2>&1 | tail -20 && npm test 2>&1 | tail -20"
+    },
+    {
+      "t": "2026-10-25T20:54:56Z",
+      "kind": "think",
+      "text": "245/245 passing, typecheck and build clean. Now let's document this fix in the README's bundled-buys section, matching the project's established style."
+    },
+    {
+      "t": "2026-10-25T20:54:56Z",
+      "kind": "run",
+      "text": "grep -n \"## Signals\\|bundled\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md | head -30"
+    },
+    {
+      "t": "2026-10-25T20:54:59Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
     }
   ],
   "schedule": {
