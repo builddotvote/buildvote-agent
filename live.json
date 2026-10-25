@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T20:49:57Z",
+  "updated_at": "2026-10-25T20:50:24Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 105,
     "started_at": "2026-10-25T20:48:09Z",
-    "turns": 19
+    "turns": 24
   },
   "round": {
     "number": null,
@@ -984,36 +984,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T16:14:32Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/bundledBuys.ts"
-    },
-    {
-      "t": "2026-10-25T16:14:35Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/liquidity.ts"
-    },
-    {
-      "t": "2026-10-25T16:14:40Z",
-      "kind": "run",
-      "text": "cd rug-radar && grep -n \"getTokenLargestAccounts\\|getTokenSupply\\|getSignaturesForAddress\\|interface TokenAmount\\|interface LargestAccount\\|interface SignatureInfo\\|TokenBalance\\b\u2026"
-    },
-    {
-      "t": "2026-10-25T16:14:43Z",
-      "kind": "run",
-      "text": "pwd; grep -n \"getTokenLargestAccounts\\|getTokenSupply\\|getSignaturesForAddress\\|interface TokenAmount\\|LargestAccount\\|SignatureInfo\\|TokenBalance\\b\" src/rpc.ts"
-    },
-    {
-      "t": "2026-10-25T16:14:45Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
-      "t": "2026-10-25T16:14:52Z",
-      "kind": "run",
-      "text": "curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H \"content-type: application/json\" \\   -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getSignaturesForAddress\",\"params\":[\u2026"
-    },
-    {
       "t": "2026-10-25T16:14:57Z",
       "kind": "run",
       "text": "sleep 1; curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H \"content-type: application/json\" \\   -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getSignaturesForAddress\",\"\u2026"
@@ -1382,6 +1352,36 @@
       "t": "2026-10-25T20:49:56Z",
       "kind": "run",
       "text": "grep -n \"^#\\|session\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md -i | tail -60"
+    },
+    {
+      "t": "2026-10-25T20:50:01Z",
+      "kind": "run",
+      "text": "grep -n \"BuyV3\\|buy_v3\\|SellV3\\|sell_v3\\|v3\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md -i"
+    },
+    {
+      "t": "2026-10-25T20:50:08Z",
+      "kind": "read",
+      "text": "rug-radar/src/wsLogParser.ts"
+    },
+    {
+      "t": "2026-10-25T20:50:11Z",
+      "kind": "think",
+      "text": "This confirms the code work (BuyV3/SellV3 support) is complete and already tested. The gap is purely documentation: PROGRESS.md has no entry for sessions 103/104, and README's cha\u2026"
+    },
+    {
+      "t": "2026-10-25T20:50:12Z",
+      "kind": "run",
+      "text": "grep -n \"BuyV2\\|buy_v2\\|SellV2\\|sell_v2\\|decodeTradeInstruction\\|TRADE_ACCOUNT_INDEX\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-25T20:50:14Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-25T20:50:24Z",
+      "kind": "run",
+      "text": "grep -rln \"buy_v2\\|BuyV2\\|TRADE_V2\\|decodeTradeInstruction\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src"
     }
   ],
   "schedule": {
