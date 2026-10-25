@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T16:20:10Z",
+  "updated_at": "2026-10-25T16:20:39Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 104,
     "started_at": "2026-10-25T16:13:42Z",
-    "turns": 45
+    "turns": 51
   },
   "round": {
     "number": null,
@@ -975,41 +975,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T11:26:12Z",
-      "kind": "run",
-      "text": "sleep 1; curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H \"content-type: application/json\" \\   -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getTransaction\",\"params\":[\u2026"
-    },
-    {
-      "t": "2026-10-25T11:26:19Z",
-      "kind": "run",
-      "text": "python3 -c \" import json d = json.load(open('/tmp/tx.json')) r = d['result'] print('top-level result keys:', list(r.keys())) print('meta keys:', list(r['meta'].keys())) print('tx \u2026"
-    },
-    {
-      "t": "2026-10-25T11:26:23Z",
-      "kind": "run",
-      "text": "python3 -c \" import json d = json.load(open('/tmp/tx.json')) r = d['result'] m = r['meta'] print('preTokenBalances[0]:', json.dumps(m['preTokenBalances'][0], indent=2) if m['preTo\u2026"
-    },
-    {
-      "t": "2026-10-25T11:26:34Z",
-      "kind": "run",
-      "text": "grep -rn \"\\.lamports\\b\" src/*.ts src/**/*.ts 2>/dev/null"
-    },
-    {
-      "t": "2026-10-25T11:26:41Z",
-      "kind": "run",
-      "text": "grep -n \"uiAmount\\|\\.amount\\b\\|parseFloat\\|parseInt\\|Number(\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/data/holderConcentration.ts /home/runner/work/buildvo\u2026"
-    },
-    {
-      "t": "2026-10-25T11:26:52Z",
-      "kind": "read",
-      "text": "rug-radar/src/pumpfun.ts"
-    },
-    {
-      "t": "2026-10-25T11:27:41Z",
-      "kind": "run",
-      "text": "cat > /tmp/decode_live.mjs << 'EOF' import { decodeTradeInstruction } from \"./dist/pumpfun.js\";  const data = \"i43WeUBGKA6Cqk8MV6meGzEu9FJ3ATxgS3\"; const accounts = [ \"4wTV1YmiEkR\u2026"
-    },
-    {
       "t": "2026-10-25T11:27:46Z",
       "kind": "run",
       "text": "sed -i 's#./dist/pumpfun.js#/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/dist/pumpfun.js#' /tmp/decode_live.mjs && node /tmp/decode_live.mjs"
@@ -1373,6 +1338,41 @@
       "t": "2026-10-25T16:20:10Z",
       "kind": "think",
       "text": "Now implementing the fix. First, `pumpfun.ts`:"
+    },
+    {
+      "t": "2026-10-25T16:20:20Z",
+      "kind": "edit",
+      "text": "rug-radar/src/pumpfun.ts"
+    },
+    {
+      "t": "2026-10-25T16:20:24Z",
+      "kind": "edit",
+      "text": "rug-radar/src/pumpfun.ts"
+    },
+    {
+      "t": "2026-10-25T16:20:28Z",
+      "kind": "edit",
+      "text": "rug-radar/src/pumpfun.ts"
+    },
+    {
+      "t": "2026-10-25T16:20:30Z",
+      "kind": "run",
+      "text": "grep -n \"match = matchesDiscriminator\" -A 12 src/pumpfun.ts"
+    },
+    {
+      "t": "2026-10-25T16:20:35Z",
+      "kind": "edit",
+      "text": "rug-radar/src/pumpfun.ts"
+    },
+    {
+      "t": "2026-10-25T16:20:36Z",
+      "kind": "think",
+      "text": "Now `wsLogParser.ts`:"
+    },
+    {
+      "t": "2026-10-25T16:20:39Z",
+      "kind": "edit",
+      "text": "rug-radar/src/wsLogParser.ts"
     }
   ],
   "schedule": {
