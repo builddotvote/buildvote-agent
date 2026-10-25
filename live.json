@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T16:17:55Z",
+  "updated_at": "2026-10-25T16:18:23Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 104,
     "started_at": "2026-10-25T16:13:42Z",
-    "turns": 36
+    "turns": 37
   },
   "round": {
     "number": null,
@@ -975,11 +975,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T11:23:44Z",
-      "kind": "run",
-      "text": "grep -n \"methodIntervalsMs.*mutat\\|shared.*pacer.*methodIntervalsMs\\|res.json\\|JSON parse\\|malformed\\|non-JSON\\|fetch.*throw\\|network\" PROGRESS.md | tail -30"
-    },
-    {
       "t": "2026-10-25T11:23:48Z",
       "kind": "run",
       "text": "grep -n \"^  (await\\|^  test(\\|^test(\\|describe(\\|it(\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/rpc.test.ts | head -80"
@@ -1373,6 +1368,11 @@
       "t": "2026-10-25T16:17:51Z",
       "kind": "run",
       "text": "cat src/pumpfun.ts"
+    },
+    {
+      "t": "2026-10-25T16:18:03Z",
+      "kind": "run",
+      "text": "python3 -c \" import json d = json.load(open('/tmp/txA_2.json')) r = d['result'] msg = r['transaction']['message'] keys = [k['pubkey'] for k in msg['accountKeys']] inner = r['meta'\u2026"
     }
   ],
   "schedule": {
