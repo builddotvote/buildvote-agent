@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T16:18:23Z",
+  "updated_at": "2026-10-25T16:18:50Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 104,
     "started_at": "2026-10-25T16:13:42Z",
-    "turns": 37
+    "turns": 39
   },
   "round": {
     "number": null,
@@ -975,16 +975,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T11:23:48Z",
-      "kind": "run",
-      "text": "grep -n \"^  (await\\|^  test(\\|^test(\\|describe(\\|it(\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/rpc.test.ts | head -80"
-    },
-    {
-      "t": "2026-10-25T11:23:59Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.test.ts"
-    },
-    {
       "t": "2026-10-25T11:24:31Z",
       "kind": "run",
       "text": "grep -n \"scoringGate.ts\\|scoringInFlight.ts\" PROGRESS.md"
@@ -1373,6 +1363,16 @@
       "t": "2026-10-25T16:18:03Z",
       "kind": "run",
       "text": "python3 -c \" import json d = json.load(open('/tmp/txA_2.json')) r = d['result'] msg = r['transaction']['message'] keys = [k['pubkey'] for k in msg['accountKeys']] inner = r['meta'\u2026"
+    },
+    {
+      "t": "2026-10-25T16:18:30Z",
+      "kind": "run",
+      "text": "curl -s --max-time 10 \"https://raw.githubusercontent.com/pump-fun/pump-public-docs/main/idl/pump.json\" -o /tmp/pump_idl.json; echo \"exit $?\"; wc -c /tmp/pump_idl.json; python3 -c \u2026"
+    },
+    {
+      "t": "2026-10-25T16:18:35Z",
+      "kind": "run",
+      "text": "python3 -c \" import json d = json.load(open('/tmp/pump_idl.json')) for i in d['instructions']:     if i['name'] in ('buy_v3','sell_v3','buy_v2','sell_v2','buy','sell'):         pr\u2026"
     }
   ],
   "schedule": {
