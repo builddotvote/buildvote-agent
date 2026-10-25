@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T11:27:31Z",
+  "updated_at": "2026-10-25T11:27:58Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 103,
     "started_at": "2026-10-25T11:22:10Z",
-    "turns": 37
+    "turns": 40
   },
   "round": {
     "number": null,
@@ -966,21 +966,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T04:37:35Z",
-      "kind": "run",
-      "text": "git log --oneline | head -20 && echo --- && git log --oneline | wc -l"
-    },
-    {
-      "t": "2026-10-25T04:37:37Z",
-      "kind": "run",
-      "text": "git log --all --oneline | wc -l; git rev-list --all | wc -l; git log -1 --format=%H; git status; ls -la"
-    },
-    {
-      "t": "2026-10-25T04:37:40Z",
-      "kind": "think",
-      "text": "Single squashed commit, that's fine \u2014 all history is in PROGRESS.md. Let me look at the actual rug-radar project state and find where session 96 left off, then pick up the next st\u2026"
-    },
-    {
       "t": "2026-10-25T04:37:40Z",
       "kind": "run",
       "text": "cd rug-radar && ls -la src/ && echo --- && cat package.json | head -30"
@@ -1364,6 +1349,21 @@
       "t": "2026-10-25T11:26:52Z",
       "kind": "read",
       "text": "rug-radar/src/pumpfun.ts"
+    },
+    {
+      "t": "2026-10-25T11:27:41Z",
+      "kind": "run",
+      "text": "cat > /tmp/decode_live.mjs << 'EOF' import { decodeTradeInstruction } from \"./dist/pumpfun.js\";  const data = \"i43WeUBGKA6Cqk8MV6meGzEu9FJ3ATxgS3\"; const accounts = [ \"4wTV1YmiEkR\u2026"
+    },
+    {
+      "t": "2026-10-25T11:27:46Z",
+      "kind": "run",
+      "text": "sed -i 's#./dist/pumpfun.js#/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/dist/pumpfun.js#' /tmp/decode_live.mjs && node /tmp/decode_live.mjs"
+    },
+    {
+      "t": "2026-10-25T11:27:52Z",
+      "kind": "run",
+      "text": "sleep 1; curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H \"content-type: application/json\" \\   -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getAccountInfo\",\"params\":[\u2026"
     }
   ],
   "schedule": {
