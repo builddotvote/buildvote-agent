@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T16:20:39Z",
+  "updated_at": "2026-10-25T16:21:16Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 104,
     "started_at": "2026-10-25T16:13:42Z",
-    "turns": 51
+    "turns": 55
   },
   "round": {
     "number": null,
@@ -975,31 +975,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T11:27:46Z",
-      "kind": "run",
-      "text": "sed -i 's#./dist/pumpfun.js#/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/dist/pumpfun.js#' /tmp/decode_live.mjs && node /tmp/decode_live.mjs"
-    },
-    {
-      "t": "2026-10-25T11:27:52Z",
-      "kind": "run",
-      "text": "sleep 1; curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H \"content-type: application/json\" \\   -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getAccountInfo\",\"params\":[\u2026"
-    },
-    {
-      "t": "2026-10-25T11:28:01Z",
-      "kind": "run",
-      "text": "grep -rn \"rentEpoch\\|executable\\b\" src/*.ts src/**/*.ts 2>/dev/null"
-    },
-    {
-      "t": "2026-10-25T11:28:09Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/bondingCurve.ts"
-    },
-    {
-      "t": "2026-10-25T11:28:16Z",
-      "kind": "run",
-      "text": "cat > /tmp/decode_curve.mjs << 'EOF' import { decodeBondingCurve } from \"/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/dist/pumpfun.js\"; const data = \"F7f4N2DYrGA4tk\u2026"
-    },
-    {
       "t": "2026-10-25T11:28:27Z",
       "kind": "run",
       "text": "grep -n \"non-SOL-quote\\|quote_mint\\|quoteMint\" PROGRESS.md | head -20"
@@ -1373,6 +1348,31 @@
       "t": "2026-10-25T16:20:39Z",
       "kind": "edit",
       "text": "rug-radar/src/wsLogParser.ts"
+    },
+    {
+      "t": "2026-10-25T16:20:41Z",
+      "kind": "read",
+      "text": "rug-radar/src/wsLogParser.ts"
+    },
+    {
+      "t": "2026-10-25T16:20:49Z",
+      "kind": "edit",
+      "text": "rug-radar/src/wsLogParser.ts"
+    },
+    {
+      "t": "2026-10-25T16:20:50Z",
+      "kind": "think",
+      "text": "Now let's add tests. First, reproduce the pre-fix bug with the live-captured data, then add regression tests."
+    },
+    {
+      "t": "2026-10-25T16:20:51Z",
+      "kind": "run",
+      "text": "npm run build 2>&1 | tail -30"
+    },
+    {
+      "t": "2026-10-25T16:21:16Z",
+      "kind": "run",
+      "text": "node --input-type=module -e \" import { decodeTradeInstruction } from '/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/dist/pumpfun.js'; const data = 'e7rq4XxkssNVBvRME\u2026"
     }
   ],
   "schedule": {
