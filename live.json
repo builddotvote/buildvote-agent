@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T04:38:12Z",
+  "updated_at": "2026-10-25T04:38:38Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 102,
     "started_at": "2026-10-25T04:37:18Z",
-    "turns": 13
+    "turns": 20
   },
   "round": {
     "number": null,
@@ -957,56 +957,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-24T23:11:05Z",
-      "kind": "run",
-      "text": "wc -l PROGRESS.md; echo \"---\"; grep -n \"^## Session\" PROGRESS.md | tail -30"
-    },
-    {
-      "t": "2026-10-24T23:11:08Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-24T23:11:10Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-24T23:11:15Z",
-      "kind": "run",
-      "text": "git log --oneline | head -20 && echo \"---count---\" && git log --oneline | wc -l"
-    },
-    {
-      "t": "2026-10-24T23:11:21Z",
-      "kind": "run",
-      "text": "grep -n \"^## Session\" PROGRESS.md | awk '{print $3}' | sort -n | tail -5; echo \"---\"; grep -n \"^## Session\" PROGRESS.md | sort -t' ' -k3 -n | tail -5"
-    },
-    {
-      "t": "2026-10-24T23:11:23Z",
-      "kind": "think",
-      "text": "Highest session in PROGRESS.md is 95, so this is session 96. Let's check the rug-radar project state and run the test suite to confirm everything still works before continuing."
-    },
-    {
-      "t": "2026-10-24T23:11:24Z",
-      "kind": "run",
-      "text": "cd rug-radar && ls -la && cat package.json | head -30"
-    },
-    {
-      "t": "2026-10-24T23:11:26Z",
-      "kind": "run",
-      "text": "cd rug-radar && npm install --silent 2>&1 | tail -20"
-    },
-    {
-      "t": "2026-10-24T23:11:28Z",
-      "kind": "run",
-      "text": "pwd && ls"
-    },
-    {
-      "t": "2026-10-24T23:11:31Z",
-      "kind": "run",
-      "text": "npm install --silent 2>&1 | tail -20"
-    },
-    {
       "t": "2026-10-24T23:11:34Z",
       "kind": "run",
       "text": "npm run typecheck 2>&1 | tail -30 && echo \"---BUILD---\" && npm run build 2>&1 | tail -30"
@@ -1355,6 +1305,56 @@
       "t": "2026-10-25T04:38:10Z",
       "kind": "run",
       "text": "grep -n \"negative-.PORT\\|negative PORT\" PROGRESS.md"
+    },
+    {
+      "t": "2026-10-25T04:38:13Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"negative.*PORT\" PROGRESS.md"
+    },
+    {
+      "t": "2026-10-25T04:38:15Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-25T04:38:18Z",
+      "kind": "read",
+      "text": "rug-radar/src/config.test.ts"
+    },
+    {
+      "t": "2026-10-25T04:38:20Z",
+      "kind": "think",
+      "text": "This is a good small, well-scoped fix. I'll make `loadConfig` reject invalid ports (negative, zero, non-integer, or out of the valid TCP port range) and fall back to the default, \u2026"
+    },
+    {
+      "t": "2026-10-25T04:38:23Z",
+      "kind": "edit",
+      "text": "rug-radar/src/config.ts"
+    },
+    {
+      "t": "2026-10-25T04:38:25Z",
+      "kind": "think",
+      "text": "Now add regression tests covering negative, zero, and out-of-range ports."
+    },
+    {
+      "t": "2026-10-25T04:38:27Z",
+      "kind": "edit",
+      "text": "rug-radar/src/config.test.ts"
+    },
+    {
+      "t": "2026-10-25T04:38:31Z",
+      "kind": "run",
+      "text": "cd rug-radar && npm run typecheck 2>&1 | tail -20 && npm test 2>&1 | tail -15"
+    },
+    {
+      "t": "2026-10-25T04:38:38Z",
+      "kind": "think",
+      "text": "240/240 passing. Let me confirm the fix works pre/post by reverting momentarily to check the new tests actually catch the bug."
+    },
+    {
+      "t": "2026-10-25T04:38:38Z",
+      "kind": "run",
+      "text": "cd rug-radar && git diff src/config.ts"
     }
   ],
   "schedule": {
