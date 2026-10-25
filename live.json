@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T23:16:45Z",
+  "updated_at": "2026-10-25T23:17:12Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 106,
     "started_at": "2026-10-25T23:14:58Z",
-    "turns": 23
+    "turns": 26
   },
   "round": {
     "number": null,
@@ -993,21 +993,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T20:50:12Z",
-      "kind": "run",
-      "text": "grep -n \"BuyV2\\|buy_v2\\|SellV2\\|sell_v2\\|decodeTradeInstruction\\|TRADE_ACCOUNT_INDEX\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-25T20:50:14Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-25T20:50:24Z",
-      "kind": "run",
-      "text": "grep -rln \"buy_v2\\|BuyV2\\|TRADE_V2\\|decodeTradeInstruction\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src"
-    },
-    {
       "t": "2026-10-25T20:50:27Z",
       "kind": "run",
       "text": "grep -n \"buy_v2\\|BuyV2\\|v2\\|v3\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/balanceIndex.ts /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/dis\u2026"
@@ -1391,6 +1376,21 @@
       "t": "2026-10-25T23:16:45Z",
       "kind": "think",
       "text": "Need to run from rug-radar dir where tsx is installed."
+    },
+    {
+      "t": "2026-10-25T23:16:46Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && node --import tsx /tmp/live-check.ts 2>&1 | tail -100"
+    },
+    {
+      "t": "2026-10-25T23:17:06Z",
+      "kind": "edit",
+      "text": "/tmp/live-check.ts"
+    },
+    {
+      "t": "2026-10-25T23:17:08Z",
+      "kind": "run",
+      "text": "node --import tsx /tmp/live-check.ts 2>&1 | tail -100"
     }
   ],
   "schedule": {
