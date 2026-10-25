@@ -6376,3 +6376,89 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
   endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
 - All five TASK.md steps remain functionally complete.
+
+## Session 103 — 2026-10-25
+
+### Done
+- Fresh checkout, `npm install`, baseline before any changes:
+  `npm run typecheck`/`npm run build` clean, `npm test` 244/244 — already 4
+  more than session 102's 240, from `buy_v3`/`sell_v3` support
+  (`pumpfun.ts`, `wsLogParser.ts` and their tests) that was already
+  committed with in-code comments citing "session 104", but had **no**
+  `PROGRESS.md` entry and no README changelog paragraph for it. Rather than
+  reconstruct a session I didn't run, added the missing README paragraph
+  (in `README.md`'s "Data layer" section, right after the `buy_v2`/`sell_v2`
+  writeup) describing only what the code/tests already prove: the third
+  trade variant, its distinct account layout, and that nothing downstream
+  needed changes since `decodeTradeInstruction`'s callers already consume
+  its `kind` field generically. Noted the gap explicitly in that paragraph
+  rather than silently backfilling it.
+- Took up session 102's actual suggestion: ran the real `data/*.ts` fetchers
+  against freshly fetched live mainnet data, not just recorded fixtures,
+  starting with `bundledBuys.ts` (not yet given this treatment; session 102
+  did it for `rpc.ts`/`pumpfun.ts` only). Found a real bug:
+  - Pulled a real pump.fun bonding curve address and mint from a live
+    buy transaction (via `getSignaturesForAddress` on the pump.fun program
+    + `getTransaction`, matching the pump.fun aggregator-CPI case —
+    confirmed the inner instruction's account layout against
+    `TRADE_ACCOUNT_INDEX` to find the bonding curve's own address).
+  - Ran the actual `fetchBundledBuysInput` (real `SolanaRpcClient` against
+    `solana-rpc.publicnode.com`, not mocked `fetch`) against that bonding
+    curve's own recent signature history. Several results came back with
+    the **bonding curve's own address as the `buyer`**, each with a
+    `fundedBy` looked up for it (meaningless for a program-derived address).
+  - Confirmed via logs: those signatures were real `Sell` transactions.
+    `findTokenReceiver` only checks "whose token balance increased", and a
+    sell increases the bonding curve's own token account by the same shape
+    a buy increases a real buyer's — nothing excluded the curve's own
+    address from being picked.
+  - **Fixed** in `src/data/bundledBuys.ts`: `findTokenReceiver` now takes
+    the bonding curve's address and skips it as a possible receiver (passed
+    through from `fetchBundledBuysInput`, which already has it).
+  - Added a regression test in `bundledBuys.test.ts`
+    (`sellTxAgainstCurve` fixture — two token-balance entries, the seller's
+    decrease *and* the curve's own increase, which the file's existing
+    "skips a sell" test didn't have, since its single-entry fixture has no
+    second account whose balance moves). Verified it fails pre-fix:
+    `git stash push -- src/data/bundledBuys.ts`, ran the new test alone, it
+    failed (`1 !== 0`, the curve's own address incorrectly returned as
+    buyer); `git stash pop` restored the fix and it passed.
+  - Documented the fix in `rug-radar/README.md`'s "Signals" section, right
+    after the existing bundled-buys writeup, same style as other session
+    fix notes (e.g. session 96's pacer writeup).
+  - Cleaned up all temporary repro scripts and fetched JSON (written under
+    `/tmp`, deleted before finishing).
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 245/245 passing (244 + 1 new regression test), offline.
+- `git status` before this edit: three files changed (`README.md`,
+  `src/data/bundledBuys.ts`, `src/data/bundledBuys.test.ts`); no stray
+  repro scripts left behind.
+
+### Next
+- Ten real bugs found and fixed total across sessions 84-103 now (84's
+  `wsLogParser.ts`, 88's `wsDiscovery.ts` stale-close race, 89's and 90's
+  two `rpc.ts`/`RequestPacer` issues, 94's `requestHandler.ts`
+  unhandled-rejection crash, 95's `server.ts` unhandled `error`-event
+  crash, 96's pacer-skips-retries gap, 101's `config.ts` invalid-`PORT` gap,
+  this session's `bundledBuys.ts` curve-counted-as-buyer bug). This
+  session's bug is a live-data-path correctness bug (corrupts the
+  bundled-buys signal with phantom buyers and wastes RPC calls on their
+  fake funding lookups), same severity class as the 84-90 bugs.
+- Session 102's live-data cross-check is still only applied to
+  `rpc.ts`/`pumpfun.ts` (session 102) and `bundledBuys.ts` (this session).
+  `holderConcentration.ts` and `liquidity.ts` haven't had it yet — good
+  next candidates, though both are thinner (mostly direct `rpc.ts` calls,
+  less custom logic than `bundledBuys.ts`'s balance-delta matching) so may
+  be lower-yield.
+- Whatever process let the `buy_v3`/`sell_v3` code land without a
+  `PROGRESS.md` entry or README paragraph at the time is worth watching
+  for — this session backfilled the README side of that specific gap, but
+  didn't investigate *why* it happened (no access to the session that did
+  it). If it recurs, worth checking whether a session is running out of
+  steps before reaching its own documentation update.
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
+- All five TASK.md steps remain functionally complete.

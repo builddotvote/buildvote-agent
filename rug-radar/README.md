@@ -78,6 +78,23 @@ this IDL (or any other on-chain spec) via a summarizing fetch tool: treat
 byte arrays and other exact values from a summary as unverified until
 cross-checked against the raw source.
 
+Session 104 found a third trade variant beyond `buy`/`sell` and
+`buy_v2`/`sell_v2`: the IDL's `buy_v3`/`sell_v3`, confirmed live via a real
+`BuyV3` instruction CPI'd into the pump.fun program from an aggregator (the
+`pumpfun.test.ts` fixture for it is verbatim from that transaction, not a
+synthetic one like the others). Account layout is `buy_v2`/`sell_v2`'s shape
+minus the now-unused fee/associated-token-program accounts: `mint` is
+`base_mint` at index 1, `bonding_curve` at 5, `user` at 8 — a third distinct
+layout, not a reuse of `buy`/`sell`'s or `buy_v2`/`sell_v2`'s.
+`decodeTradeInstruction` and `wsLogParser.ts`'s `detectTradeInstruction` both
+now match all six variants. Nothing downstream needed changes: `discovery.ts`'s
+bundled-buy detection and `balanceIndex.ts` already consume
+`decodeTradeInstruction`'s collapsed `kind` field generically rather than
+switching on variant, so they picked up `buy_v3`/`sell_v3` for free. Noted here
+in session 103: the code and tests for this were already complete and
+committed, but this README paragraph and the matching `PROGRESS.md` entry
+hadn't been written yet — backfilled now rather than left undocumented.
+
 Session 31 added the next piece toward the balance index: `src/wsLogParser.ts`
 now also exports `detectTradeInstruction(programId, logs)`, the same
 invoke-stack-aware check `detectCreateInstruction` uses but matching
@@ -267,6 +284,25 @@ question open since session 34.
    without an index covering the lost recall). The dev's own bundled buy, if
    any, is passed in from `DiscoveredLaunch.bundledBuy` instead of being
    re-discovered by the scan — see "Score" below (session 55).
+
+   **The bonding curve's own balance was counted as a buyer (fixed session
+   103).** `fetchBundledBuysInput`'s `findTokenReceiver` picked whichever
+   token account's balance increased in an early transaction and called its
+   owner the buyer — but a sell increases the bonding curve's own token
+   balance by the same shape as a buy increases a real buyer's, and nothing
+   excluded the curve's own address from that check. Confirmed live: running
+   the real fetch against a live mainnet bonding curve's actual recent
+   signatures (not a recorded fixture) turned up exactly this — several
+   "Sell" transactions reported back with the bonding curve's own address as
+   the `buyer`, each with a nonsense `fundedBy` (a "funding source" looked up
+   for a program-derived address, which doesn't have one) wasting an extra
+   `getSignaturesForAddress`/`getTransaction` round trip per occurrence.
+   `findTokenReceiver` now takes the bonding curve's address and skips it as
+   a possible receiver. New regression test in `bundledBuys.test.ts` (a
+   two-token-balance-entry sell fixture — the single-entry shape the
+   existing "skips a sell" test used doesn't reproduce this, since nothing
+   else's balance moved in that fixture); confirmed it fails pre-fix,
+   `git stash` of the one-line fix included.
 3. **Holder concentration** — top 10 holder share, excluding the bonding
    curve and known program accounts. **Built:** `src/signals/holderConcentration.ts`
    (pure scoring function) + `src/data/holderConcentration.ts` (gathers the

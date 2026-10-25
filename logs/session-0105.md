@@ -1,0 +1,92 @@
+# Session 105: Rug radar: live launch scoring
+
+- Started: 2026-10-25T20:48:09Z
+- Ended: 2026-10-25T20:55:54Z
+- Steps: 59
+- Model turns: 60
+- Billing: Claude subscription (API value $2.3695, not billed)
+- Outcome: ok
+
+## Summary
+
+All checks pass (245/245 tests, clean typecheck/build). Session summary:  **Found and fixed a real bug** in `bundledBuys.ts`: `findTokenReceiver` misclassified sell transactions as "bundled buys" because it only checked "whose token balance increased," without excluding the bonding curve's own token account — which increases on every sell. Confirmed live by running the actual fetcher against a real mainnet bonding curve's signature history (not just fixtures), which surfaced sells reported as buys with the curve's own address as "buyer" and nonsense funding lookups. Fixed, added a regression …
+
+## Steps
+
+- `think` I'll start by reading TASK.md and PROGRESS.md to understand the current task and prior progress.
+- `run` cat TASK.md 2>/dev/null; echo "---PROGRESS---"; cat PROGRESS.md 2>/dev/null
+- `run` wc -l TASK.md PROGRESS.md 2>/dev/null; echo "---"; ls rug-radar 2>/dev/null
+- `read` PROGRESS.md
+- `read` PROGRESS.md
+- `run` git log --oneline -15 && echo "---" && sed -n '6378p' PROGRESS.md && echo "---tail---" && tail -5 PROGRESS.md
+- `run` git log --oneline | wc -l; git log -1 --format='%H %ad' ; git rev-list --count HEAD; git log --all --oneline | head -20
+- `run` cd rug-radar && ls -la src src/data 2>/dev/null && echo "---" && cat package.json | head -30
+- `think` Let me check that `npm install` + baseline tests still pass before deciding what to do this session.
+- `run` cd rug-radar && npm install --silent 2>&1 | tail -20 && npm run typecheck 2>&1 | tail -30
+- `run` pwd; ls
+- `think` Good, already in rug-radar. Let's run install and checks.
+- `run` npm install --silent 2>&1 | tail -20 && echo "---typecheck---" && npm run typecheck 2>&1 | tail -40
+- `run` npm run build 2>&1 | tail -30 && echo "---test---" && npm test 2>&1 | tail -60
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n "^## Session" PROGRESS.md | tail -10
+- `run` find . -maxdepth 2 -iname "TASK.md" -o -iname "PROGRESS.md" | grep -v node_modules
+- `run` cd rug-radar && grep -rn "quote" src --include=*.ts -i | grep -v test
+- `read` rug-radar/src/pumpfun.ts
+- `run` cd rug-radar && grep -rn "session 10[3-9]" src README.md -i
+- `run` pwd; ls
+- `run` grep -rn "session 10[3-9]" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md -i
+- `run` grep -n "^#\|session" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md -i | tail -60
+- `run` grep -n "BuyV3\|buy_v3\|SellV3\|sell_v3\|v3" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md -i
+- `read` rug-radar/src/wsLogParser.ts
+- `think` This confirms the code work (BuyV3/SellV3 support) is complete and already tested. The gap is purely documentation: PROGRESS.md has no entry for sessions 103/104, and README's changelog sections never mention this v3 addition. Let me check the README's "Signals" section around trade decoding to find where this should be added.
+- `run` grep -n "BuyV2\|buy_v2\|SellV2\|sell_v2\|decodeTradeInstruction\|TRADE_ACCOUNT_INDEX" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md
+- `read` rug-radar/README.md
+- `run` grep -rln "buy_v2\|BuyV2\|TRADE_V2\|decodeTradeInstruction" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src
+- `run` grep -n "buy_v2\|BuyV2\|v2\|v3" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/balanceIndex.ts /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/discovery.ts -i
+- `run` sed -n '1,40p' /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/discovery.ts
+- `think` Good — `decodeTradeInstruction` is called generically (any matching variant), so the bundled-buy detection already benefits from v3 support automatically; no further code changes needed there. Now let's check the pumpfun.test.ts and wsLogParser.test.ts for the v3 fixtures to understand exactly what was verified, so I document it accurately.
+- `run` sed -n '150,230p' /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/pumpfun.test.ts
+- `think` Now let's check wsLogParser.test.ts's v3 fixture context for completeness.
+- `run` sed -n '115,150p' /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/wsLogParser.test.ts
+- `read` rug-radar/src/data/holderConcentration.ts
+- `read` rug-radar/src/data/bundledBuys.ts
+- `think` Now let's add the missing README documentation for the buy_v3/sell_v3 support. I'll insert it right after the existing buy_v2/sell_v2 paragraph.
+- `read` rug-radar/README.md
+- `edit` rug-radar/README.md
+- `think` Now let's do the live-data cross-check on `bundledBuys.ts` against real mainnet data, per session 102's suggested next step. Let's find a recent live pump.fun bonding-curve transaction with early buys.
+- `run` cat /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/config.ts 2>/dev/null | head -30
+- `run` curl -s https://solana-rpc.publicnode.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"getSignaturesForAddress","params":["6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",{"limit":30}]}' | head -c 3000
+- `run` curl -s https://solana-rpc.publicnode.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"getSignaturesForAddress","params":["6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",{"limit":100}]}' > /tmp/sigs.json python3 -c " import json d = json.load(open('/tmp/sigs.json')) sigs = [s for s in d['result'] if s['err'] is None] print(len(sigs)) for s in sigs[:10]:     prin…
+- `run` for sig in [redacted] [redacted]; do echo "=== $sig ===" curl -s https://solana-rpc.publicnode.com -X POST -H "Content-Type: application/json" -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getTransaction\",\"params\":[\"$sig\",{\"encoding\":\"jsonParsed\",\"maxSupportedTransactionVersion\":1}]}" | python3 -c " import json,sys d = json.load(sys.stdin) r = d.get('result') if not r:     print('no r…
+- `run` python3 -c " import json d = json.load(open('/tmp/sigs.json')) sigs = [s['signature'] for s in d['result'] if s['err'] is None] print('\n'.join(sigs)) " > /tmp/good_sigs.txt while read -r sig; do echo "=== $sig ===" curl -s https://solana-rpc.publicnode.com -X POST -H "Content-Type: application/json" -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getTransaction\",\"params\":[\"$sig\",{\"encoding\…
+- `run` curl -s https://solana-rpc.publicnode.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"getTransaction","params":["[redacted]",{"encoding":"jsonParsed","maxSupportedTransactionVersion":1}]}' > /tmp/tx1.json python3 -c " import json d = json.load(open('/tmp/tx1.json'))['result'] print('accountKeys:') for i,k in enumerate(d['transaction']['message']['accountKeys'…
+- `run` grep -n "export function\|export async function\|export interface\|export class\|export const\|ParsedTransaction" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/rpc.ts | head -60
+- `run` sed -n '247,403p' /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/rpc.ts
+- `run` python3 -c " import json d = json.load(open('/tmp/tx1.json'))['result'] msg = d['transaction']['message'] for ix in msg['instructions']:     pid = ix.get('programId')     print(pid, ix.get('accounts'), list(ix.keys())) print('---inner---') for grp in d['meta'].get('innerInstructions', []):     for ix in grp['instructions']:         print(ix.get('programId'), ix.get('accounts')) "
+- `edit` /tmp/livecheck_bundled.mjs
+- `run` node --import tsx /tmp/livecheck_bundled.mjs 2>&1 | tail -80
+- `think` This confirms a real bug: `findTokenReceiver` returns the bonding-curve's own token account as a "buyer" on sell transactions. Let me verify with the actual transaction logs before confirming.
+- `run` curl -s https://solana-rpc.publicnode.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"getSignaturesForAddress","params":["79EvQAHqEN59Y1aHyunnBEi9e7m1AJuUTLVTCp6X73Lv",{"limit":10}]}' | python3 -m json.tool 2>/dev/null | grep signature
+- `run` curl -s https://solana-rpc.publicnode.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"getTransaction","params":["[redacted]",{"encoding":"jsonParsed","maxSupportedTransactionVersion":1}]}' | python3 -c " import json,sys d = json.load(sys.stdin)['result'] for l in d['meta']['logMessages']:     if 'Instruction:' in l: print(l) print('---pre/post token---') for …
+- `think` Confirmed: this is a real bug. A sell transaction against the bonding curve gets misclassified as a "bundled buy" because `findTokenReceiver` doesn't exclude the bonding curve's own token account from being picked as the "buyer". Let's look at the test file to match style, then fix it.
+- `read` rug-radar/src/data/bundledBuys.test.ts
+- `edit` rug-radar/src/data/bundledBuys.ts
+- `edit` rug-radar/src/data/bundledBuys.ts
+- `think` Now add the regression test, following the file's existing style.
+- `edit` rug-radar/src/data/bundledBuys.test.ts
+- `edit` rug-radar/src/data/bundledBuys.test.ts
+- `think` Let's verify the test fails pre-fix (per project discipline) and passes post-fix.
+- `run` git stash push -- src/data/bundledBuys.ts && node --import tsx --test --test-reporter spec src/data/bundledBuys.test.ts 2>&1 | tail -40; echo "---restoring fix---"; git stash pop
+- `think` Confirmed it fails pre-fix. Now run the full suite with the fix in place.
+- `run` npm run typecheck 2>&1 | tail -20 && npm run build 2>&1 | tail -20 && npm test 2>&1 | tail -20
+- `think` 245/245 passing, typecheck and build clean. Now let's document this fix in the README's bundled-buys section, matching the project's established style.
+- `run` grep -n "## Signals\|bundled" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md | head -30
+- `read` rug-radar/README.md
+- `edit` rug-radar/README.md
+- `think` Now let's clean up temp files and write the PROGRESS.md entry.
+- `run` rm -f /tmp/livecheck_bundled.mjs /tmp/sigs.json /tmp/good_sigs.txt /tmp/tx1.json; cd /home/runner/work/buildvote-agent/buildvote-agent && git status --short
+- `think` Now let's write the PROGRESS.md entry for this session.
+- `run` tail -3 /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md
+- `edit` PROGRESS.md
+- `think` Let's do a final verification pass to make sure everything is consistent.
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10 && echo "---git status---" && git status --short
+- `think` All checks pass (245/245 tests, clean typecheck/build). Session summary:

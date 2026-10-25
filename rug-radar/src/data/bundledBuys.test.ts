@@ -43,6 +43,66 @@ function buyTx(buyer: string, preAmount: string, postAmount: string): ParsedTran
   };
 }
 
+// A real sell: the seller's balance of `mint` drops while the bonding
+// curve's own token account for that mint rises by the same shape (two
+// entries, not the single-entry shape `buyTx` uses) — confirmed live
+// (session 103) against a real pump.fun bonding curve's recent signatures.
+function sellTxAgainstCurve(
+  seller: string,
+  sellerPre: string,
+  sellerPost: string,
+  curvePre: string,
+  curvePost: string,
+): ParsedTransaction {
+  return {
+    slot: 1,
+    blockTime: 1000,
+    transaction: {
+      signatures: ["sig"],
+      message: {
+        accountKeys: [
+          { pubkey: seller, signer: true, writable: true },
+          { pubkey: CURVE, signer: false, writable: true },
+        ],
+      },
+    },
+    meta: {
+      err: null,
+      fee: 5000,
+      preBalances: [0, 0],
+      postBalances: [0, 0],
+      preTokenBalances: [
+        {
+          accountIndex: 0,
+          mint: MINT,
+          owner: seller,
+          uiTokenAmount: { amount: sellerPre, decimals: 6, uiAmount: null, uiAmountString: sellerPre },
+        },
+        {
+          accountIndex: 1,
+          mint: MINT,
+          owner: CURVE,
+          uiTokenAmount: { amount: curvePre, decimals: 6, uiAmount: null, uiAmountString: curvePre },
+        },
+      ],
+      postTokenBalances: [
+        {
+          accountIndex: 0,
+          mint: MINT,
+          owner: seller,
+          uiTokenAmount: { amount: sellerPost, decimals: 6, uiAmount: null, uiAmountString: sellerPost },
+        },
+        {
+          accountIndex: 1,
+          mint: MINT,
+          owner: CURVE,
+          uiTokenAmount: { amount: curvePost, decimals: 6, uiAmount: null, uiAmountString: curvePost },
+        },
+      ],
+    },
+  };
+}
+
 function fundingTx(recipient: string, sender: string, amount: number): ParsedTransaction {
   return {
     slot: 1,
@@ -106,6 +166,19 @@ test("skips transactions with no increase in the tracked mint (e.g. a sell)", as
       return [];
     },
     getTransaction: async () => buyTx("buyerA", "1000", "500"),
+  };
+
+  const result = await fetchBundledBuysInput(rpc, MINT, CURVE, 1000, { windowSeconds: 300 });
+  assert.equal(result.length, 0);
+});
+
+test("does not report the bonding curve itself as a buyer when a sell sends tokens back to it", async () => {
+  const rpc = {
+    getSignaturesForAddress: async (address: string) => {
+      if (address === CURVE) return [sig("sell-sig", 1050)];
+      return [];
+    },
+    getTransaction: async () => sellTxAgainstCurve("seller1", "1000", "500", "0", "500"),
   };
 
   const result = await fetchBundledBuysInput(rpc, MINT, CURVE, 1000, { windowSeconds: 300 });

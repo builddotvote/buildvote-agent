@@ -62,7 +62,7 @@ export async function fetchBundledBuysInput(
     early.map(async (sig) => {
       const tx = await safeGetTransaction(rpc, sig.signature);
       if (!tx) return null;
-      const buyer = findTokenReceiver(tx, mint);
+      const buyer = findTokenReceiver(tx, mint, bondingCurveAddress);
       if (!buyer) return null;
       return { buyer, secondsAfterLaunch: (sig.blockTime as number) - launchTimestampSec };
     }),
@@ -91,13 +91,23 @@ export async function fetchBundledBuysInput(
   }));
 }
 
-// The buyer is whichever owner's balance of `mint` went up in this transaction.
-function findTokenReceiver(tx: ParsedTransaction, mint: string): string | null {
+// The buyer is whichever owner's balance of `mint` went up in this
+// transaction. Excludes the bonding curve's own balance: a sell sends tokens
+// back to the curve, which is exactly as much an "increase" as a real buy,
+// but the curve isn't a buyer — confirmed live (session 103) by scanning a
+// real bonding curve's recent signatures and finding "Sell" transactions
+// reported back as bundled buys with the curve's own address as the buyer
+// (and a nonsense "funding source" looked up for it as a result).
+function findTokenReceiver(
+  tx: ParsedTransaction,
+  mint: string,
+  bondingCurveAddress: string,
+): string | null {
   const pre = tx.meta?.preTokenBalances ?? [];
   const post = tx.meta?.postTokenBalances ?? [];
 
   for (const entry of post) {
-    if (entry.mint !== mint || !entry.owner) continue;
+    if (entry.mint !== mint || !entry.owner || entry.owner === bondingCurveAddress) continue;
     const preEntry = pre.find((e) => e.accountIndex === entry.accountIndex);
     const preAmount = preEntry ? BigInt(preEntry.uiTokenAmount.amount) : 0n;
     const postAmount = BigInt(entry.uiTokenAmount.amount);
