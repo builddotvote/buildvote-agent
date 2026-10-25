@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T16:18:50Z",
+  "updated_at": "2026-10-25T16:19:16Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 104,
     "started_at": "2026-10-25T16:13:42Z",
-    "turns": 39
+    "turns": 40
   },
   "round": {
     "number": null,
@@ -975,11 +975,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T11:24:31Z",
-      "kind": "run",
-      "text": "grep -n \"scoringGate.ts\\|scoringInFlight.ts\" PROGRESS.md"
-    },
-    {
       "t": "2026-10-25T11:24:37Z",
       "kind": "run",
       "text": "grep -n \"RESCORE_DELAY_MS\" PROGRESS.md | head -20"
@@ -1373,6 +1368,11 @@
       "t": "2026-10-25T16:18:35Z",
       "kind": "run",
       "text": "python3 -c \" import json d = json.load(open('/tmp/pump_idl.json')) for i in d['instructions']:     if i['name'] in ('buy_v3','sell_v3','buy_v2','sell_v2','buy','sell'):         pr\u2026"
+    },
+    {
+      "t": "2026-10-25T16:19:00Z",
+      "kind": "run",
+      "text": "node -e \" const { base58Decode } = require('./dist/base58.js'); \" 2>&1 | head -5 node --input-type=module -e \" import { base58Decode } from '/home/runner/work/buildvote-agent/buil\u2026"
     }
   ],
   "schedule": {
