@@ -6284,3 +6284,95 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   only had one pass so far, or do a fourth pass on `rpc.ts` (three passes,
   three bugs found — still the strongest signal of an under-tested area).
 - All five TASK.md steps remain functionally complete.
+
+## Session 102 — 2026-10-25
+
+### Done
+- Fresh checkout again had no `node_modules` — ran `npm install` before
+  typecheck/build/test. Confirmed baseline unchanged: `npm run typecheck`,
+  `npm run build` clean, `npm test` 240/240, matching session 101 exactly.
+- Took up session 101's pointer: a fourth "re-derive from scratch" pass on
+  `rpc.ts` (three prior passes, three real bugs). Re-walked
+  `SolanaRpcClient.request()`'s acquire/reserve/release ordering,
+  `RequestPacer.reserve()`'s chain-poisoning guard, the retry-respects-
+  pacer-lane fix, and the `methodMaxRetries`/`methodIntervalsMs`
+  interactions line by line against the three previous fixes (sessions
+  89, 90, 96) — all held up, no new defect in that logic this time.
+- Took a genuinely new angle on the same file instead of a fifth re-read:
+  cross-checked `rpc.ts`'s response types and `pumpfun.ts`'s decoders
+  against **live mainnet data** fetched this session via the public RPC
+  (`api.mainnet-beta.solana.com`), not just recorded fixtures — a
+  stronger check than any prior "re-derive from scratch" pass, which only
+  re-read code/docs.
+  - Pulled a real recent pump.fun program transaction
+    (`getSignaturesForAddress` + `getTransaction`, `jsonParsed`,
+    `maxSupportedTransactionVersion: 1`, matching `rpc.ts`'s own call).
+    Ran the actual `decodeTradeInstruction` against its raw instruction
+    data/accounts: it returned `kind: "buy"`, and the decoded `amount`
+    (20,932,048.363041 tokens) matched the transaction's own
+    `transferChecked` inner instruction exactly — confirms the discriminator
+    bytes and `TRADE_ACCOUNT_INDEX` layout are still byte-correct against
+    the live program, not just the recorded `wsLogParser.test.ts` fixtures.
+  - Fetched that trade's bonding-curve account live (`getAccountInfo`,
+    base64) and ran `decodeBondingCurve` against the raw bytes: sane
+    output (`tokenTotalSupply` 1,000,000,000 tokens at 6 decimals, a valid
+    base58 `creator` pubkey, `complete: false`) — confirms the Anchor
+    struct offsets are still correct on live data, not just session 86's
+    IDL-JSON paper check.
+  - Noted real response bodies carry fields the TS interfaces don't
+    declare (`transactionIndex`, `meta.computeUnitsConsumed`/`costUnits`/
+    `rewards`/`status`, instruction `stackHeight`, `message.
+    addressTableLookups`, `programId` on token-balance entries). Checked
+    each is genuinely unused by any code path (grepped for `.rentEpoch`,
+    `.lamports`, etc.) — harmless extras under TS's structural typing, not
+    a bug.
+  - Re-opened session 86's speculative non-SOL-quote-mint risk with an
+    actual live data point: the fetched curve's `virtualSolReserves`
+    (~1.10 SOL) was far below the ~30 SOL figure referenced in that
+    session's research, with `realSolReserves` near zero. Considered
+    checking the `Global` account's `quote_mint` field directly to settle
+    it, but stopped short of guessing its address from memory — that's
+    exactly the "trust a remembered constant instead of deriving it"
+    mistake session 30/86 already flagged (confirmed one guessed address
+    doesn't even exist on-chain: `getAccountInfo` on
+    `4wTuiYjN4YbXGbyv8DR2ZsAU8YAWHS45kN3oVT6KDGZx` returned `null`).
+    Sampled 3 live program transactions looking for a real `create`/
+    `create_v2` to read the `global` account out of its own account list
+    instead of guessing; none of the 3 sampled were creates. A single
+    low-`realSolReserves` snapshot is also just as consistent with normal
+    heavy net selling (which depletes real, not virtual, SOL reserves) as
+    with a changed quote mint, so this remains unresolved, not confirmed —
+    left open rather than acted on without stronger evidence.
+- No source files changed this session — audit/verification-only. Cleaned
+  up all temporary repro scripts and fetched JSON (written under `/tmp`,
+  deleted before finishing).
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 240/240 passing, offline, unchanged from session 101 (no
+  tests added or modified this session).
+- `git status` before this edit: clean except this `PROGRESS.md` update.
+
+### Next
+- The live-data cross-check used on `rpc.ts`/`pumpfun.ts` this session
+  (run the real decoder against freshly fetched mainnet responses, not
+  just recorded fixtures) is a stronger validation technique than the
+  code-only "re-derive from scratch" passes sessions 84-101 used — worth
+  applying to the other `data/*.ts` fetchers (`holderConcentration.ts`,
+  `bundledBuys.ts`, `liquidity.ts`) that have so far only had the
+  code-level version of this review (session 86).
+- The non-SOL-quote-mint question is still open, not resolved: a future
+  session should either derive the pump.fun `Global` PDA properly (seeds
+  `["global"]`, program `6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P`,
+  standard Solana off-curve PDA search) instead of guessing its address,
+  or simpler — catch a live `create`/`create_v2` transaction (this
+  session's small 3-tx sample had none; needs either a longer sample or
+  watching `wsDiscovery.ts`'s own live feed for one) and read the
+  `global` account straight out of its account list, then decode it
+  against the `Global` struct's `quote_mint` field from the raw IDL
+  (session 86 already parsed the struct layout via raw JSON — reuse that,
+  don't re-derive from memory).
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
+- All five TASK.md steps remain functionally complete.
