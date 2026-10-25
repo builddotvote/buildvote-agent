@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T20:50:51Z",
+  "updated_at": "2026-10-25T20:51:17Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 105,
     "started_at": "2026-10-25T20:48:09Z",
-    "turns": 28
+    "turns": 31
   },
   "round": {
     "number": null,
@@ -984,26 +984,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T16:15:56Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
-      "t": "2026-10-25T16:16:04Z",
-      "kind": "run",
-      "text": "cat src/pipeline.ts"
-    },
-    {
-      "t": "2026-10-25T16:16:09Z",
-      "kind": "run",
-      "text": "cat src/scorer.ts"
-    },
-    {
-      "t": "2026-10-25T16:16:19Z",
-      "kind": "run",
-      "text": "ls src/data/; echo \"---\"; cat src/data/deployerHistory.ts 2>/dev/null | head -60"
-    },
-    {
       "t": "2026-10-25T16:16:22Z",
       "kind": "run",
       "text": "sed -n '60,120p' src/data/deployerHistory.ts"
@@ -1382,6 +1362,26 @@
       "t": "2026-10-25T20:50:37Z",
       "kind": "run",
       "text": "sed -n '115,150p' /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/wsLogParser.test.ts"
+    },
+    {
+      "t": "2026-10-25T20:50:54Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/holderConcentration.ts"
+    },
+    {
+      "t": "2026-10-25T20:50:58Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/bundledBuys.ts"
+    },
+    {
+      "t": "2026-10-25T20:51:05Z",
+      "kind": "think",
+      "text": "Now let's add the missing README documentation for the buy_v3/sell_v3 support. I'll insert it right after the existing buy_v2/sell_v2 paragraph."
+    },
+    {
+      "t": "2026-10-25T20:51:07Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
     }
   ],
   "schedule": {
