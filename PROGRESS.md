@@ -6229,3 +6229,58 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   speculative non-SOL-quote-mint risk (session 86; no action needed
   unless live evidence appears).
 - All five TASK.md steps remain functionally complete.
+
+## Session 101 — 2026-10-25
+
+### Done
+- Fresh checkout had no `node_modules` (same as every recent session) —
+  ran `npm install` before typecheck/build/test.
+- Confirmed the baseline first: `npm run typecheck`, `npm run build`
+  clean, `npm test` 237/237 passing — matches session 96's state exactly,
+  nothing regressed between sessions.
+- Picked up session 95/96's standing low-priority item: `config.ts`'s
+  negative-`PORT` gap. `loadConfig` only guarded `PORT` with
+  `Number.isFinite`, so a negative or zero value (e.g. `PORT=-1`) passed
+  that check and would reach `server.listen`, which throws a synchronous
+  `RangeError` — not an `error` event, so the session 95 handler on the
+  `http.Server` doesn't catch it.
+  - Fixed by replacing the `Number.isFinite` check with `Number.isInteger
+    && port > 0 && port <= 65535` (a valid TCP port), falling back to the
+    default (8787) otherwise — same fallback behavior as the existing
+    non-numeric case.
+  - Added three regression tests in `config.test.ts` (`PORT=-1`,
+    `PORT=0`, `PORT=70000`), each asserting the default port is used.
+    Verified they fail pre-fix: `git stash push -- src/config.ts`, ran
+    `config.test.ts` alone, all three failed with the raw (invalid) value
+    instead of the 8787 fallback; `git stash pop` restored the fix and
+    all three passed.
+  - Documented the fix in `rug-radar/README.md`'s "Live feed" section,
+    right after session 96's pacer writeup (same section, same style).
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 240/240 passing (237 + 3 new regression tests), offline.
+- `git status` before this edit: three files changed (`src/config.ts`,
+  `src/config.test.ts`, `README.md`); no stray repro scripts left behind.
+
+### Next
+- The standing low-priority items list shrinks by one: `RESCORE_DELAY_MS`
+  (session 73), `findFundingSource`'s ~2% unknown rate (session 39), the
+  scoring endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71),
+  and the speculative non-SOL-quote-mint risk (session 86) remain, all
+  still low-priority/no-action-needed as previously assessed.
+- Nine real bugs found and fixed total across sessions 84-101 now (84's
+  `wsLogParser.ts`, 88's `wsDiscovery.ts` stale-close race, 89's and 90's
+  two `rpc.ts`/`RequestPacer` issues, 94's `requestHandler.ts`
+  unhandled-rejection crash, 95's `server.ts` unhandled `error`-event
+  crash, 96's pacer-skips-retries gap, this session's `config.ts`
+  invalid-`PORT` gap). Note this session's fix is operator-facing
+  (startup config), not a live-data-path bug like most of the others —
+  worth keeping that distinction in mind when tallying "real bugs" for
+  future prioritization.
+- A future session still has no obvious "fresh module" to sweep a third
+  time with new findings (per session 96's note, most modules have had
+  one or two passes). Candidates for a next session: pick a module that's
+  only had one pass so far, or do a fourth pass on `rpc.ts` (three passes,
+  three bugs found — still the strongest signal of an under-tested area).
+- All five TASK.md steps remain functionally complete.

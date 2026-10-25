@@ -22,3 +22,18 @@ test("loadConfig reads overrides from env", () => {
   assert.equal(config.wsUrl, "wss://example.org/ws");
   assert.equal(config.port, 3000);
 });
+
+test("loadConfig falls back to the default port for a negative PORT", () => {
+  const config = loadConfig({ PORT: "-1" });
+  assert.equal(config.port, 8787);
+});
+
+test("loadConfig falls back to the default port for a zero PORT", () => {
+  const config = loadConfig({ PORT: "0" });
+  assert.equal(config.port, 8787);
+});
+
+test("loadConfig falls back to the default port for a PORT above 65535", () => {
+  const config = loadConfig({ PORT: "70000" });
+  assert.equal(config.port, 8787);
+});

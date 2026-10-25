@@ -32,5 +32,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const discoveryRpcUrl = env.SOLANA_DISCOVERY_RPC_URL || DEFAULT_DISCOVERY_RPC_URL;
   const wsUrl = env.SOLANA_WS_URL || undefined;
   const port = Number.parseInt(env.PORT ?? "8787", 10);
-  return { rpcUrl, discoveryRpcUrl, wsUrl, port: Number.isFinite(port) ? port : 8787 };
+  // Must be a valid TCP port (1-65535): Number.isFinite alone lets through
+  // negative/zero/out-of-range values that reach server.listen and throw a
+  // synchronous RangeError instead of falling back cleanly.
+  const validPort = Number.isInteger(port) && port > 0 && port <= 65535;
+  return { rpcUrl, discoveryRpcUrl, wsUrl, port: validPort ? port : 8787 };
 }

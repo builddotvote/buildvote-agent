@@ -545,6 +545,17 @@ landing ~2000ms apart as configured. Regression test in `rpc.test.ts`
 confirms a retry now takes as long as `minIntervalMs` requires, not just
 `baseDelayMs`.
 
+**An invalid `PORT` env var reached `server.listen` uncaught (fixed
+session 101).** `loadConfig`'s `PORT` parsing only guarded against
+non-numeric input (`Number.isFinite`) — a negative or zero value (e.g.
+`PORT=-1`) passed that check and reached `server.listen`, which throws a
+synchronous `RangeError` instead of emitting the `error` event the
+session 95 handler above catches. Flagged as a theoretical gap in session
+95's pass, left unfixed there as operator-typo-only (no live-data path).
+Fixed by checking the parsed port is a positive integer in the valid TCP
+range (1-65535), falling back to the default (8787) otherwise, same as
+the existing non-numeric fallback.
+
 `resolveLaunchFromSignature` retries a `getTransaction` call that comes back
 "not found" with exponential backoff (5 retries, 750ms base, ~23s budget)
 before giving up — confirmed live that the public RPC's multi-node cluster
