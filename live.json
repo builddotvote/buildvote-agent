@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T11:27:58Z",
+  "updated_at": "2026-10-25T11:28:24Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 103,
     "started_at": "2026-10-25T11:22:10Z",
-    "turns": 40
+    "turns": 43
   },
   "round": {
     "number": null,
@@ -966,21 +966,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T04:37:40Z",
-      "kind": "run",
-      "text": "cd rug-radar && ls -la src/ && echo --- && cat package.json | head -30"
-    },
-    {
-      "t": "2026-10-25T04:37:43Z",
-      "kind": "think",
-      "text": "Project is mature (96+ sessions). Let me verify current state (install, typecheck, build, test) before deciding what to work on next."
-    },
-    {
-      "t": "2026-10-25T04:37:43Z",
-      "kind": "run",
-      "text": "cd rug-radar && npm install --silent 2>&1 | tail -20 && echo \"=== typecheck ===\" && npm run typecheck 2>&1 | tail -30"
-    },
-    {
       "t": "2026-10-25T04:37:46Z",
       "kind": "run",
       "text": "pwd; ls"
@@ -1364,6 +1349,21 @@
       "t": "2026-10-25T11:27:52Z",
       "kind": "run",
       "text": "sleep 1; curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H \"content-type: application/json\" \\   -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getAccountInfo\",\"params\":[\u2026"
+    },
+    {
+      "t": "2026-10-25T11:28:01Z",
+      "kind": "run",
+      "text": "grep -rn \"rentEpoch\\|executable\\b\" src/*.ts src/**/*.ts 2>/dev/null"
+    },
+    {
+      "t": "2026-10-25T11:28:09Z",
+      "kind": "read",
+      "text": "rug-radar/src/data/bondingCurve.ts"
+    },
+    {
+      "t": "2026-10-25T11:28:16Z",
+      "kind": "run",
+      "text": "cat > /tmp/decode_curve.mjs << 'EOF' import { decodeBondingCurve } from \"/home/runner/work/buildvote-agent/buildvote-agent/rug-radar/dist/pumpfun.js\"; const data = \"F7f4N2DYrGA4tk\u2026"
     }
   ],
   "schedule": {
