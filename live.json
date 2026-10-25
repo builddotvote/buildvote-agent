@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T23:15:52Z",
+  "updated_at": "2026-10-25T23:16:18Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 106,
     "started_at": "2026-10-25T23:14:58Z",
-    "turns": 13
+    "turns": 20
   },
   "round": {
     "number": null,
@@ -993,41 +993,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T20:49:10Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"^## Session\" PROGRESS.md | tail -10"
-    },
-    {
-      "t": "2026-10-25T20:49:18Z",
-      "kind": "run",
-      "text": "find . -maxdepth 2 -iname \"TASK.md\" -o -iname \"PROGRESS.md\" | grep -v node_modules"
-    },
-    {
-      "t": "2026-10-25T20:49:37Z",
-      "kind": "run",
-      "text": "cd rug-radar && grep -rn \"quote\" src --include=*.ts -i | grep -v test"
-    },
-    {
-      "t": "2026-10-25T20:49:40Z",
-      "kind": "read",
-      "text": "rug-radar/src/pumpfun.ts"
-    },
-    {
-      "t": "2026-10-25T20:49:45Z",
-      "kind": "run",
-      "text": "cd rug-radar && grep -rn \"session 10[3-9]\" src README.md -i"
-    },
-    {
-      "t": "2026-10-25T20:49:47Z",
-      "kind": "run",
-      "text": "pwd; ls"
-    },
-    {
-      "t": "2026-10-25T20:49:51Z",
-      "kind": "run",
-      "text": "grep -rn \"session 10[3-9]\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md -i"
-    },
-    {
       "t": "2026-10-25T20:49:56Z",
       "kind": "run",
       "text": "grep -n \"^#\\|session\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/README.md -i | tail -60"
@@ -1391,6 +1356,41 @@
       "t": "2026-10-25T23:15:49Z",
       "kind": "run",
       "text": "cat src/data/bondingCurve.ts; echo \"---\"; grep -n \"getTokenSupply\\|getTokenLargestAccounts\\|getAccountInfo\" src/rpc.ts | head -40"
+    },
+    {
+      "t": "2026-10-25T23:15:54Z",
+      "kind": "run",
+      "text": "sed -n '1,50p' src/pumpfun.ts | head -60; echo \"...\"; grep -n \"PROGRAM_ID\\|TRADE_ACCOUNT_INDEX\\|export \" src/pumpfun.ts"
+    },
+    {
+      "t": "2026-10-25T23:15:57Z",
+      "kind": "run",
+      "text": "grep -n \"getSignaturesForAddress\\|getTransaction\\|class SolanaRpcClient\\|constructor\" src/rpc.ts | head -20"
+    },
+    {
+      "t": "2026-10-25T23:15:59Z",
+      "kind": "run",
+      "text": "sed -n '247,270p' src/rpc.ts; echo \"---config---\"; cat src/config.ts"
+    },
+    {
+      "t": "2026-10-25T23:16:08Z",
+      "kind": "run",
+      "text": "sed -n '140,200p' src/pumpfun.ts"
+    },
+    {
+      "t": "2026-10-25T23:16:11Z",
+      "kind": "run",
+      "text": "cat src/data/bundledBuys.ts"
+    },
+    {
+      "t": "2026-10-25T23:16:14Z",
+      "kind": "run",
+      "text": "cat src/pipeline.ts 2>/dev/null | head -100"
+    },
+    {
+      "t": "2026-10-25T23:16:18Z",
+      "kind": "run",
+      "text": "grep -n \"new SolanaRpcClient\\|discoveryRpcUrl\\|rpcUrl\\|scoreLaunch\\|PipelineRpc\" src/server.ts"
     }
   ],
   "schedule": {
