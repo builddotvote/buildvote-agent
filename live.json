@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T16:19:43Z",
+  "updated_at": "2026-10-25T16:20:10Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 104,
     "started_at": "2026-10-25T16:13:42Z",
-    "turns": 42
+    "turns": 45
   },
   "round": {
     "number": null,
@@ -975,26 +975,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T11:25:17Z",
-      "kind": "run",
-      "text": "grep -n \"backoff.*slot\\|slot.*backoff\\|holds.*slot.*sleep\\|sleep.*holds\\|holding.*slot\" PROGRESS.md"
-    },
-    {
-      "t": "2026-10-25T11:25:37Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.test.ts"
-    },
-    {
-      "t": "2026-10-25T11:25:57Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && grep -rn \"6EF8rrecthR5\\|PUMP_FUN_PROGRAM\" src/*.ts | head -5"
-    },
-    {
-      "t": "2026-10-25T11:26:00Z",
-      "kind": "run",
-      "text": "curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H \"content-type: application/json\" \\   -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getSignaturesForAddress\",\"params\":[\u2026"
-    },
-    {
       "t": "2026-10-25T11:26:12Z",
       "kind": "run",
       "text": "sleep 1; curl -s --max-time 10 -X POST https://api.mainnet-beta.solana.com -H \"content-type: application/json\" \\   -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getTransaction\",\"params\":[\u2026"
@@ -1373,6 +1353,26 @@
       "t": "2026-10-25T16:19:25Z",
       "kind": "run",
       "text": "cat src/wsLogParser.test.ts"
+    },
+    {
+      "t": "2026-10-25T16:19:59Z",
+      "kind": "run",
+      "text": "grep -rln \"decodeTradeInstruction\\|detectTradeInstruction\" src/*.ts | grep -v test"
+    },
+    {
+      "t": "2026-10-25T16:20:01Z",
+      "kind": "run",
+      "text": "grep -n \"decodeTradeInstruction\\|detectTradeInstruction\" src/balanceIndex.ts src/discovery.ts src/wsDiscovery.ts"
+    },
+    {
+      "t": "2026-10-25T16:20:08Z",
+      "kind": "read",
+      "text": "rug-radar/src/pumpfun.ts"
+    },
+    {
+      "t": "2026-10-25T16:20:10Z",
+      "kind": "think",
+      "text": "Now implementing the fix. First, `pumpfun.ts`:"
     }
   ],
   "schedule": {
