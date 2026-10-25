@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T20:51:17Z",
+  "updated_at": "2026-10-25T20:51:48Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 105,
     "started_at": "2026-10-25T20:48:09Z",
-    "turns": 31
+    "turns": 36
   },
   "round": {
     "number": null,
@@ -984,36 +984,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T16:16:22Z",
-      "kind": "run",
-      "text": "sed -n '60,120p' src/data/deployerHistory.ts"
-    },
-    {
-      "t": "2026-10-25T16:16:34Z",
-      "kind": "run",
-      "text": "python3 -c \" import json d = json.load(open('/tmp/tx.json')) logs = d['result']['meta'].get('logMessages', []) for l in logs:     print(l) \" | head -40"
-    },
-    {
-      "t": "2026-10-25T16:16:44Z",
-      "kind": "run",
-      "text": "python3 -c \" import json d = json.load(open('/tmp/sigs.json')) ok = [s['signature'] for s in d['result'] if s['err'] is None] print('\\n'.join(ok[1:10])) \""
-    },
-    {
-      "t": "2026-10-25T16:16:59Z",
-      "kind": "run",
-      "text": "cd /tmp sigs=(\"[redacted]\" \"[redacted]\" \"[redacted]\" \"[redacted]\" \"[redacted]\") i=0 for s in \"${sigs[@]}\"; do   sleep 3   curl -s --max-time 10 -X POST https://api.mainnet-beta.so\u2026"
-    },
-    {
-      "t": "2026-10-25T16:17:29Z",
-      "kind": "run",
-      "text": "cd /tmp for i in 0 1 2 3 4; do python3 -c \" import json d = json.load(open('/tmp/txA_$i.json')) msg = d['result']['transaction']['message'] ins = msg.get('instructions', []) print\u2026"
-    },
-    {
-      "t": "2026-10-25T16:17:39Z",
-      "kind": "run",
-      "text": "python3 -c \" import json d = json.load(open('/tmp/txA_2.json')) for l in d['result']['meta']['logMessages']:     print(l) \""
-    },
-    {
       "t": "2026-10-25T16:17:45Z",
       "kind": "run",
       "text": "cat src/wsLogParser.ts"
@@ -1382,6 +1352,36 @@
       "t": "2026-10-25T20:51:07Z",
       "kind": "read",
       "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-25T20:51:23Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-25T20:51:25Z",
+      "kind": "think",
+      "text": "Now let's do the live-data cross-check on `bundledBuys.ts` against real mainnet data, per session 102's suggested next step. Let's find a recent live pump.fun bonding-curve transa\u2026"
+    },
+    {
+      "t": "2026-10-25T20:51:26Z",
+      "kind": "run",
+      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/config.ts 2>/dev/null | head -30"
+    },
+    {
+      "t": "2026-10-25T20:51:32Z",
+      "kind": "run",
+      "text": "curl -s https://solana-rpc.publicnode.com -X POST -H \"Content-Type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getSignaturesForAddress\",\"params\":[\"6EF8rrecthR5Dkzon8N\u2026"
+    },
+    {
+      "t": "2026-10-25T20:51:38Z",
+      "kind": "run",
+      "text": "curl -s https://solana-rpc.publicnode.com -X POST -H \"Content-Type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getSignaturesForAddress\",\"params\":[\"6EF8rrecthR5Dkzon8N\u2026"
+    },
+    {
+      "t": "2026-10-25T20:51:48Z",
+      "kind": "run",
+      "text": "for sig in [redacted] [redacted]; do echo \"=== $sig ===\" curl -s https://solana-rpc.publicnode.com -X POST -H \"Content-Type: application/json\" -d \"{\\\"jsonrpc\\\":\\\"2.0\\\",\\\"id\\\":1,\\\"\u2026"
     }
   ],
   "schedule": {
