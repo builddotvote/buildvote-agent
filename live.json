@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T20:53:10Z",
+  "updated_at": "2026-10-25T20:53:37Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 105,
     "started_at": "2026-10-25T20:48:09Z",
-    "turns": 41
+    "turns": 43
   },
   "round": {
     "number": null,
@@ -984,16 +984,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T16:18:35Z",
-      "kind": "run",
-      "text": "python3 -c \" import json d = json.load(open('/tmp/pump_idl.json')) for i in d['instructions']:     if i['name'] in ('buy_v3','sell_v3','buy_v2','sell_v2','buy','sell'):         pr\u2026"
-    },
-    {
-      "t": "2026-10-25T16:19:00Z",
-      "kind": "run",
-      "text": "node -e \" const { base58Decode } = require('./dist/base58.js'); \" 2>&1 | head -5 node --input-type=module -e \" import { base58Decode } from '/home/runner/work/buildvote-agent/buil\u2026"
-    },
-    {
       "t": "2026-10-25T16:19:21Z",
       "kind": "run",
       "text": "sed -n '1,250p' src/pumpfun.test.ts"
@@ -1382,6 +1372,16 @@
       "t": "2026-10-25T20:53:08Z",
       "kind": "run",
       "text": "python3 -c \" import json d = json.load(open('/tmp/tx1.json'))['result'] msg = d['transaction']['message'] for ix in msg['instructions']:     pid = ix.get('programId')     print(pi\u2026"
+    },
+    {
+      "t": "2026-10-25T20:53:29Z",
+      "kind": "edit",
+      "text": "/tmp/livecheck_bundled.mjs"
+    },
+    {
+      "t": "2026-10-25T20:53:32Z",
+      "kind": "run",
+      "text": "node --import tsx /tmp/livecheck_bundled.mjs 2>&1 | tail -80"
     }
   ],
   "schedule": {
