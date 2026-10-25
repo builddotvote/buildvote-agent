@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T16:16:26Z",
+  "updated_at": "2026-10-25T16:16:59Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 104,
     "started_at": "2026-10-25T16:13:42Z",
-    "turns": 28
+    "turns": 31
   },
   "round": {
     "number": null,
@@ -975,21 +975,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T11:23:15Z",
-      "kind": "run",
-      "text": "grep -n \"bondingCurve\" PROGRESS.md"
-    },
-    {
-      "t": "2026-10-25T11:23:24Z",
-      "kind": "think",
-      "text": "Session 101 explicitly flagged `rpc.ts` as the strongest candidate for a fourth pass (three prior passes, three real bugs found). Let me read it fresh."
-    },
-    {
-      "t": "2026-10-25T11:23:24Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
       "t": "2026-10-25T11:23:31Z",
       "kind": "run",
       "text": "grep -n -i \"fetch.*reject\\|network error\\in rpc\\|ECONNRESET\\|fetchImpl.*throw\\|abort\\|timeout\" PROGRESS.md | grep -i rpc"
@@ -1373,6 +1358,21 @@
       "t": "2026-10-25T16:16:22Z",
       "kind": "run",
       "text": "sed -n '60,120p' src/data/deployerHistory.ts"
+    },
+    {
+      "t": "2026-10-25T16:16:34Z",
+      "kind": "run",
+      "text": "python3 -c \" import json d = json.load(open('/tmp/tx.json')) logs = d['result']['meta'].get('logMessages', []) for l in logs:     print(l) \" | head -40"
+    },
+    {
+      "t": "2026-10-25T16:16:44Z",
+      "kind": "run",
+      "text": "python3 -c \" import json d = json.load(open('/tmp/sigs.json')) ok = [s['signature'] for s in d['result'] if s['err'] is None] print('\\n'.join(ok[1:10])) \""
+    },
+    {
+      "t": "2026-10-25T16:16:59Z",
+      "kind": "run",
+      "text": "cd /tmp sigs=(\"[redacted]\" \"[redacted]\" \"[redacted]\" \"[redacted]\" \"[redacted]\") i=0 for s in \"${sigs[@]}\"; do   sleep 3   curl -s --max-time 10 -X POST https://api.mainnet-beta.so\u2026"
     }
   ],
   "schedule": {
