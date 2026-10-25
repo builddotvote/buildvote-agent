@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-25T23:17:12Z",
+  "updated_at": "2026-10-25T23:17:41Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 106,
     "started_at": "2026-10-25T23:14:58Z",
-    "turns": 26
+    "turns": 34
   },
   "round": {
     "number": null,
@@ -993,46 +993,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-25T20:50:27Z",
-      "kind": "run",
-      "text": "grep -n \"buy_v2\\|BuyV2\\|v2\\|v3\" /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/balanceIndex.ts /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/dis\u2026"
-    },
-    {
-      "t": "2026-10-25T20:50:31Z",
-      "kind": "run",
-      "text": "sed -n '1,40p' /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/discovery.ts"
-    },
-    {
-      "t": "2026-10-25T20:50:34Z",
-      "kind": "think",
-      "text": "Good \u2014 `decodeTradeInstruction` is called generically (any matching variant), so the bundled-buy detection already benefits from v3 support automatically; no further code changes \u2026"
-    },
-    {
-      "t": "2026-10-25T20:50:34Z",
-      "kind": "run",
-      "text": "sed -n '150,230p' /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/pumpfun.test.ts"
-    },
-    {
-      "t": "2026-10-25T20:50:36Z",
-      "kind": "think",
-      "text": "Now let's check wsLogParser.test.ts's v3 fixture context for completeness."
-    },
-    {
-      "t": "2026-10-25T20:50:37Z",
-      "kind": "run",
-      "text": "sed -n '115,150p' /home/runner/work/buildvote-agent/buildvote-agent/rug-radar/src/wsLogParser.test.ts"
-    },
-    {
-      "t": "2026-10-25T20:50:54Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/holderConcentration.ts"
-    },
-    {
-      "t": "2026-10-25T20:50:58Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/bundledBuys.ts"
-    },
-    {
       "t": "2026-10-25T20:51:05Z",
       "kind": "think",
       "text": "Now let's add the missing README documentation for the buy_v3/sell_v3 support. I'll insert it right after the existing buy_v2/sell_v2 paragraph."
@@ -1389,6 +1349,46 @@
     },
     {
       "t": "2026-10-25T23:17:08Z",
+      "kind": "run",
+      "text": "node --import tsx /tmp/live-check.ts 2>&1 | tail -100"
+    },
+    {
+      "t": "2026-10-25T23:17:14Z",
+      "kind": "run",
+      "text": "grep -n \"interface ParsedTransaction\\|interface.*Instruction\\|innerInstructions\\|accountKeys\\|programIdIndex\\|data:\" src/rpc.ts | head -40"
+    },
+    {
+      "t": "2026-10-25T23:17:16Z",
+      "kind": "read",
+      "text": "rug-radar/src/rpc.ts"
+    },
+    {
+      "t": "2026-10-25T23:17:20Z",
+      "kind": "run",
+      "text": "sed -n '375,398p' src/rpc.ts"
+    },
+    {
+      "t": "2026-10-25T23:17:25Z",
+      "kind": "run",
+      "text": "grep -rn \"innerInstructions\\|PartiallyDecodedInstruction\\|instructions?.\\[\" src --include=*.ts | grep -v test"
+    },
+    {
+      "t": "2026-10-25T23:17:28Z",
+      "kind": "run",
+      "text": "grep -rn \"decodeTradeInstruction\\|decodeCreateInstruction\" src --include=*.ts | grep -v test"
+    },
+    {
+      "t": "2026-10-25T23:17:30Z",
+      "kind": "run",
+      "text": "sed -n '200,260p' src/discovery.ts"
+    },
+    {
+      "t": "2026-10-25T23:17:36Z",
+      "kind": "edit",
+      "text": "/tmp/live-check.ts"
+    },
+    {
+      "t": "2026-10-25T23:17:38Z",
       "kind": "run",
       "text": "node --import tsx /tmp/live-check.ts 2>&1 | tail -100"
     }
