@@ -733,6 +733,30 @@ doesn't fix.
   walking forward to find the actual funding transfer — fixed, with a
   regression test (`bundledBuys.test.ts`) confirming it fails pre-fix and
   passes post-fix.
+- **`discovery.ts`'s trade decoding missed virtually every real post-launch
+  buy/sell (fixed session 107).** `findTradeInstruction`/`findCreateInstruction`
+  only scanned a transaction's top-level instructions for a pump.fun
+  `programId`. Confirmed live by sampling real signatures off the pump.fun
+  program's own history: 16/16 standalone buy/sell transactions sampled were
+  invoked via CPI from an outer router program (Jupiter or similar) — the
+  actual pump.fun `Buy`/`Sell` instruction only appears in
+  `meta.innerInstructions`, never at the top level. A top-level-only scan
+  silently returned `null` for all of them. This fed straight into
+  `wsDiscovery.ts`'s per-mint `trackMint`/`onTrade` path (`resolveTradeFromSignature`
+  calls the same `findTradeInstruction`): `BalanceIndex`'s rescore mitigation
+  for the `getTokenLargestAccounts` 429 (above) was built on `onTrade`, so it
+  was receiving close to zero real trade data, not just "not always" recovering
+  the signal as previously documented. Bundled dev buys (same transaction as
+  the `create`) were still called directly at the top level in every live
+  sample checked, so that path wasn't affected — but the fix (both functions
+  now scan top-level and inner instructions together, via a shared
+  `allInstructions` helper) is symmetric rather than special-casing trades, in
+  case that stops holding for creates too. `ParsedTransactionMeta`
+  (`src/rpc.ts`) now exposes `innerInstructions` (same shape as the RPC
+  response, just not previously typed). Regression test in
+  `discovery.test.ts` reproduces the CPI shape with an unrelated top-level
+  program and a pump.fun trade only in `innerInstructions`; confirmed it
+  fails pre-fix, passes post-fix.
 
 See `PROGRESS.md` for the session-by-session history behind these
 findings (live measurements, rejected alternatives, and fixes).

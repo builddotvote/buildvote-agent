@@ -1,0 +1,92 @@
+# Session 107: Rug radar: live launch scoring
+
+- Started: 2026-10-26T04:42:38Z
+- Ended: 2026-10-26T04:50:08Z
+- Steps: 57
+- Model turns: 58
+- Billing: Claude subscription (API value $2.6214, not billed)
+- Outcome: ok
+
+## Summary
+
+All checks pass: 246/246 tests, clean typecheck/build, five files changed (`PROGRESS.md`, `README.md`, `discovery.ts`, `discovery.test.ts`, `rpc.ts`).  **Summary:** Found and fixed a real, high-impact bug in `rug-radar/src/discovery.ts`. Live sampling of real pump.fun program signatures showed 16/16 standalone buy/sell transactions are invoked via CPI through an outer router program, with the actual pump.fun instruction only present in `meta.innerInstructions` — but `findTradeInstruction`/`findCreateInstruction` only ever scanned top-level instructions, so they silently returned `null` for es…
+
+## Steps
+
+- `think` I'll start by reading the task and progress files.
+- `run` cat TASK.md 2>/dev/null; echo "---PROGRESS---"; cat PROGRESS.md 2>/dev/null
+- `run` wc -l PROGRESS.md TASK.md
+- `read` PROGRESS.md
+- `read` PROGRESS.md
+- `run` grep -n "^## Session" PROGRESS.md | tail -10
+- `run` git log --oneline -15
+- `run` ls -la rug-radar 2>/dev/null | head -30; echo "---"; git log --all --oneline | head -20; echo "---"; git show --stat HEAD | head -20
+- `run` ls logs/ | tail -20
+- `run` cat logs/session-0105.md; echo "=====106====="; cat logs/session-0106.md
+- `run` cd rug-radar && npm install --silent 2>&1 | tail -20 && npm run typecheck 2>&1 | tail -30 && npm run build 2>&1 | tail -30 && npm test 2>&1 | tail -30
+- `think` Baseline confirmed clean: 245/245 tests pass, typecheck and build clean. Now let's look at the discovery path live-check opportunity suggested as next step.
+- `run` cd rug-radar && ls src && echo "---" && wc -l src/discovery.ts src/wsDiscovery.ts src/wsLogParser.ts 2>/dev/null
+- `run` pwd; ls
+- `think` Already in rug-radar. Let's examine the discovery path modules.
+- `run` wc -l src/discovery.ts src/wsDiscovery.ts src/wsLogParser.ts src/pumpfun.ts src/rpc.ts 2>/dev/null
+- `read` rug-radar/src/wsDiscovery.ts
+- `run` cd rug-radar && grep -n "^#\|^##" README.md | head -80
+- `run` pwd
+- `run` grep -n "^## \|^### " README.md | head -100
+- `read` rug-radar/README.md
+- `read` rug-radar/src/discovery.ts
+- `read` rug-radar/src/data/bundledBuys.ts
+- `run` grep -rn "innerInstructions\|TRADE_ACCOUNT_INDEX\|aggregator" src --include=*.ts | grep -v test
+- `run` grep -n "innerInstructions\|interface ParsedTransaction\|interface.*Instruction\b" src/rpc.ts
+- `read` rug-radar/src/rpc.ts
+- `run` grep -n "getTransaction\b" -A 40 src/rpc.ts | head -80
+- `run` grep -n "async getTransaction" -A 25 src/rpc.ts
+- `run` cat src/pumpfun.ts | sed -n '1,60p'
+- `think` Let me do a live check to confirm whether aggregator-CPI trades actually bypass `findTradeInstruction`'s decode step.
+- `run` cat > /tmp/live-check2.mjs << 'EOF' const RPC = "https://solana-rpc.publicnode.com"; const PUMP_FUN = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";  async function rpcCall(method, params) {   const res = await fetch(RPC, {     method: "POST",     headers: { "Content-Type": "application/json" },     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),   });   const json = await res.js…
+- `run` cat > /tmp/live-check3.mjs << 'EOF' const RPC = "https://solana-rpc.publicnode.com"; const PUMP_FUN = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";  async function rpcCall(method, params) {   const res = await fetch(RPC, {     method: "POST",     headers: { "Content-Type": "application/json" },     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),   });   const json = await res.js…
+- `run` cat > /tmp/live-check4.mjs << 'EOF' const RPC = "https://solana-rpc.publicnode.com"; const PUMP_FUN = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";  async function rpcCall(method, params) {   const res = await fetch(RPC, {     method: "POST",     headers: { "Content-Type": "application/json" },     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),   });   const json = await res.js…
+- `run` cat > /tmp/live-check5.mjs << 'EOF' const RPC = "https://solana-rpc.publicnode.com"; const PUMP_FUN = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";  async function rpcCall(method, params) {   const res = await fetch(RPC, {     method: "POST",     headers: { "Content-Type": "application/json" },     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),   });   const json = await res.js…
+- `run` cat > /tmp/live-check6.mjs << 'EOF' const RPC = "https://solana-rpc.publicnode.com"; const PUMP_FUN = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";  async function rpcCall(method, params) {   const res = await fetch(RPC, {     method: "POST",     headers: { "Content-Type": "application/json" },     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),   });   const json = await res.js…
+- `run` cat > /tmp/live-check7.mjs << 'EOF' const RPC = "https://solana-rpc.publicnode.com"; async function rpcCall(method, params) {   const res = await fetch(RPC, {     method: "POST",     headers: { "Content-Type": "application/json" },     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),   });   const json = await res.json();   if (json.error) throw new Error(JSON.stringify(json.error…
+- `run` wc -l src/discovery.test.ts; grep -n "describe\|it(\|test(" src/discovery.test.ts | head -60
+- `run` grep -n "resolveTradeFromSignature\|findTradeInstruction\|decodeTradeInstruction" src/discovery.test.ts src/wsDiscovery.test.ts 2>/dev/null
+- `run` grep -n "onTrade\|trackMint\|getTransaction" src/wsDiscovery.test.ts | head -40
+- `think` Let's see the fixture used for a trade transaction at line 458 to understand current shape.
+- `read` rug-radar/src/wsDiscovery.test.ts
+- `run` sed -n '440,535p' src/wsDiscovery.test.ts
+- `run` grep -n "function tradeFixtureTx\|function fixtureTx\|function createFixtureTx" -A 30 src/wsDiscovery.test.ts | head -80
+- `read` rug-radar/src/rpc.ts
+- `think` Now let's make the fix. First, expose `innerInstructions` on the RPC type:
+- `edit` rug-radar/src/rpc.ts
+- `think` Now update `discovery.ts` to scan inner instructions too:
+- `edit` rug-radar/src/discovery.ts
+- `think` Need to import `MessageInstruction` type:
+- `read` rug-radar/src/discovery.ts
+- `edit` rug-radar/src/discovery.ts
+- `think` Now let's check it typechecks, then add regression tests.
+- `run` npm run typecheck 2>&1 | tail -30
+- `think` Clean. Now let's add a regression test in `discovery.test.ts` for the CPI case, and verify it fails pre-fix.
+- `read` rug-radar/src/discovery.test.ts
+- `edit` rug-radar/src/discovery.test.ts
+- `edit` rug-radar/src/discovery.test.ts
+- `think` Now let's verify it fails pre-fix, then passes post-fix, per project convention.
+- `run` git stash push -- src/discovery.ts src/rpc.ts && node --import tsx --test --test-reporter spec src/discovery.test.ts 2>&1 | tail -40
+- `think` Confirmed the regression test fails pre-fix as expected. Restoring the fix.
+- `run` git stash pop
+- `think` Now run the full suite with the fix in place.
+- `run` npm run typecheck 2>&1 | tail -20 && npm run build 2>&1 | tail -20 && npm test 2>&1 | tail -20
+- `think` 246/246 passing, typecheck and build clean. Now let's clean up temp scripts and document the fix in the README.
+- `run` rm -f /tmp/live-check2.mjs /tmp/live-check3.mjs /tmp/live-check4.mjs /tmp/live-check5.mjs /tmp/live-check6.mjs /tmp/live-check7.mjs git status --short
+- `think` Now let's update the README's "Known limitations" section to document this finding, following the project's established style.
+- `read` rug-radar/README.md
+- `think` Now let's add documentation for this fix, right after the known limitations list that documents `getSignaturesForAddress`/discovery-related findings.
+- `edit` rug-radar/README.md
+- `think` Now let's update PROGRESS.md with this session's entry.
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent && tail -5 PROGRESS.md
+- `run` cat >> /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md << 'EOF'  ## Session 105 — 2026-10-26  ### Done - Fresh checkout; `npm install`, then `npm run typecheck`/`npm run build`   clean, `npm test` 245/245 — matches session 104's count, no drift. - Followed up on session 104's suggested next step (apply the live-data   cross-check technique to the discovery path) and found a real bug…
+- `think` Final verification pass before finishing.
+- `run` npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10 && echo "---git status---" && git status --short
+- `think` I was at the root dir after `cd` earlier in the heredoc. Let's run from rug-radar.
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10
+- `think` All checks pass: 246/246 tests, clean typecheck/build, five files changed (`PROGRESS.md`, `README.md`, `discovery.ts`, `discovery.test.ts`, `rpc.ts`).

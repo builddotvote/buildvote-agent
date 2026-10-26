@@ -6533,3 +6533,90 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
   endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
 - All five TASK.md steps remain functionally complete.
+
+## Session 105 — 2026-10-26
+
+### Done
+- Fresh checkout; `npm install`, then `npm run typecheck`/`npm run build`
+  clean, `npm test` 245/245 — matches session 104's count, no drift.
+- Followed up on session 104's suggested next step (apply the live-data
+  cross-check technique to the discovery path) and found a real bug, this
+  time in `discovery.ts` rather than a `data/*.ts` fetcher.
+  - Sampled real pump.fun program signatures via `solana-rpc.publicnode.com`
+    (`getSignaturesForAddress` + `getTransaction`, same technique as sessions
+    102-104) looking for standalone buy/sell transactions (not bundled with
+    a create). **16 out of 16 sampled** had their pump.fun `Buy`/`Sell`
+    instruction invoked via CPI from an outer router program (different
+    router programs across samples, e.g. `MAyhSmzXzV1pTf7...` and
+    `J7pourVwqP1Vt...`) — the pump.fun program only appeared in
+    `meta.innerInstructions`, never as a top-level instruction.
+  - `discovery.ts`'s `findTradeInstruction`/`findCreateInstruction` only ever
+    scanned `tx.transaction.message.instructions` (top-level). Confirmed via
+    the sampled transactions' raw JSON that `findTradeInstruction`'s loop
+    would silently return `null` for all 16 — no top-level instruction has
+    `programId === PUMP_FUN_PROGRAM_ID` in any of them.
+  - Traced the blast radius: `resolveTradeFromSignature` (same decode step)
+    is what `wsDiscovery.ts`'s `LaunchWatcher.trackMint`/`onTrade` calls for
+    every per-mint trade notification, which is what feeds `BalanceIndex` —
+    the documented mitigation for `getTokenLargestAccounts`'s ~100% 429 rate
+    (see README's "Known limitations"). Given the 16/16 live sample, that
+    path was receiving close to zero real trade data, not "often but not
+    always" as previously documented — a materially worse gap than believed.
+  - Separately checked whether **creates** have the same exposure: scanned
+    ~115 more signatures (paginated, sampled every 4th) looking for a
+    `Create`/`CreateV2` log line; found 3, and all 3 called pump.fun directly
+    at the top level (not via CPI) — including a bundled dev `BuyV2` in the
+    same transaction, also top-level. So the create path and the bundled-buy
+    path (`resolveLaunchFromSignature`) were not actually broken on live
+    data, just the standalone-trade path. Small sample (3), so documented as
+    "every live sample checked", not a guarantee this never changes.
+  - **Fixed** in `src/discovery.ts`: added `allInstructions(tx)` (top-level
+    instructions + everything flattened out of `tx.meta.innerInstructions`),
+    used by both `findCreateInstruction` and `findTradeInstruction` instead
+    of just `tx.transaction.message.instructions` — symmetric rather than
+    fixing only the trade path, since nothing guarantees creates stay direct.
+  - `src/rpc.ts`: added `innerInstructions` to `ParsedTransactionMeta` (typed
+    as `InnerInstructionGroup[]`, same `{index, instructions}` shape as the
+    real RPC response) — the field was already present in the raw JSON, just
+    never declared, so `discovery.ts` had no typed way to read it.
+  - Added a regression test in `discovery.test.ts` (`cpiTradeTx` fixture — a
+    trade whose top-level instruction belongs to an unrelated router program
+    and whose pump.fun `Buy` only exists in `meta.innerInstructions`).
+    Verified it fails pre-fix: `git stash push -- src/discovery.ts
+    src/rpc.ts`, ran the test alone, got `null` instead of the decoded
+    trade; `git stash pop` restored the fix and it passed.
+  - Documented the fix in `rug-radar/README.md`'s "Known limitations"
+    section, same style as session 103's bundled-buys writeup.
+  - Cleaned up all temporary repro scripts (`/tmp/live-check*.mjs`, deleted
+    before finishing).
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 246/246 passing (245 + 1 new regression test), offline.
+- `git status` before this edit: three files changed (`README.md`,
+  `src/discovery.ts`, `src/discovery.test.ts`, `src/rpc.ts`); no stray repro
+  scripts left behind.
+
+### Next
+- Eleven real bugs found and fixed total across sessions 84-105 now (see
+  session 104's list, plus this session's `discovery.ts` CPI-instruction
+  gap). This one has the widest practical impact of the recent batch: it
+  means `BalanceIndex`'s rescore mitigation — the documented workaround for
+  `getTokenLargestAccounts`'s near-100% 429 rate — was likely rescuing far
+  fewer launches live than the README previously described, since it
+  depended on `onTrade` firing, and `onTrade` depended on exactly the decode
+  step that was broken for ~100% of live standalone trades.
+- Worth a future session checking `balanceIndex.ts`/`rescore.ts` live again
+  now that this fix is in, to see how much the rescore recovery rate
+  actually improves with real trade data flowing into `BalanceIndex` for the
+  first time (the live measurement behind `RESCORE_DELAY_MS: 60s`, session
+  73, may have been measured against a mostly-empty `BalanceIndex` as an
+  unintended side effect of this bug — worth re-measuring, not just
+  assuming the old number still holds).
+- The non-SOL-quote-mint question from session 102 is still open and
+  untouched this session.
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73,
+  see above for why its live basis may be worth re-checking),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
+- All five TASK.md steps remain functionally complete.

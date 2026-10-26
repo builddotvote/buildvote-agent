@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { findNewLaunches, resolveLaunchFromSignature } from "./discovery.js";
+import { findNewLaunches, resolveLaunchFromSignature, resolveTradeFromSignature } from "./discovery.js";
 import { PUMP_FUN_PROGRAM_ID } from "./pumpfun.js";
 import { base58Encode } from "./base58.js";
 import type { ParsedTransaction, SignatureInfo } from "./rpc.js";
@@ -140,6 +140,56 @@ test("does not mistake a bundled sell for a bundled buy", async () => {
 
   const launch = await resolveLaunchFromSignature(rpc, "sigCreate");
   assert.equal(launch?.bundledBuy, undefined);
+});
+
+// Confirmed live (session 107): a program-wide scan of real pump.fun
+// signatures found every standalone buy/sell routed through an outer router
+// program, with the pump.fun Buy/Sell instruction itself only present in
+// `meta.innerInstructions` — the top-level instruction belongs to the router,
+// not pump.fun. Reproduces that shape with an unrelated top-level program.
+function cpiTradeTx(discriminator: number[], amount: bigint): ParsedTransaction {
+  return {
+    slot: 1,
+    blockTime: 1700000200,
+    transaction: {
+      signatures: ["sigCpiTrade"],
+      message: {
+        accountKeys: [],
+        instructions: [{ programId: "SomeRouterProgram11111111111111111111111", accounts: [], data: "routerdata" }],
+      },
+    },
+    meta: {
+      err: null,
+      fee: 5000,
+      preBalances: [],
+      postBalances: [],
+      innerInstructions: [
+        {
+          index: 0,
+          instructions: [
+            { programId: PUMP_FUN_PROGRAM_ID, accounts: TRADE_ACCOUNTS, data: tradeInstructionData(discriminator, amount) },
+          ],
+        },
+      ],
+    },
+  };
+}
+
+test("resolveTradeFromSignature decodes a trade CPI'd in under an unrelated router program", async () => {
+  const rpc = {
+    async getTransaction() {
+      return cpiTradeTx(BUY_DISCRIMINATOR, 7_000_000n);
+    },
+  };
+
+  const trade = await resolveTradeFromSignature(rpc, "sigCpiTrade");
+  assert.deepEqual(trade, {
+    kind: "buy",
+    mint: "Mint1111111111111111111111111111111111111",
+    bondingCurve: "BondingCurve11111111111111111111111111111",
+    user: "DevBuyer111111111111111111111111111111111",
+    amount: 7_000_000n,
+  });
 });
 
 test("ignores signatures strictly before the watermark", async () => {

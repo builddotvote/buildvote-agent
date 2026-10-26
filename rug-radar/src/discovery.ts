@@ -5,7 +5,7 @@
 
 import { decodeCreateInstruction, decodeTradeInstruction, PUMP_FUN_PROGRAM_ID } from "./pumpfun.js";
 import type { TradeInstruction } from "./pumpfun.js";
-import type { ParsedTransaction, SolanaRpcClient } from "./rpc.js";
+import type { MessageInstruction, ParsedTransaction, SolanaRpcClient } from "./rpc.js";
 
 export interface DiscoveredLaunch {
   mint: string;
@@ -221,11 +221,25 @@ export async function resolveTradeFromSignature(
   return resolveWithRetry(rpc, signature, (tx) => findTradeInstruction(tx), options);
 }
 
+// Top-level instructions plus everything invoked via CPI underneath them.
+// Confirmed live (session 107): a program-wide scan of real pump.fun
+// signatures found every standalone buy/sell routed through an outer router
+// program (Jupiter or similar), with the actual pump.fun Buy/Sell instruction
+// only present in `meta.innerInstructions` — a top-level-only scan missed
+// 16/16 real trade transactions sampled. Bundled dev buys (same tx as a
+// create) were still called directly at the top level in every sample, but
+// nothing guarantees that stays true, so both callers below scan the same
+// combined list rather than diverging on which case to handle.
+function allInstructions(tx: ParsedTransaction): MessageInstruction[] {
+  const outer = tx.transaction.message.instructions ?? [];
+  const inner = tx.meta?.innerInstructions?.flatMap((group) => group.instructions) ?? [];
+  return [...outer, ...inner];
+}
+
 function findCreateInstruction(
   tx: ParsedTransaction,
 ): { mint: string; deployer: string; bondingCurve: string } | null {
-  const instructions = tx.transaction.message.instructions ?? [];
-  for (const ix of instructions) {
+  for (const ix of allInstructions(tx)) {
     if (ix.programId !== PUMP_FUN_PROGRAM_ID || !("data" in ix)) continue;
     const decoded = decodeCreateInstruction(ix.data, ix.accounts);
     if (decoded) {
@@ -236,8 +250,7 @@ function findCreateInstruction(
 }
 
 function findTradeInstruction(tx: ParsedTransaction): TradeInstruction | null {
-  const instructions = tx.transaction.message.instructions ?? [];
-  for (const ix of instructions) {
+  for (const ix of allInstructions(tx)) {
     if (ix.programId !== PUMP_FUN_PROGRAM_ID || !("data" in ix)) continue;
     const decoded = decodeTradeInstruction(ix.data, ix.accounts);
     if (decoded) return decoded;

@@ -45,16 +45,6 @@ export interface TokenBalanceEntry {
   uiTokenAmount: RpcTokenAmount;
 }
 
-export interface ParsedTransactionMeta {
-  err: unknown | null;
-  fee: number;
-  preBalances: number[];
-  postBalances: number[];
-  preTokenBalances?: TokenBalanceEntry[];
-  postTokenBalances?: TokenBalanceEntry[];
-  logMessages?: string[];
-}
-
 export interface ParsedAccountKey {
   pubkey: string;
   signer: boolean;
@@ -79,6 +69,30 @@ export interface KnownProgramInstruction {
 }
 
 export type MessageInstruction = PartiallyDecodedInstruction | KnownProgramInstruction;
+
+// Instructions a top-level instruction invoked via CPI, grouped by the
+// top-level instruction's own index. Confirmed live (session 107): virtually
+// every post-launch pump.fun buy/sell is now called this way — a router
+// program (Jupiter or similar) is the outer instruction, and the actual
+// pump.fun Buy/Sell only shows up in here. Creates were still direct in every
+// live sample checked, but nothing about the RPC's shape guarantees that
+// stays true, so callers that need "every pump.fun instruction in this tx"
+// (discovery.ts) scan both this and the top-level list.
+export interface InnerInstructionGroup {
+  index: number;
+  instructions: MessageInstruction[];
+}
+
+export interface ParsedTransactionMeta {
+  err: unknown | null;
+  fee: number;
+  preBalances: number[];
+  postBalances: number[];
+  preTokenBalances?: TokenBalanceEntry[];
+  postTokenBalances?: TokenBalanceEntry[];
+  logMessages?: string[];
+  innerInstructions?: InnerInstructionGroup[];
+}
 
 export interface ParsedTransaction {
   slot: number;
