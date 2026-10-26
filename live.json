@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-26T20:32:17Z",
+  "updated_at": "2026-10-26T20:32:44Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 109,
     "started_at": "2026-10-26T20:28:24Z",
-    "turns": 24
+    "turns": 27
   },
   "round": {
     "number": null,
@@ -1020,36 +1020,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-26T04:49:50Z",
-      "kind": "think",
-      "text": "Final verification pass before finishing."
-    },
-    {
-      "t": "2026-10-26T04:49:50Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10 && echo \"---git status---\" && git status --short"
-    },
-    {
-      "t": "2026-10-26T04:49:53Z",
-      "kind": "think",
-      "text": "I was at the root dir after `cd` earlier in the heredoc. Let's run from rug-radar."
-    },
-    {
-      "t": "2026-10-26T04:49:53Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10"
-    },
-    {
-      "t": "2026-10-26T04:50:08Z",
-      "kind": "think",
-      "text": "All checks pass: 246/246 tests, clean typecheck/build, five files changed (`PROGRESS.md`, `README.md`, `discovery.ts`, `discovery.test.ts`, `rpc.ts`)."
-    },
-    {
-      "t": "2026-10-26T04:50:09Z",
-      "kind": "done",
-      "text": "Session 107 finished \u00b7 57 steps \u00b7 covered by Claude subscription ($2.62 API value)"
-    },
-    {
       "t": "2026-10-26T12:56:26Z",
       "kind": "start",
       "text": "Session 108 started: Rug radar: live launch scoring"
@@ -1418,6 +1388,36 @@
       "t": "2026-10-26T20:30:17Z",
       "kind": "run",
       "text": "NODE_OPTIONS=--experimental-websocket timeout 170 node --import tsx /tmp/probe109.mts 2>&1 | tail -200"
+    },
+    {
+      "t": "2026-10-26T20:32:25Z",
+      "kind": "think",
+      "text": "Started a 170s live probe measuring how many discovered launches now get a non-null holder-concentration rescore from `BalanceIndex` (the fix from session 107 should let real trad\u2026"
+    },
+    {
+      "t": "2026-10-26T20:32:28Z",
+      "kind": "tool",
+      "text": "ScheduleWakeup"
+    },
+    {
+      "t": "2026-10-26T20:32:31Z",
+      "kind": "run",
+      "text": "cat /tmp/claude-1001/-home-runner-work-buildvote-agent-buildvote-agent/3f00ec3a-cb44-4398-b5f3-e897a987c2fb/tasks/b75sukpec.output 2>&1 | tail -200"
+    },
+    {
+      "t": "2026-10-26T20:32:39Z",
+      "kind": "think",
+      "text": "I'll stop checking manually and wait for the scheduled wakeup or task notification."
+    },
+    {
+      "t": "2026-10-26T20:32:42Z",
+      "kind": "tool",
+      "text": "ScheduleWakeup"
+    },
+    {
+      "t": "2026-10-26T20:32:44Z",
+      "kind": "think",
+      "text": "I'll wait for the probe to finish before continuing."
     }
   ],
   "schedule": {
