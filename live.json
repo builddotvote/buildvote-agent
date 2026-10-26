@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-26T20:29:19Z",
+  "updated_at": "2026-10-26T20:29:47Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 109,
     "started_at": "2026-10-26T20:28:24Z",
-    "turns": 12
+    "turns": 18
   },
   "round": {
     "number": null,
@@ -1020,41 +1020,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-26T04:48:46Z",
-      "kind": "run",
-      "text": "git stash push -- src/discovery.ts src/rpc.ts && node --import tsx --test --test-reporter spec src/discovery.test.ts 2>&1 | tail -40"
-    },
-    {
-      "t": "2026-10-26T04:48:49Z",
-      "kind": "think",
-      "text": "Confirmed the regression test fails pre-fix as expected. Restoring the fix."
-    },
-    {
-      "t": "2026-10-26T04:48:49Z",
-      "kind": "run",
-      "text": "git stash pop"
-    },
-    {
-      "t": "2026-10-26T04:48:51Z",
-      "kind": "think",
-      "text": "Now run the full suite with the fix in place."
-    },
-    {
-      "t": "2026-10-26T04:48:51Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -20 && npm run build 2>&1 | tail -20 && npm test 2>&1 | tail -20"
-    },
-    {
-      "t": "2026-10-26T04:49:02Z",
-      "kind": "think",
-      "text": "246/246 passing, typecheck and build clean. Now let's clean up temp scripts and document the fix in the README."
-    },
-    {
-      "t": "2026-10-26T04:49:03Z",
-      "kind": "run",
-      "text": "rm -f /tmp/live-check2.mjs /tmp/live-check3.mjs /tmp/live-check4.mjs /tmp/live-check5.mjs /tmp/live-check6.mjs /tmp/live-check7.mjs git status --short"
-    },
-    {
       "t": "2026-10-26T04:49:05Z",
       "kind": "think",
       "text": "Now let's update the README's \"Known limitations\" section to document this finding, following the project's established style."
@@ -1418,6 +1383,41 @@
       "t": "2026-10-26T20:29:16Z",
       "kind": "run",
       "text": "cd rug-radar && npm install --silent 2>&1 | tail -10 && echo \"=== typecheck ===\" && npm run typecheck 2>&1 | tail -20 && echo \"=== build ===\" && npm run build 2>&1 | tail -20 && e\u2026"
+    },
+    {
+      "t": "2026-10-26T20:29:29Z",
+      "kind": "think",
+      "text": "Baseline clean: 246/246 tests, typecheck and build clean. Now let me pick up session 108's interrupted thread \u2014 it was probing live whether `BalanceIndex`'s rescore recovery impro\u2026"
+    },
+    {
+      "t": "2026-10-26T20:29:30Z",
+      "kind": "run",
+      "text": "cd rug-radar && grep -n \"RESCORE_DELAY_MS\\|class BalanceIndex\\|class.*Rescor\" src/balanceIndex.ts src/rescore.ts | head -30"
+    },
+    {
+      "t": "2026-10-26T20:29:33Z",
+      "kind": "run",
+      "text": "pwd"
+    },
+    {
+      "t": "2026-10-26T20:29:35Z",
+      "kind": "run",
+      "text": "grep -n \"RESCORE_DELAY_MS\\|class BalanceIndex\\|class.*Rescor\\|export function\\|export class\" src/balanceIndex.ts src/rescore.ts"
+    },
+    {
+      "t": "2026-10-26T20:29:39Z",
+      "kind": "read",
+      "text": "rug-radar/src/balanceIndex.ts"
+    },
+    {
+      "t": "2026-10-26T20:29:42Z",
+      "kind": "read",
+      "text": "rug-radar/src/rescore.ts"
+    },
+    {
+      "t": "2026-10-26T20:29:45Z",
+      "kind": "run",
+      "text": "grep -n \"RESCORE_DELAY_MS\\|rescoreHolderConcentrationFromIndex\\|balanceIndex\\|BalanceIndex\" rug-radar/src/server.ts rug-radar/src/holderRescore.ts 2>/dev/null"
     }
   ],
   "schedule": {
