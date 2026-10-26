@@ -6620,3 +6620,80 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
   endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
 - All five TASK.md steps remain functionally complete.
+
+## Session 106 — 2026-10-26
+
+### Done
+- Fresh checkout; `npm install`, then `npm run typecheck`/`npm run build`
+  clean, `npm test` 246/246 — matches session 105's count, no drift.
+- Picked up session 105's suggested next step: measure live whether
+  `BalanceIndex`'s holder-concentration rescore recovery actually improved
+  now that `discovery.ts`'s CPI-aware decode fix (session 105) lets
+  `wsDiscovery.ts`'s `onTrade` fire for CPI-routed trades. Wrote a probe
+  script (deleted before finishing) that ran the real `LaunchWatcher`
+  against `wss://solana-rpc.publicnode.com` for 150s, tracking every
+  discovered mint and calling `rescoreHolderConcentrationFromIndex` on
+  each afterward.
+- **Result: inconclusive, for an unexpected reason.** The probe discovered
+  zero launches and zero trades in 150s — not because of anything in
+  `BalanceIndex`/`rescore.ts`, but because the websocket delivered zero
+  notifications of any kind, program-wide, for the entire run. The run's
+  own idle watchdog (session 60's mitigation) correctly detected this and
+  forced 4 reconnects, each right at the 30s `programIdleTimeoutMs`
+  threshold — it fired as designed, it just can't fix a provider that
+  never pushes data in the first place.
+- Confirmed this wasn't the probe script or a one-off blip with two
+  standalone, minimal `logsSubscribe` tests against the same program:
+  received the subscribe ack both times, then **zero** `logsNotification`
+  messages in 20s, and zero in a separate 60s run. Meanwhile a plain HTTP
+  `getSignaturesForAddress` call against the same program during the same
+  window returned signatures with `blockTime` equal to the current second
+  and multiple transactions per second — i.e. the chain and the program
+  were both clearly live and busy; only the websocket push was silent.
+  This is the exact "ack-but-never-push" failure mode session 60 already
+  documented (observed there on both the pump.fun program and the SPL
+  Token program) — reproduced live again here, persistent across roughly
+  230s of combined testing this session, not transient.
+- Also sanity-checked the backstop poller (`findNewLaunches`, HTTP-only,
+  no websocket) during this same window: 4 poll cycles over 80s found 0
+  new launches. Sampled 50 raw signatures directly and found 0 of 50 had
+  `err: null` (i.e. not one of the 50 most recent transactions touching
+  the program had succeeded at that instant) — read as a live burst of
+  failed trades crowding out the much rarer successful creates in such a
+  short/shallow sample, not evidence of a bug in `findNewLaunches`, but
+  flagged as a thin (one-sample) signal worth a longer re-check rather
+  than full confidence.
+- No code changes this session — this was pure live investigation; nothing
+  in `rug-radar`'s own code was implicated by any of the above.
+- Cleaned up all temporary probe/test scripts from `/tmp` before finishing.
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 246/246 passing, offline — unchanged from session 105, as
+  expected since no source files changed this session.
+- `git status`: clean, no files changed.
+
+### Next
+- The actual question this session set out to answer — whether
+  `BalanceIndex`'s rescore recovery rate improved after session 105's CPI
+  decode fix — is still open. It's blocked on the websocket provider
+  actually delivering notifications, which it did not do at all during
+  this session's ~230s of live testing. Worth retrying on a future session
+  in case this was a transient provider-side outage; if it reproduces
+  again, it's worth treating as a standing known limitation (like the
+  `getTokenLargestAccounts` 429s) rather than a transient blip, and maybe
+  worth documenting in README's "Known limitations" alongside session 60's
+  original writeup of the same symptom.
+- If a future session gets real websocket data flowing again, re-run this
+  session's exact probe shape (track every discovered mint, call
+  `rescoreHolderConcentrationFromIndex` after some delay, count non-null
+  vs null) to finally get a live number for the CPI fix's actual impact.
+- The thin backstop-poller signal above (0/50 successful signatures in one
+  sample) is worth a longer, repeated check on a future session before
+  concluding anything either way about `findNewLaunches`.
+- The non-SOL-quote-mint question from session 102 is still open and
+  untouched this session.
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
+- All five TASK.md steps remain functionally complete.
