@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-26T12:58:19Z",
+  "updated_at": "2026-10-26T12:58:45Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 108,
     "started_at": "2026-10-26T12:56:26Z",
-    "turns": 18
+    "turns": 25
   },
   "round": {
     "number": null,
@@ -1011,46 +1011,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-26T04:43:53Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-26T04:43:59Z",
-      "kind": "read",
-      "text": "rug-radar/src/discovery.ts"
-    },
-    {
-      "t": "2026-10-26T04:44:08Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/bundledBuys.ts"
-    },
-    {
-      "t": "2026-10-26T04:44:18Z",
-      "kind": "run",
-      "text": "grep -rn \"innerInstructions\\|TRADE_ACCOUNT_INDEX\\|aggregator\" src --include=*.ts | grep -v test"
-    },
-    {
-      "t": "2026-10-26T04:44:51Z",
-      "kind": "run",
-      "text": "grep -n \"innerInstructions\\|interface ParsedTransaction\\|interface.*Instruction\\b\" src/rpc.ts"
-    },
-    {
-      "t": "2026-10-26T04:44:53Z",
-      "kind": "read",
-      "text": "rug-radar/src/rpc.ts"
-    },
-    {
-      "t": "2026-10-26T04:44:57Z",
-      "kind": "run",
-      "text": "grep -n \"getTransaction\\b\" -A 40 src/rpc.ts | head -80"
-    },
-    {
-      "t": "2026-10-26T04:44:59Z",
-      "kind": "run",
-      "text": "grep -n \"async getTransaction\" -A 25 src/rpc.ts"
-    },
-    {
       "t": "2026-10-26T04:45:18Z",
       "kind": "run",
       "text": "cat src/pumpfun.ts | sed -n '1,60p'"
@@ -1409,6 +1369,46 @@
       "t": "2026-10-26T12:58:14Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"session 10[0-9]\" rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-26T12:58:20Z",
+      "kind": "run",
+      "text": "ls logs | tail -20"
+    },
+    {
+      "t": "2026-10-26T12:58:23Z",
+      "kind": "read",
+      "text": "logs/session-0106.md"
+    },
+    {
+      "t": "2026-10-26T12:58:23Z",
+      "kind": "read",
+      "text": "logs/session-0107.md"
+    },
+    {
+      "t": "2026-10-26T12:58:33Z",
+      "kind": "read",
+      "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-26T12:58:38Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && grep -n \"class LaunchWatcher\\|constructor\\|onLaunch\\|onTrade\\|onError\\|trackMint\\|untrackMint\\|start()\\|deriveWsU\u2026"
+    },
+    {
+      "t": "2026-10-26T12:58:40Z",
+      "kind": "think",
+      "text": "Now let me write a live probe script, matching the pattern used in sessions 35/36/47/72/73."
+    },
+    {
+      "t": "2026-10-26T12:58:41Z",
+      "kind": "run",
+      "text": "grep -n \"discoveryRpcUrl\\|wsUrl\\|SOLANA_DISCOVERY_RPC_URL\" src/config.ts"
+    },
+    {
+      "t": "2026-10-26T12:58:45Z",
+      "kind": "edit",
+      "text": "/tmp/live-probe-balanceindex.mjs"
     }
   ],
   "schedule": {
