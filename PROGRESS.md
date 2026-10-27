@@ -6763,3 +6763,88 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
   endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
 - All five TASK.md steps remain functionally complete.
+
+## Session 108 — 2026-10-27
+
+### Done
+- Fresh checkout; `npm install`, then `npm run typecheck`/`npm run build`
+  clean, `npm test` 246/246 — matches session 107's count, no drift.
+- Picked up the non-SOL-quote-mint question open since session 86/102
+  (last touched session 107, untouched that session). Resolved it this
+  time instead of re-deferring it.
+  - Derived the pump.fun `Global` config PDA properly — seeds `["global"]`,
+    program `6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P`, standard
+    Solana off-curve bump search (implemented the ed25519 point-
+    decompression check from scratch with `node:crypto`'s sha256 + BigInt
+    field arithmetic, no new dependency) — not a remembered/guessed
+    address, per the session 30/86 rule (which had already caught one
+    guessed address that didn't exist on-chain). Got
+    `4wTV1YmiEkRvAtNtsSGPtUrqRYQMe5SKy2uB4Jjaxnjf`, bump 255.
+  - Fetched it live (`getAccountInfo`, `solana-rpc.publicnode.com`):
+    exists, owned by the pump.fun program itself, discriminator
+    `[167,232,232,177,200,108,114,127]` matches the IDL's `Global`
+    account exactly.
+  - Downloaded `idl/pump.json` directly via `curl` (not a summarizing
+    fetch) and decoded the full `Global` struct per its field order: the
+    decode's final offset landed on exactly 1088 bytes, matching the
+    account's own reported `space` exactly — strong confirmation the
+    whole field layout (32 fields, mix of bools/u64s/pubkeys/arrays) is
+    byte-correct, not just the one field being asked about.
+  - **Result: `whitelisted_quote_mints[0]` is currently USDC**
+    (`EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`), not SOL — the
+    speculative risk sessions 86/102 raised has, in a sense, already
+    happened at the `Global`-config level.
+  - **But this doesn't affect rug-radar.** Cross-checked the full
+    56-instruction public IDL: `create`/`create_v2` (the only two
+    instructions that create a bonding curve, and the only ones
+    `pumpfun.ts`/`discovery.ts`/`wsDiscovery.ts` watch for) take no
+    `quote_mint` account or arg at all — every bonding curve this
+    codebase can discover is SOL-only by construction. The `quote_mint`
+    account on `buy_v2`/`buy_v3`/`sell_v2`/`sell_v3` (which session 104
+    had only checked against one live sample, flagged as not fully
+    settled) belongs to a separate multi-quote-mint swap feature
+    (`add_quote_mint`, `remove_quote_mint`, `multi_hop_curve_swap`,
+    `buy_exact_quote_in_v2`/`v3`, `admin_cto`, etc.) — a distinct,
+    newer product surface, not a variant of the `create`/`create_v2`
+    bonding-curve path. For any trade against a bonding curve this
+    codebase can see, that account is always SOL/WSOL, structurally, not
+    by luck. Also sanity-checked other decoded `Global` fields against
+    known values while in there: `initialVirtualSolReserves` = 30,000,000,000
+    lamports = exactly the "~30 SOL" figure session 102 cited from
+    research, and `tokenTotalSupply` = 1,000,000,000,000,000 (1B tokens
+    at 6 decimals) — both consistent with every prior session's live
+    sanity checks, no surprises there.
+  - Documented the resolution in README's "Known limitations" (new
+    bullet) and strengthened the caveat comment in `pumpfun.ts` above
+    `TRADE_V3_ACCOUNT_INDEX` that previously read as an open "even though
+    this one sample used SOL there" — now states the structural reason
+    plainly, with a pointer to the README bullet, so a future session
+    doesn't need to re-derive the PDA to re-answer this.
+- No other source files changed. Cleaned up all temporary scripts
+  (`/tmp/derivePda.mts`, `/tmp/decodeGlobal.mts`, `/tmp/decodeGlobalFull.mts`,
+  `/tmp/pump_idl.json`) before finishing.
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 246/246 passing, offline — unchanged from session 107 (no
+  test files touched; this session's changes were a README bullet and a
+  comment).
+- `git status`: `rug-radar/README.md` and `rug-radar/src/pumpfun.ts`
+  (comment only, no logic change) plus this `PROGRESS.md` update.
+
+### Next
+- The rescore-recovery-rate measurement (blocked on the websocket
+  actually delivering notifications, sessions 106/109) is still open —
+  unrelated to this session's work. If a future session catches a live
+  window where the websocket is actually pushing, that's the time to run
+  it (track every discovered mint, call
+  `rescoreHolderConcentrationFromIndex` after a delay, count non-null vs
+  null).
+- The non-SOL-quote-mint question (sessions 86/102) is now resolved — no
+  longer a standing "Next" item. Don't re-open it without new evidence
+  (e.g. a future IDL change adding a `quote_mint` to `create`/`create_v2`
+  themselves, which would be a real finding worth catching).
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
+- All five TASK.md steps remain functionally complete.

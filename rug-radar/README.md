@@ -786,6 +786,32 @@ doesn't fix.
   future session should expect to root-cause further without a different
   provider.
 
+- **The speculative "what if pump.fun's quote mint isn't SOL" risk (raised
+  sessions 86/102) is now resolved, not just unobserved.** Derived the
+  `Global` config PDA properly this session (seeds `["global"]`, program
+  `6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P`, standard off-curve bump
+  search — not a remembered/guessed address, per the session 30/86 rule)
+  and fetched it live: `4wTV1YmiEkRvAtNtsSGPtUrqRYQMe5SKy2uB4Jjaxnjf`
+  (bump 255), owned by the pump.fun program, discriminator matches
+  `Global`. Decoding the full struct per the public IDL's field order
+  landed exactly on the account's reported 1088-byte size (strong
+  layout-correctness check) and confirmed `whitelisted_quote_mints[0]` is
+  currently USDC (`EPjFWdd5...Dt1v`), not SOL — the risk the earlier
+  sessions worried about has, in a sense, already happened. But cross-
+  checking the full 56-instruction public IDL shows this doesn't affect
+  rug-radar: `create`/`create_v2` — the *only* two instructions that
+  create a bonding curve, and the only ones `pumpfun.ts`/`discovery.ts`/
+  `wsDiscovery.ts` watch for — take no `quote_mint` account or arg at
+  all, so every bonding curve this codebase can ever discover is SOL-only
+  by construction. The `quote_mint` account present on `buy_v2`/`buy_v3`/
+  `sell_v2`/`sell_v3` (which session 104 had only checked against one
+  live sample) belongs to a separate multi-quote-mint swap feature
+  (`add_quote_mint`, `multi_hop_curve_swap`, `buy_exact_quote_in_v2/v3`,
+  etc.) that doesn't touch bonding-curve creation — for any trade against
+  a `create`/`create_v2` bonding curve, that account is always SOL/WSOL,
+  structurally, not by luck. No code change needed; this closes the open
+  question rather than deferring it again.
+
 See `PROGRESS.md` for the session-by-session history behind these
 findings (live measurements, rejected alternatives, and fixes).
 

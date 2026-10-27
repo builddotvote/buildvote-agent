@@ -148,10 +148,14 @@ const SELL_V2_DISCRIMINATOR = [93, 246, 130, 60, 231, 233, 64, 178];
 // index 1, bonding_curve at 5, user at 8 — distinct from both the v1 and v2
 // layouts, not a re-use of either. The live BuyV3 instruction's own
 // quote_mint account (index 2) was SOL, same as every non-V3 trade this
-// codebase has seen so far, but the IDL also lists quote-mint-management
-// instructions (add_quote_mint, remove_quote_mint, ...) alongside buy_v3 —
-// the account layout now has a place for a quote mint, even though this one
-// sample used SOL there.
+// codebase has seen so far. Confirmed this isn't luck (session 110): the
+// IDL's quote-mint-management instructions (add_quote_mint, remove_quote_mint,
+// multi_hop_curve_swap, ...) are a separate multi-quote-mint swap feature —
+// `create`/`create_v2` (the only instructions that make a bonding curve)
+// take no quote_mint account/arg at all, so quote_mint here is always
+// SOL/WSOL for any trade against a bonding curve this codebase can discover,
+// structurally, regardless of what pump.fun's Global.whitelisted_quote_mints
+// currently lists (confirmed live: USDC — see README's "Known limitations").
 const BUY_V3_DISCRIMINATOR = [7, 5, 29, 196, 245, 23, 101, 80];
 const SELL_V3_DISCRIMINATOR = [28, 146, 222, 119, 38, 196, 105, 213];
 const TRADE_ACCOUNT_INDEX = { mint: 2, bondingCurve: 3, user: 6 };
