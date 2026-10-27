@@ -6848,3 +6848,91 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
   endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
 - All five TASK.md steps remain functionally complete.
+
+## Session 109 — 2026-10-27
+
+### Done
+- Fresh checkout; `npm install`, then `npm run typecheck`/`npm run build`
+  clean, `npm test` 246/246 — matches session 108's count, no drift.
+- This entry documents log session 112 (`logs/session-0112.md`), which hit
+  its step limit right after finishing its code/README changes and before
+  writing a `PROGRESS.md` entry — picked up here from the log transcript
+  plus the already-committed working tree, instead of redoing the work.
+- Log session 112 picked up the standing "Next" item from sessions
+  106/107/109(log): the discovery websocket's default host,
+  `solana-rpc.publicnode.com`, acks `logsSubscribe` but never pushes a
+  notification (session 60, reproduced session 109-log). It ran a live A/B
+  comparison in the same moment: publicnode delivered 0 notifications in
+  15s, while the official endpoint (`wss://api.mainnet-beta.solana.com`)
+  delivered 7,618 — repeated across a sustained 50s run and 4 independent
+  reconnect attempts, every one acked and pushed real data before closing
+  abnormally (code 1006) after ~7-24s each time. Checked that the
+  instability doesn't matter: `LaunchWatcher.connect()`'s `ws.onopen`
+  already resets the reconnect backoff to its base delay on every
+  successful open, so a ~15s-lived connection just becomes frequent
+  ~1s-gap reconnects that keep delivering data rather than a growing
+  backoff. A concurrent-load check (pacing `getSlot` HTTP calls against
+  the official endpoint with and without a reconnecting websocket open in
+  parallel) found no 429 increase, so this doesn't add load to the
+  already-strained scoring RPC that shares this default host.
+- **Fixed in `src/server.ts`**: added `DEFAULT_WS_URL =
+  "wss://api.mainnet-beta.solana.com"`, used as `config.wsUrl ??
+  DEFAULT_WS_URL` — previously the discovery websocket had no explicit
+  default and fell back to deriving one from `discoveryRpcUrl` via
+  `wsDiscovery.ts`'s `deriveWsUrl` (i.e. defaulted to publicnode's
+  websocket, the broken one). Removed the now-unused `deriveWsUrl` import
+  from `server.ts` and updated a stale comment in `config.ts` describing
+  the old derivation behavior. `SOLANA_WS_URL` still overrides the default
+  for anyone who needs a different host.
+- Confirmed end to end through the real server, not just raw socket
+  tests: with the new default (no env override), a 20s run reached real
+  discovered launches hitting `ScoringGate`, and a longer run produced a
+  scored launch with real signals in `/api/feed`; the old default
+  produced zero discovery-related log lines in equivalent windows.
+- Updated `README.md`'s "Known limitations" (new bullet documenting the
+  fix, same style as prior entries) and its "Setup"/"Live feed" sections
+  to describe the new default and the `SOLANA_WS_URL` override.
+- Cleaned up all temporary scripts (`/tmp/wscheck*.mjs`, `/tmp/httpimpact.mjs`,
+  `/tmp/server*.log`) before hitting the step limit.
+- **This session's own addition**: found and fixed a citation bug log
+  session 112 left in its own README edit — two spots in the new
+  "Known limitations" bullet mislabeled the A/B test and the fix itself as
+  "session 109" work, when session 109 (the earlier, separate session)
+  never tested the official endpoint's websocket and made no code change
+  (confirmed by rereading `logs/session-0109.md` and this file's own
+  "Session 106" entry, which documents session 109-log's actual, more
+  limited scope: two standalone repros + one 150s `LaunchWatcher` run,
+  all against publicnode only, no fix). Corrected both to "session 112" in
+  `README.md` (the fix sentence and the "Session 109 then tried the
+  official endpoint's websocket" sentence) — this project's citations
+  elsewhere consistently use log-file numbering, so "112" is the correct
+  reference, matching `logs/session-0112.md`.
+- No other source files changed this session.
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 246/246 passing, offline — unchanged from session 108, no
+  test files touched (log session 112's change was to `server.ts`/
+  `config.ts`, already covered by existing config/server tests; this
+  session's own change was `README.md` only).
+- `git status` before this edit: `rug-radar/README.md` only (the citation
+  fix), plus this `PROGRESS.md` update. Log session 112's `server.ts`/
+  `config.ts`/earlier `README.md` changes were already committed before
+  this session started.
+
+### Next
+- The rescore-recovery-rate measurement has been blocked since session
+  106 on the websocket actually delivering notifications — that blocker
+  should now be gone with the new default in place. Worth running the
+  actual dedicated probe next (track every discovered mint, call
+  `rescoreHolderConcentrationFromIndex` after a delay, count non-null vs
+  null) to finally get a live number for the CPI decode fix's (session
+  107) impact on holder-concentration rescoring.
+- Watch for whether *sustained* (hours, not seconds) frequent reconnecting
+  against the shared official-endpoint host eventually triggers stricter
+  throttling — flagged in the README as not yet observed, only tested in
+  short (tens of seconds) windows so far.
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
+- All five TASK.md steps remain functionally complete.

@@ -761,7 +761,7 @@ doesn't fix.
 - **`solana-rpc.publicnode.com`'s websocket acks a `logsSubscribe` and then
   never pushes a single notification — a standing behavior of that specific
   provider (found session 60, reproduced again session 109), fixed session
-  109 by switching the discovery websocket's default host away from it.**
+  112 by switching the discovery websocket's default host away from it.**
   Session 60's live repro: minimal standalone scripts subscribing with
   `mentions` on both the pump.fun program and the SPL Token program each got
   a normal subscribe ack, then zero `logsNotification` messages, while the
@@ -777,7 +777,7 @@ doesn't fix.
   that each hit the same ack-then-silence pattern. A plain HTTP
   `getSignaturesForAddress` call against the same program in the same
   window returned fresh signatures, confirming the chain itself was live and
-  the gap is push-specific to this one provider. Session 109 then tried the
+  the gap is push-specific to this one provider. Session 112 then tried the
   official endpoint's websocket (`wss://api.mainnet-beta.solana.com`) as an
   A/B comparison in the same moment: publicnode delivered 0 notifications in
   15s, the official endpoint delivered 7,618 — repeated across a sustained
