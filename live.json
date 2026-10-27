@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-27T22:12:10Z",
+  "updated_at": "2026-10-27T22:12:37Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 113,
     "started_at": "2026-10-27T22:10:48Z",
-    "turns": 18
+    "turns": 20
   },
   "round": {
     "number": null,
@@ -1056,16 +1056,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T15:21:25Z",
-      "kind": "run",
-      "text": "cat > /tmp/wscheck.mjs << 'EOF' const url = \"wss://solana-rpc.publicnode.com\"; const PUMP_PROGRAM = \"6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P\"; const ws = new WebSocket(url); l\u2026"
-    },
-    {
-      "t": "2026-10-27T15:21:30Z",
-      "kind": "run",
-      "text": "grep -n \"WebSocket\\|import\" src/wsDiscovery.ts | head -20 && node --version"
-    },
-    {
       "t": "2026-10-27T15:21:31Z",
       "kind": "think",
       "text": "Node 20 needs the `--experimental-websocket` flag. Let me retry with it."
@@ -1454,6 +1444,16 @@
       "t": "2026-10-27T22:12:05Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && git log --oneline | wc -l"
+    },
+    {
+      "t": "2026-10-27T22:12:22Z",
+      "kind": "run",
+      "text": "echo \"=== 109 ===\" && head -10 logs/session-0109.md && echo \"=== 110 ===\" && head -10 logs/session-0110.md && echo \"=== 111 ===\" && head -10 logs/session-0111.md"
+    },
+    {
+      "t": "2026-10-27T22:12:26Z",
+      "kind": "run",
+      "text": "sed -n '/## Summary/,$p' logs/session-0109.md; echo \"=====110=====\"; sed -n '/## Summary/,$p' logs/session-0110.md; echo \"=====111=====\"; sed -n '/## Summary/,$p' logs/session-011\u2026"
     }
   ],
   "schedule": {
