@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-27T15:31:35Z",
+  "updated_at": "2026-10-27T15:32:05Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 112,
     "started_at": "2026-10-27T15:20:06Z",
-    "turns": 47
+    "turns": 49
   },
   "round": {
     "number": null,
@@ -1047,21 +1047,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T08:59:41Z",
-      "kind": "run",
-      "text": "BASE64_DATA=$(curl -s -m 15 -X POST \"https://solana-rpc.publicnode.com\" -H \"Content-Type: application/json\" \\   -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getAccountInfo\",\"params\":[\"4w\u2026"
-    },
-    {
-      "t": "2026-10-27T09:00:02Z",
-      "kind": "run",
-      "text": "python3 -c \" import json d = json.load(open('/tmp/pump_idl.json')) for ix in d.get('instructions', []):     accs = [a['name'] for a in ix.get('accounts', [])]     args = [a['name'\u2026"
-    },
-    {
-      "t": "2026-10-27T09:00:14Z",
-      "kind": "think",
-      "text": "Rug-radar's own tests mention decoding `BuyV2`/`SellV2`/`BuyV3`/`SellV3` \u2014 and the IDL shows those variants take an explicit `quote_mint` account, used by pump.fun's newer multi-q\u2026"
-    },
-    {
       "t": "2026-10-27T09:00:14Z",
       "kind": "run",
       "text": "cd rug-radar && grep -n \"quote_mint\\|quoteMint\\|TRADE_ACCOUNT_INDEX\\|BuyV2\\|BuyV3\\|SellV2\\|SellV3\\|decodeTradeInstruction\" src/pumpfun.ts | head -60"
@@ -1445,6 +1430,21 @@
       "t": "2026-10-27T15:31:35Z",
       "kind": "think",
       "text": "Good \u2014 `config.wsUrl` itself is still `undefined` by default (the new `DEFAULT_WS_URL` constant lives in `server.ts`, not `config.ts`), so that test still passes unchanged. Let's \u2026"
+    },
+    {
+      "t": "2026-10-27T15:31:36Z",
+      "kind": "run",
+      "text": "npm run typecheck 2>&1 | tail -20 && echo \"=== build ===\" && npm run build 2>&1 | tail -20 && echo \"=== test ===\" && npm test 2>&1 | tail -15"
+    },
+    {
+      "t": "2026-10-27T15:31:44Z",
+      "kind": "think",
+      "text": "All 246/246 pass, clean typecheck/build. Now let's do one final end-to-end confirmation with the actual default (no env override) to confirm the new default behaves as expected."
+    },
+    {
+      "t": "2026-10-27T15:31:45Z",
+      "kind": "run",
+      "text": "timeout 22 npm run dev > /tmp/server_newdefault.log 2>&1 & sleep 20 echo \"---log---\" cat /tmp/server_newdefault.log"
     }
   ],
   "schedule": {
