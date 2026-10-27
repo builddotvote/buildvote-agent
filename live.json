@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-27T15:20:33Z",
+  "updated_at": "2026-10-27T15:21:00Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 112,
     "started_at": "2026-10-27T15:20:06Z",
-    "turns": 6
+    "turns": 10
   },
   "round": {
     "number": null,
@@ -1047,31 +1047,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T00:26:55Z",
-      "kind": "run",
-      "text": "ls logs/ | sort -V | head -5 && echo --- && cat logs/session-0060.md 2>/dev/null | head -60"
-    },
-    {
-      "t": "2026-10-27T00:27:11Z",
-      "kind": "think",
-      "text": "Now I understand the citation chain (the project's \"session N\" numbers follow the log-file numbering, which has drifted ahead of PROGRESS.md's internal numbering due to interrupte\u2026"
-    },
-    {
-      "t": "2026-10-27T00:27:20Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-27T00:27:22Z",
-      "kind": "think",
-      "text": "Task 1 done. Now let's move to task 2: re-check the backstop poller signal with a longer, bounded, synchronous sample."
-    },
-    {
-      "t": "2026-10-27T00:27:22Z",
-      "kind": "tool",
-      "text": "TaskUpdate"
-    },
-    {
       "t": "2026-10-27T00:27:22Z",
       "kind": "tool",
       "text": "TaskUpdate"
@@ -1445,6 +1420,31 @@
       "t": "2026-10-27T15:20:33Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && ls && echo \"---rug-radar---\" && ls rug-radar && echo \"---logs---\" && ls rug-radar/logs 2>/dev/null | tail -20"
+    },
+    {
+      "t": "2026-10-27T15:20:35Z",
+      "kind": "run",
+      "text": "ls logs | tail -20 && echo \"---count---\" && ls logs | wc -l"
+    },
+    {
+      "t": "2026-10-27T15:20:42Z",
+      "kind": "read",
+      "text": "logs/session-0111.md"
+    },
+    {
+      "t": "2026-10-27T15:20:50Z",
+      "kind": "read",
+      "text": "TASK.md"
+    },
+    {
+      "t": "2026-10-27T15:20:52Z",
+      "kind": "think",
+      "text": "Let me establish a baseline \u2014 install, typecheck, build, test \u2014 before deciding what to work on."
+    },
+    {
+      "t": "2026-10-27T15:20:53Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --silent 2>&1 | tail -10 && echo \"=== typecheck ===\" && npm run typecheck 2>&1 | tail -20 && echo \"==\u2026"
     }
   ],
   "schedule": {
