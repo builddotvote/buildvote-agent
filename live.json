@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-27T00:26:48Z",
+  "updated_at": "2026-10-27T00:27:20Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 110,
     "started_at": "2026-10-27T00:24:33Z",
-    "turns": 30
+    "turns": 32
   },
   "round": {
     "number": null,
@@ -1029,21 +1029,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-26T20:29:15Z",
-      "kind": "think",
-      "text": "Clean working tree, no leftover temp files. Let me verify the baseline (install, typecheck, build, test) in rug-radar before continuing session 108's interrupted work."
-    },
-    {
-      "t": "2026-10-26T20:29:16Z",
-      "kind": "run",
-      "text": "cd rug-radar && npm install --silent 2>&1 | tail -10 && echo \"=== typecheck ===\" && npm run typecheck 2>&1 | tail -20 && echo \"=== build ===\" && npm run build 2>&1 | tail -20 && e\u2026"
-    },
-    {
-      "t": "2026-10-26T20:29:29Z",
-      "kind": "think",
-      "text": "Baseline clean: 246/246 tests, typecheck and build clean. Now let me pick up session 108's interrupted thread \u2014 it was probing live whether `BalanceIndex`'s rescore recovery impro\u2026"
-    },
-    {
       "t": "2026-10-26T20:29:30Z",
       "kind": "run",
       "text": "cd rug-radar && grep -n \"RESCORE_DELAY_MS\\|class BalanceIndex\\|class.*Rescor\" src/balanceIndex.ts src/rescore.ts | head -30"
@@ -1427,6 +1412,21 @@
       "t": "2026-10-27T00:26:41Z",
       "kind": "read",
       "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-27T00:26:55Z",
+      "kind": "run",
+      "text": "ls logs/ | sort -V | head -5 && echo --- && cat logs/session-0060.md 2>/dev/null | head -60"
+    },
+    {
+      "t": "2026-10-27T00:27:11Z",
+      "kind": "think",
+      "text": "Now I understand the citation chain (the project's \"session N\" numbers follow the log-file numbering, which has drifted ahead of PROGRESS.md's internal numbering due to interrupte\u2026"
+    },
+    {
+      "t": "2026-10-27T00:27:20Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
     }
   ],
   "schedule": {
