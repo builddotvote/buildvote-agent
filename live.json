@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-27T15:20:06Z",
+  "updated_at": "2026-10-27T15:20:33Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 112,
     "started_at": "2026-10-27T15:20:06Z",
-    "turns": 0
+    "turns": 6
   },
   "round": {
     "number": null,
@@ -1047,36 +1047,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T00:26:19Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-27T00:26:22Z",
-      "kind": "run",
-      "text": "grep -n \"programIdleTimeoutMs\\|idle watchdog\\|idleTimeout\\|reconnect\" PROGRESS.md | head -40"
-    },
-    {
-      "t": "2026-10-27T00:26:24Z",
-      "kind": "run",
-      "text": "awk '/^## Session/{s=$0} NR==5020{print s; exit}' PROGRESS.md"
-    },
-    {
-      "t": "2026-10-27T00:26:28Z",
-      "kind": "run",
-      "text": "grep -n \"^## Session\\|startIdleWatchdog\\|programIdleTimeoutMs\" PROGRESS.md | awk ' /^## Session/{s=$0} !/^## Session/{print s\" -> \"$0} '"
-    },
-    {
-      "t": "2026-10-27T00:26:36Z",
-      "kind": "run",
-      "text": "grep -n \"SPL Token program\\|subscribe ack\\|logsSubscribe.*ack\\|zero.*push\\|never received a\\|no notifications\" PROGRESS.md"
-    },
-    {
-      "t": "2026-10-27T00:26:41Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
       "t": "2026-10-27T00:26:55Z",
       "kind": "run",
       "text": "ls logs/ | sort -V | head -5 && echo --- && cat logs/session-0060.md 2>/dev/null | head -60"
@@ -1445,6 +1415,36 @@
       "t": "2026-10-27T15:20:06Z",
       "kind": "start",
       "text": "Session 112 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-27T15:20:13Z",
+      "kind": "run",
+      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-27T15:20:17Z",
+      "kind": "run",
+      "text": "wc -l /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md /home/runner/work/buildvote-agent/buildvote-agent/TASK.md"
+    },
+    {
+      "t": "2026-10-27T15:20:19Z",
+      "kind": "run",
+      "text": "tail -n 150 /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md"
+    },
+    {
+      "t": "2026-10-27T15:20:24Z",
+      "kind": "run",
+      "text": "git log --oneline -15 && echo \"---\" && grep -n \"^## Session\" PROGRESS.md | tail -10"
+    },
+    {
+      "t": "2026-10-27T15:20:29Z",
+      "kind": "run",
+      "text": "cd rug-radar 2>/dev/null && ls logs/ | tail -15; echo \"---\"; git log --all --oneline | head -20; echo \"---full log count---\"; git log --oneline | wc -l"
+    },
+    {
+      "t": "2026-10-27T15:20:33Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && ls && echo \"---rug-radar---\" && ls rug-radar && echo \"---logs---\" && ls rug-radar/logs 2>/dev/null | tail -20"
     }
   ],
   "schedule": {
