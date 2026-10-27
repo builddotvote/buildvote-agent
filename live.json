@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-27T09:00:29Z",
+  "updated_at": "2026-10-27T09:00:56Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 111,
     "started_at": "2026-10-27T08:56:16Z",
-    "turns": 23
+    "turns": 26
   },
   "round": {
     "number": null,
@@ -1038,26 +1038,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T00:25:05Z",
-      "kind": "read",
-      "text": "logs/session-0109.md"
-    },
-    {
-      "t": "2026-10-27T00:25:10Z",
-      "kind": "read",
-      "text": "logs/session-0108.md"
-    },
-    {
-      "t": "2026-10-27T00:25:34Z",
-      "kind": "run",
-      "text": "git status --short && echo \"---rug-radar baseline---\" && cd rug-radar && npm install --silent 2>&1 | tail -10 && echo \"=== typecheck ===\" && npm run typecheck 2>&1 | tail -20 && e\u2026"
-    },
-    {
-      "t": "2026-10-27T00:25:44Z",
-      "kind": "think",
-      "text": "Baseline confirmed clean (246/246 tests). Let me set up a short task list for this session."
-    },
-    {
       "t": "2026-10-27T00:25:44Z",
       "kind": "tool",
       "text": "ToolSearch"
@@ -1436,6 +1416,26 @@
       "t": "2026-10-27T09:00:19Z",
       "kind": "read",
       "text": "rug-radar/src/pumpfun.ts"
+    },
+    {
+      "t": "2026-10-27T09:00:33Z",
+      "kind": "run",
+      "text": "python3 -c \" import json d = json.load(open('/tmp/pump_idl.json')) names = [ix['name'] for ix in d.get('instructions', [])] print(len(names), 'instructions') for n in sorted(names\u2026"
+    },
+    {
+      "t": "2026-10-27T09:00:53Z",
+      "kind": "think",
+      "text": "This resolves the long-standing open question. Let me verify where this risk is documented in the README and update it with the structural proof."
+    },
+    {
+      "t": "2026-10-27T09:00:53Z",
+      "kind": "run",
+      "text": "cd rug-radar && grep -n \"quote.mint\\|quote mint\\|whitelisted\" README.md"
+    },
+    {
+      "t": "2026-10-27T09:00:56Z",
+      "kind": "run",
+      "text": "grep -n \"quote.mint\\|quote mint\\|whitelisted\" README.md"
     }
   ],
   "schedule": {
