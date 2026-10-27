@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-27T15:22:22Z",
+  "updated_at": "2026-10-27T15:22:49Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 112,
     "started_at": "2026-10-27T15:20:06Z",
-    "turns": 23
+    "turns": 25
   },
   "round": {
     "number": null,
@@ -1047,16 +1047,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T00:30:29Z",
-      "kind": "think",
-      "text": "Everything is clean: 246/246 tests passing, typecheck/build clean, no stray temp files, only `README.md` and `PROGRESS.md` modified."
-    },
-    {
-      "t": "2026-10-27T00:30:29Z",
-      "kind": "tool",
-      "text": "TaskUpdate"
-    },
-    {
       "t": "2026-10-27T00:30:35Z",
       "kind": "think",
       "text": "This session's work (no code changes \u2014 docs + live verification only):"
@@ -1445,6 +1435,16 @@
       "t": "2026-10-27T15:22:18Z",
       "kind": "read",
       "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-27T15:22:24Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-27T15:22:29Z",
+      "kind": "run",
+      "text": "timeout 20 npm run dev > /tmp/server.log 2>&1 & sleep 5 curl -s -m 5 http://localhost:8787/ | head -c 300 echo echo \"---feed---\" curl -s -m 5 http://localhost:8787/api/feed | head\u2026"
     }
   ],
   "schedule": {
