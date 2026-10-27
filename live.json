@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-27T15:32:05Z",
+  "updated_at": "2026-10-27T15:32:40Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 112,
     "started_at": "2026-10-27T15:20:06Z",
-    "turns": 49
+    "turns": 50
   },
   "round": {
     "number": null,
@@ -1047,11 +1047,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T09:00:14Z",
-      "kind": "run",
-      "text": "cd rug-radar && grep -n \"quote_mint\\|quoteMint\\|TRADE_ACCOUNT_INDEX\\|BuyV2\\|BuyV3\\|SellV2\\|SellV3\\|decodeTradeInstruction\" src/pumpfun.ts | head -60"
-    },
-    {
       "t": "2026-10-27T09:00:19Z",
       "kind": "read",
       "text": "rug-radar/src/pumpfun.ts"
@@ -1445,6 +1440,11 @@
       "t": "2026-10-27T15:31:45Z",
       "kind": "run",
       "text": "timeout 22 npm run dev > /tmp/server_newdefault.log 2>&1 & sleep 20 echo \"---log---\" cat /tmp/server_newdefault.log"
+    },
+    {
+      "t": "2026-10-27T15:32:13Z",
+      "kind": "run",
+      "text": "timeout 25 npm run dev > /tmp/server_feedcheck.log 2>&1 & sleep 15 curl -s -m 5 http://localhost:8787/api/feed | python3 -m json.tool | head -40 sleep 12"
     }
   ],
   "schedule": {
