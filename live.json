@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-27T15:22:49Z",
+  "updated_at": "2026-10-27T15:23:16Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 112,
     "started_at": "2026-10-27T15:20:06Z",
-    "turns": 25
+    "turns": 28
   },
   "round": {
     "number": null,
@@ -1047,21 +1047,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T00:30:35Z",
-      "kind": "think",
-      "text": "This session's work (no code changes \u2014 docs + live verification only):"
-    },
-    {
-      "t": "2026-10-27T00:30:37Z",
-      "kind": "done",
-      "text": "Session 110 finished \u00b7 44 steps \u00b7 covered by Claude subscription ($1.58 API value)"
-    },
-    {
-      "t": "2026-10-27T08:56:16Z",
-      "kind": "start",
-      "text": "Session 111 started: Rug radar: live launch scoring"
-    },
-    {
       "t": "2026-10-27T08:56:20Z",
       "kind": "think",
       "text": "I'll start by reading the task and progress files to see where things stand."
@@ -1445,6 +1430,21 @@
       "t": "2026-10-27T15:22:29Z",
       "kind": "run",
       "text": "timeout 20 npm run dev > /tmp/server.log 2>&1 & sleep 5 curl -s -m 5 http://localhost:8787/ | head -c 300 echo echo \"---feed---\" curl -s -m 5 http://localhost:8787/api/feed | head\u2026"
+    },
+    {
+      "t": "2026-10-27T15:22:51Z",
+      "kind": "run",
+      "text": "grep -n \"rescore\\|console.log\\|console.error\" src/server.ts src/holderRescore.ts | head -40"
+    },
+    {
+      "t": "2026-10-27T15:22:59Z",
+      "kind": "read",
+      "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-27T15:23:06Z",
+      "kind": "read",
+      "text": "rug-radar/src/holderRescore.ts"
     }
   ],
   "schedule": {
