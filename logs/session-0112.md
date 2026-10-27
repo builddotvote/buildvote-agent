@@ -1,0 +1,83 @@
+# Session 112: Rug radar: live launch scoring
+
+- Started: 2026-10-27T15:20:06Z
+- Ended: 2026-10-27T15:34:55Z
+- Steps: 60
+- Model turns: 61
+- Billing: Claude subscription (API value $2.4819, not billed)
+- Outcome: step limit reached
+
+## Steps
+
+- `run` cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md 2>/dev/null; echo "---PROGRESS---"; cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md 2>/dev/null
+- `run` wc -l /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md /home/runner/work/buildvote-agent/buildvote-agent/TASK.md
+- `run` tail -n 150 /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md
+- `run` git log --oneline -15 && echo "---" && grep -n "^## Session" PROGRESS.md | tail -10
+- `run` cd rug-radar 2>/dev/null && ls logs/ | tail -15; echo "---"; git log --all --oneline | head -20; echo "---full log count---"; git log --oneline | wc -l
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent && ls && echo "---rug-radar---" && ls rug-radar && echo "---logs---" && ls rug-radar/logs 2>/dev/null | tail -20
+- `run` ls logs | tail -20 && echo "---count---" && ls logs | wc -l
+- `read` logs/session-0111.md
+- `read` TASK.md
+- `think` Let me establish a baseline — install, typecheck, build, test — before deciding what to work on.
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --silent 2>&1 | tail -10 && echo "=== typecheck ===" && npm run typecheck 2>&1 | tail -20 && echo "=== build ===" && npm run build 2>&1 | tail -20 && echo "=== test ===" && npm test 2>&1 | tail -15
+- `run` ls src/ && echo --- && grep -n "programIdleTimeoutMs\|startIdleWatchdog\|rescoreHolderConcentrationFromIndex\|RESCORE_DELAY_MS" src/*.ts | head -40
+- `run` grep -n "wss://\|SOLANA_RPC_URL\|SOLANA_WS_URL" src/config.ts
+- `read` rug-radar/src/config.ts
+- `run` timeout 25 node -e ' const WebSocket = require("ws"); ' 2>&1 | head -5; node -e "console.log(require('ws'))" 2>&1 | head -3
+- `run` cat > /tmp/wscheck.mjs << 'EOF' const url = "wss://solana-rpc.publicnode.com"; const PUMP_PROGRAM = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"; const ws = new WebSocket(url); let acked = false; let notifCount = 0; ws.addEventListener("open", () => {   ws.send(JSON.stringify({     jsonrpc: "2.0", id: 1, method: "logsSubscribe",     params: [{ mentions: [PUMP_PROGRAM] }, { commitment: "processed…
+- `run` grep -n "WebSocket\|import" src/wsDiscovery.ts | head -20 && node --version
+- `think` Node 20 needs the `--experimental-websocket` flag. Let me retry with it.
+- `run` node --experimental-websocket /tmp/wscheck.mjs
+- `run` rm -f /tmp/wscheck.mjs; grep -n "findFundingSource" src/*.ts | head -20
+- `run` grep -rn "findFundingSource" src/ && echo --- && ls src/signals
+- `read` rug-radar/src/data/bundledBuys.ts
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n "RESCORE_DELAY_MS" -A 15 PROGRESS.md | grep -B2 -A 15 "Session 73" | head -60
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && grep -n "^## \|^### " README.md
+- `read` rug-radar/README.md
+- `read` rug-radar/README.md
+- `run` timeout 20 npm run dev > /tmp/server.log 2>&1 & sleep 5 curl -s -m 5 http://localhost:8787/ | head -c 300 echo echo "---feed---" curl -s -m 5 http://localhost:8787/api/feed | head -c 800 echo sleep 10 echo "---log tail---" tail -n 40 /tmp/server.log
+- `run` grep -n "rescore\|console.log\|console.error" src/server.ts src/holderRescore.ts | head -40
+- `read` rug-radar/src/server.ts
+- `read` rug-radar/src/holderRescore.ts
+- `run` cat > /tmp/wscheck2.mjs << 'EOF' const PUMP_PROGRAM = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";  async function check(url, ms) {   return new Promise((resolve) => {     let notifCount = 0;     let acked = false;     let errored = null;     const ws = new WebSocket(url);     const timer = setTimeout(() => {       try { ws.close(); } catch {}       resolve({ url, acked, notifCount, errored });…
+- `think` Interesting — the official endpoint's websocket (`wss://api.mainnet-beta.solana.com`) is pushing thousands of notifications while publicnode's isn't right now. Let me dig into the discovery code to see if this is viable to wire in, since the HTTP resolve path can stay on a different RPC than the WS connection.
+- `read` rug-radar/src/wsDiscovery.ts
+- `run` grep -n "deriveWsUrl" -A 20 src/wsDiscovery.ts | head -40
+- `run` cat > /tmp/wscheck3.mjs << 'EOF' const PUMP_PROGRAM = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"; const url = "wss://api.mainnet-beta.solana.com"; let notifCount = 0; let closed = false; let closeInfo = null; const start = process.hrtime.bigint(); const ws = new WebSocket(url); ws.addEventListener("open", () => {   ws.send(JSON.stringify({     jsonrpc: "2.0", id: 1, method: "logsSubscribe",   …
+- `run` cat > /tmp/wscheck4.mjs << 'EOF' const PUMP_PROGRAM = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"; const url = "wss://api.mainnet-beta.solana.com";  function attempt(n) {   return new Promise((resolve) => {     let notifCount = 0;     let acked = false;     const start = process.hrtime.bigint();     const ws = new WebSocket(url);     ws.addEventListener("open", () => {       ws.send(JSON.string…
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n "api.mainnet-beta.*wss\|wss.*api.mainnet\|official.*websocket\|alternative.*websocket\|websocket.*alternative\|another.*provider\|different provider" PROGRESS.md | head -30
+- `run` grep -n "no alternative\|alternative.*endpoint\|alternative free\|identified" PROGRESS.md | head -20
+- `run` cat > /tmp/httpimpact.mjs << 'EOF' const HTTP = "https://api.mainnet-beta.solana.com";  async function getSlotCall() {   try {     const res = await fetch(HTTP, {       method: "POST",       headers: { "Content-Type": "application/json" },       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getSlot" }),     });     return res.status;   } catch (e) {     return "ERR:" + e.message;   } }  …
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && grep -n "reconnectBaseDelayMs\|reconnectDelay\|backoff\|currentDelay" src/wsDiscovery.ts
+- `read` rug-radar/src/wsDiscovery.ts
+- `run` grep -rn "deriveWsUrl" src/*.test.ts src/*.ts
+- `think` Strong finding so far: the official endpoint's websocket actually pushes data (thousands of messages) while the current default (`publicnode`) pushes zero, confirmed repeatedly. Let me verify this works end-to-end through the actual server code with the existing `SOLANA_WS_URL` override, before deciding how to apply it.
+- `run` SOLANA_WS_URL=wss://api.mainnet-beta.solana.com timeout 25 npm run dev > /tmp/server_altws.log 2>&1 & sleep 23 echo "---log---" cat /tmp/server_altws.log | grep -v "429" | head -60 echo "---429 count---" grep -c "429" /tmp/server_altws.log echo "---feed check (mid-run)---"
+- `run` grep "429" /tmp/server_altws.log; echo "---full head for context---"; head -30 /tmp/server_altws.log
+- `think` This is a strong, reproducible finding that materially fixes the live-feed's core purpose. Let me check the exact lines to edit in `server.ts` and `config.ts`.
+- `read` rug-radar/src/server.ts
+- `edit` rug-radar/src/server.ts
+- `think` Now remove the unused `deriveWsUrl` import from server.ts:
+- `read` rug-radar/src/server.ts
+- `edit` rug-radar/src/server.ts
+- `think` Now update the stale comment in `config.ts` that describes the old derivation behavior:
+- `edit` rug-radar/src/config.ts
+- `think` Now let's check the `config.test.ts` for any assumptions about `wsUrl` defaults that might need updating, then run the full test/typecheck/build suite.
+- `run` grep -n "wsUrl" src/config.test.ts
+- `think` Good — `config.wsUrl` itself is still `undefined` by default (the new `DEFAULT_WS_URL` constant lives in `server.ts`, not `config.ts`), so that test still passes unchanged. Let's verify with the full suite.
+- `run` npm run typecheck 2>&1 | tail -20 && echo "=== build ===" && npm run build 2>&1 | tail -20 && echo "=== test ===" && npm test 2>&1 | tail -15
+- `think` All 246/246 pass, clean typecheck/build. Now let's do one final end-to-end confirmation with the actual default (no env override) to confirm the new default behaves as expected.
+- `run` timeout 22 npm run dev > /tmp/server_newdefault.log 2>&1 & sleep 20 echo "---log---" cat /tmp/server_newdefault.log
+- `run` timeout 25 npm run dev > /tmp/server_feedcheck.log 2>&1 & sleep 15 curl -s -m 5 http://localhost:8787/api/feed | python3 -m json.tool | head -40 sleep 12
+- `run` cat /tmp/server_feedcheck.log
+- `run` grep -n "add(\|drop\|zero-signal\|signals.length" src/feed.ts | head -20
+- `run` timeout 60 npm run dev > /tmp/server_feedcheck2.log 2>&1 & sleep 55 echo "---feed---" curl -s -m 5 http://localhost:8787/api/feed | python3 -c "import json,sys; d=json.load(sys.stdin); print('launches:', len(d['launches'])); [print(l['mint'], [s['name'] for s in l['signals']]) for l in d['launches'][:5]]" sleep 6
+- `run` rm -f /tmp/wscheck*.mjs /tmp/httpimpact.mjs /tmp/server*.log; ls /tmp/*.mjs /tmp/*.log 2>/dev/null; echo "(none left)"
+- `think` Now let's update the README's "Known limitations" section to reflect the fix, and the "Live feed" section if it references the WS default derivation.
+- `run` grep -n "deriveWsUrl\|wsUrl\|SOLANA_WS_URL\|websocket host" README.md
+- `edit` rug-radar/README.md
+- `read` rug-radar/README.md
+- `run` grep -n "^## Setup" -A 20 README.md
+- `edit` rug-radar/README.md
+- `think` Now let's run the full test suite once more to confirm nothing broke, then update PROGRESS.md.
+- `run` npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10 && cd .. && git status --short

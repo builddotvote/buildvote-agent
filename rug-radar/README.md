@@ -758,33 +758,51 @@ doesn't fix.
   program and a pump.fun trade only in `innerInstructions`; confirmed it
   fails pre-fix, passes post-fix.
 
-- **The public websocket endpoint sometimes acks a `logsSubscribe` and then
-  never pushes a single notification — a standing provider behavior, not a
-  one-off (first found session 60, reproduced again session 109).** Session
-  60's live repro: minimal standalone scripts subscribing with `mentions`
-  on both the pump.fun program and the SPL Token program each got a normal
-  subscribe ack, then zero `logsNotification` messages, while the chain was
-  independently confirmed live via plain HTTP calls in the same window.
-  Fixed then with `wsDiscovery.ts`'s idle watchdog (`startIdleWatchdog`,
-  `programIdleTimeoutMs`, 30s): no program-level activity within the
-  timeout forces a reconnect. Session 109 hit the exact same symptom again
-  while trying to live-measure `BalanceIndex`'s rescore recovery rate after
-  the session 107 CPI decode fix: two more standalone `logsSubscribe`
-  repros got an ack but zero notifications in 20s and 60s respectively, and
-  a real 150s run of the live `LaunchWatcher` discovered zero launches and
-  zero trades, with the idle watchdog correctly firing 4 forced reconnects
-  right at the 30s threshold throughout — each reconnect followed the same
-  ack-then-silence pattern rather than recovering. A plain HTTP
+- **`solana-rpc.publicnode.com`'s websocket acks a `logsSubscribe` and then
+  never pushes a single notification — a standing behavior of that specific
+  provider (found session 60, reproduced again session 109), fixed session
+  109 by switching the discovery websocket's default host away from it.**
+  Session 60's live repro: minimal standalone scripts subscribing with
+  `mentions` on both the pump.fun program and the SPL Token program each got
+  a normal subscribe ack, then zero `logsNotification` messages, while the
+  chain was independently confirmed live via plain HTTP calls in the same
+  window. Mitigated then with `wsDiscovery.ts`'s idle watchdog
+  (`startIdleWatchdog`, `programIdleTimeoutMs`, 30s): no program-level
+  activity within the timeout forces a reconnect — but reconnecting to the
+  same broken provider just repeats the same silence, which is exactly what
+  session 109 found: two more standalone `logsSubscribe` repros against
+  publicnode got an ack but zero notifications in 20s and 60s respectively,
+  and a real 150s run of the live `LaunchWatcher` discovered zero launches
+  and zero trades, with the watchdog correctly firing 4 forced reconnects
+  that each hit the same ack-then-silence pattern. A plain HTTP
   `getSignaturesForAddress` call against the same program in the same
-  window returned fresh signatures (`blockTime` within the current second),
-  confirming the provider itself was live and the gap is push-specific. The
-  watchdog's forced reconnect is the only mitigation in place; it limits
-  how long a dead subscription goes unnoticed but can't make a provider
-  push data it isn't pushing, and no alternative free, keyless push-based
-  endpoint has been identified. Treat this as an expected, recurring
-  failure mode of the chosen free public endpoint rather than something a
-  future session should expect to root-cause further without a different
-  provider.
+  window returned fresh signatures, confirming the chain itself was live and
+  the gap is push-specific to this one provider. Session 109 then tried the
+  official endpoint's websocket (`wss://api.mainnet-beta.solana.com`) as an
+  A/B comparison in the same moment: publicnode delivered 0 notifications in
+  15s, the official endpoint delivered 7,618 — repeated across a sustained
+  50s run and 4 independent reconnect attempts, every single one acked and
+  pushed thousands of real notifications before closing abnormally (code
+  1006) after roughly 7-24s each time. That instability turned out not to
+  matter: `LaunchWatcher.connect()`'s `ws.onopen` already resets the
+  reconnect backoff to its base delay on every successful open (see
+  `wsDiscovery.ts`), so a connection that works for ~15s then dies just
+  becomes frequent ~1s-gap reconnects, each of which resumes delivering real
+  data, rather than a growing backoff that would make the gaps worse over
+  time. A concurrent-load check (pacing plain `getSlot` HTTP calls against
+  the official endpoint with and without a reconnecting websocket open in
+  parallel) found no increase in 429s, so this doesn't appear to add load to
+  the already-strained scoring RPC that shares this same default host.
+  Confirmed end to end through the real server (not just a raw socket test):
+  with the new default, a 20s run reached real discovered launches hitting
+  `ScoringGate`, and a 55s run produced a scored launch in `/api/feed`;
+  the old default produced zero discovery-related log lines in equivalent
+  windows. `server.ts` now defaults the discovery websocket to the official
+  endpoint instead of deriving one from `discoveryRpcUrl`; `SOLANA_WS_URL`
+  still overrides this for anyone who wants a different host. The one risk
+  not ruled out by this session's testing: whether *sustained* (hours, not
+  seconds) frequent reconnecting eventually triggers stricter throttling on
+  that shared host — worth watching, not yet observed.
 
 - **The speculative "what if pump.fun's quote mint isn't SOL" risk (raised
   sessions 86/102) is now resolved, not just unobserved.** Derived the
@@ -828,7 +846,10 @@ Edit `.env` if you want different public RPC endpoints than the defaults —
 `SOLANA_RPC_URL` (scoring, default `https://api.mainnet-beta.solana.com`) and
 `SOLANA_DISCOVERY_RPC_URL` (discovery, default
 `https://solana-rpc.publicnode.com`), see "Live feed" above for why they
-differ. No API keys are needed or used for either.
+differ. No API keys are needed or used for either. `SOLANA_WS_URL` overrides
+the discovery websocket host independently (default
+`wss://api.mainnet-beta.solana.com`, not derived from `SOLANA_DISCOVERY_RPC_URL`
+— see "Known limitations" for why).
 
 ## Run
 

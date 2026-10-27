@@ -17,9 +17,12 @@ export interface Config {
   // overridden independently if these numbers change or a provider's limits
   // shift.
   discoveryRpcUrl: string;
-  // Optional override for providers whose websocket host differs from their
-  // discovery HTTP host. When unset, server.ts derives it from
-  // discoveryRpcUrl (see wsDiscovery.ts's deriveWsUrl).
+  // Optional override for the discovery websocket host. When unset,
+  // server.ts defaults to the official endpoint (api.mainnet-beta.solana.com)
+  // rather than deriving one from discoveryRpcUrl — live-tested (session
+  // 109): discoveryRpcUrl's default host acks every logsSubscribe but never
+  // pushes a notification, while the official endpoint does. See server.ts
+  // for the full finding and tradeoffs.
   wsUrl: string | undefined;
   port: number;
 }

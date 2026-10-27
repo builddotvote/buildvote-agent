@@ -6,7 +6,7 @@ import { loadConfig } from "./config.js";
 import { SolanaRpcClient, RequestPacer } from "./rpc.js";
 import { LiveFeed } from "./feed.js";
 import { pollOnce, type PollState } from "./poller.js";
-import { LaunchWatcher, deriveWsUrl } from "./wsDiscovery.js";
+import { LaunchWatcher } from "./wsDiscovery.js";
 import { DeployerIndex } from "./deployerIndex.js";
 import { ScoringGate } from "./scoringGate.js";
 import { ScoringInFlight } from "./scoringInFlight.js";
@@ -112,7 +112,26 @@ const pollScoringRpc = new SolanaRpcClient(config.rpcUrl, fetch, {
 // Primary discovery is the websocket watcher (near-instant, sees every
 // create as it happens). The poller below stays on as a backstop for
 // launches created while the socket is down (startup, or a reconnect gap).
-const wsUrl = config.wsUrl ?? deriveWsUrl(config.discoveryRpcUrl);
+//
+// Default WS host is the official endpoint, not discoveryRpcUrl's derived
+// host (solana-rpc.publicnode.com) — live-tested (session 109): publicnode's
+// websocket acks every logsSubscribe but pushed zero logsNotification
+// messages across repeated checks (consistent with sessions 60/106/109's
+// prior findings), while wss://api.mainnet-beta.solana.com pushed thousands
+// per connection in the same window. The tradeoff: that connection closes
+// abnormally (code 1006) every ~7-24s under the program-wide subscription's
+// full volume, but LaunchWatcher already resets its reconnect backoff to the
+// base delay on every successful open (see connect()'s ws.onopen), so this
+// just becomes frequent ~1s-gap reconnects rather than a growing backoff —
+// confirmed live end to end (real launches reaching ScoringGate, not just a
+// raw socket test) over a 20s run. A concurrent HTTP-vs-websocket check
+// against this same host found no increase in 429s on plain getSlot calls,
+// so this doesn't appear to add load to the already-strained scoring RPC
+// (config.rpcUrl, same default host) within the window tested. SOLANA_WS_URL
+// still overrides this for anyone who wants a different host, e.g. deriving
+// from a custom discoveryRpcUrl via wsDiscovery.ts's deriveWsUrl.
+const DEFAULT_WS_URL = "wss://api.mainnet-beta.solana.com";
+const wsUrl = config.wsUrl ?? DEFAULT_WS_URL;
 const watcher = new LaunchWatcher(wsUrl, watcherDiscoveryRpc, {
   // handleDiscoveredLaunch (watcherOnLaunch.ts) is the exact same
   // dedup/gate/score/rescore wiring pollOnce uses for the backstop poller —
