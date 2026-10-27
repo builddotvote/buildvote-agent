@@ -6697,3 +6697,69 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
   endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
 - All five TASK.md steps remain functionally complete.
+
+## Session 107 — 2026-10-27
+
+### Done
+- Fresh checkout; `npm install`, then `npm run typecheck`/`npm run build`
+  clean, `npm test` 246/246 — matches session 106's count, no drift.
+- Picked up session 106's two "Next" items.
+- **Documented the websocket ack-but-never-push symptom in README's
+  "Known limitations"** (previously only in `PROGRESS.md`, never in the
+  README itself). While writing it up, traced the citation: the "session
+  60" session 106 referenced for the original finding is log-file session
+  60 (`logs/session-0060.md`), not `PROGRESS.md`'s own "Session 60"
+  header — the two numbering schemes have drifted apart over the project's
+  history (interrupted sessions, like log session 108, consumed a log
+  number without ever writing a `PROGRESS.md` entry). Confirmed from the
+  log: that session's live repro subscribed with `mentions` on *both* the
+  pump.fun program and the SPL Token program, got a normal ack each time,
+  then zero `logsNotification` messages — and `startIdleWatchdog`
+  (`programIdleTimeoutMs`, 30s forced reconnect) was built there as the
+  mitigation. Session 109 (log numbering, = this file's "Session 106")
+  reproduced the identical ack-then-silence pattern again, so the README
+  now describes it as a standing, recurring provider behavior rather than
+  a one-off — same framing session 106 itself suggested. README citations
+  elsewhere in this project already use log-file numbering (e.g. "fixed
+  session 107" for the CPI decode fix matches `logs/session-0107.md`
+  exactly), so this entry follows the same convention rather than
+  introducing a third numbering scheme.
+- **Re-checked the thin backstop-poller signal** (session 106's "0/50
+  successful signatures in one sample" flag). Sampled
+  `getSignaturesForAddress` against the live pump.fun program 6 times (50
+  signatures each, ~20s apart, ~100s total span, `solana-rpc.publicnode.com`,
+  no keys): success counts (`err: null`) were 12, 10, 9, 5, 18, 18 out of
+  50 per sample — 72/300 (~24%) overall, nowhere near the single sample's
+  0%. **Conclusion: session 106's 0/50 sample was a short, unlucky
+  fluctuation, not a persistent failure-crowding pattern or a bug in
+  `findNewLaunches`.** No code change — `findNewLaunches` already only
+  cares about `err: null` signatures when resolving a launch (confirmed by
+  re-reading `discovery.ts`), so a transient low-success window just means
+  fewer candidates per poll tick, not a correctness problem.
+- No source files changed other than `README.md`; no code bug found or
+  fixed this session.
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 246/246 passing, offline — unchanged, no source files
+  touched this session.
+- `git status` before this edit: `README.md` and this `PROGRESS.md` update
+  only; no stray temp files (the sampling above used inline `curl`/`node -e`
+  commands, nothing written to `/tmp`).
+
+### Next
+- The rescore-recovery-rate measurement (blocked on the websocket actually
+  delivering notifications, sessions 106/109) is still open — now that the
+  symptom is documented as a standing limitation rather than assumed
+  transient, a future session shouldn't spend much time re-confirming the
+  symptom itself; if a session happens to catch a live window where the
+  websocket is actually pushing, that's the time to finally run the
+  rescore-recovery probe (track every discovered mint, call
+  `rescoreHolderConcentrationFromIndex` after a delay, count non-null vs
+  null).
+- The non-SOL-quote-mint question from session 102 is still open and
+  untouched this session.
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
+- All five TASK.md steps remain functionally complete.

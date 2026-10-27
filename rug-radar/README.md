@@ -758,6 +758,34 @@ doesn't fix.
   program and a pump.fun trade only in `innerInstructions`; confirmed it
   fails pre-fix, passes post-fix.
 
+- **The public websocket endpoint sometimes acks a `logsSubscribe` and then
+  never pushes a single notification — a standing provider behavior, not a
+  one-off (first found session 60, reproduced again session 109).** Session
+  60's live repro: minimal standalone scripts subscribing with `mentions`
+  on both the pump.fun program and the SPL Token program each got a normal
+  subscribe ack, then zero `logsNotification` messages, while the chain was
+  independently confirmed live via plain HTTP calls in the same window.
+  Fixed then with `wsDiscovery.ts`'s idle watchdog (`startIdleWatchdog`,
+  `programIdleTimeoutMs`, 30s): no program-level activity within the
+  timeout forces a reconnect. Session 109 hit the exact same symptom again
+  while trying to live-measure `BalanceIndex`'s rescore recovery rate after
+  the session 107 CPI decode fix: two more standalone `logsSubscribe`
+  repros got an ack but zero notifications in 20s and 60s respectively, and
+  a real 150s run of the live `LaunchWatcher` discovered zero launches and
+  zero trades, with the idle watchdog correctly firing 4 forced reconnects
+  right at the 30s threshold throughout — each reconnect followed the same
+  ack-then-silence pattern rather than recovering. A plain HTTP
+  `getSignaturesForAddress` call against the same program in the same
+  window returned fresh signatures (`blockTime` within the current second),
+  confirming the provider itself was live and the gap is push-specific. The
+  watchdog's forced reconnect is the only mitigation in place; it limits
+  how long a dead subscription goes unnoticed but can't make a provider
+  push data it isn't pushing, and no alternative free, keyless push-based
+  endpoint has been identified. Treat this as an expected, recurring
+  failure mode of the chosen free public endpoint rather than something a
+  future session should expect to root-cause further without a different
+  provider.
+
 See `PROGRESS.md` for the session-by-session history behind these
 findings (live measurements, rejected alternatives, and fixes).
 
