@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-27T22:13:30Z",
+  "updated_at": "2026-10-27T22:13:57Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 113,
     "started_at": "2026-10-27T22:10:48Z",
-    "turns": 21
+    "turns": 28
   },
   "round": {
     "number": null,
@@ -1056,56 +1056,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T15:21:31Z",
-      "kind": "run",
-      "text": "node --experimental-websocket /tmp/wscheck.mjs"
-    },
-    {
-      "t": "2026-10-27T15:21:59Z",
-      "kind": "run",
-      "text": "rm -f /tmp/wscheck.mjs; grep -n \"findFundingSource\" src/*.ts | head -20"
-    },
-    {
-      "t": "2026-10-27T15:22:01Z",
-      "kind": "run",
-      "text": "grep -rn \"findFundingSource\" src/ && echo --- && ls src/signals"
-    },
-    {
-      "t": "2026-10-27T15:22:04Z",
-      "kind": "read",
-      "text": "rug-radar/src/data/bundledBuys.ts"
-    },
-    {
-      "t": "2026-10-27T15:22:10Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"RESCORE_DELAY_MS\" -A 15 PROGRESS.md | grep -B2 -A 15 \"Session 73\" | head -60"
-    },
-    {
-      "t": "2026-10-27T15:22:16Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && grep -n \"^## \\|^### \" README.md"
-    },
-    {
-      "t": "2026-10-27T15:22:18Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-27T15:22:24Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-27T15:22:29Z",
-      "kind": "run",
-      "text": "timeout 20 npm run dev > /tmp/server.log 2>&1 & sleep 5 curl -s -m 5 http://localhost:8787/ | head -c 300 echo echo \"---feed---\" curl -s -m 5 http://localhost:8787/api/feed | head\u2026"
-    },
-    {
-      "t": "2026-10-27T15:22:51Z",
-      "kind": "run",
-      "text": "grep -n \"rescore\\|console.log\\|console.error\" src/server.ts src/holderRescore.ts | head -40"
-    },
-    {
       "t": "2026-10-27T15:22:59Z",
       "kind": "read",
       "text": "rug-radar/src/server.ts"
@@ -1454,6 +1404,56 @@
       "t": "2026-10-27T22:12:55Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && sed -n '750,810p' README.md"
+    },
+    {
+      "t": "2026-10-27T22:13:31Z",
+      "kind": "run",
+      "text": "grep -n \"\" README.md | sed -n '760,800p'"
+    },
+    {
+      "t": "2026-10-27T22:13:38Z",
+      "kind": "run",
+      "text": "grep -n \"session 109\\|Session 109\\|session 112\\|Session 112\" README.md"
+    },
+    {
+      "t": "2026-10-27T22:13:41Z",
+      "kind": "think",
+      "text": "Found a real citation bug session 112 introduced: it mislabeled its own fix (and its own live A/B test) as \"session 109\" work in the README, when session 109 (the earlier, inconcl\u2026"
+    },
+    {
+      "t": "2026-10-27T22:13:43Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-27T22:13:45Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-27T22:13:46Z",
+      "kind": "think",
+      "text": "Now I can edit."
+    },
+    {
+      "t": "2026-10-27T22:13:48Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-27T22:13:51Z",
+      "kind": "edit",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-27T22:13:55Z",
+      "kind": "read",
+      "text": "rug-radar/README.md"
+    },
+    {
+      "t": "2026-10-27T22:13:57Z",
+      "kind": "think",
+      "text": "Good, no other stray citations there. Now let me verify the build/tests are still fine and write the PROGRESS.md entry for session 109 (= log session 112's unfinished write-up), t\u2026"
     }
   ],
   "schedule": {
