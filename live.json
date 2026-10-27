@@ -1,11 +1,10 @@
 {
-  "updated_at": "2026-10-27T00:30:18Z",
+  "updated_at": "2026-10-27T00:30:37Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 110,
-    "started_at": "2026-10-27T00:24:33Z",
-    "turns": 42
+    "turns": 44
   },
   "round": {
     "number": null,
@@ -1024,40 +1023,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 1.5819
+    },
+    {
+      "date": "2026-10-27T00:24:33Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 45,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0110.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 1.584
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-26T20:32:28Z",
-      "kind": "tool",
-      "text": "ScheduleWakeup"
-    },
-    {
-      "t": "2026-10-26T20:32:31Z",
-      "kind": "run",
-      "text": "cat /tmp/claude-1001/-home-runner-work-buildvote-agent-buildvote-agent/3f00ec3a-cb44-4398-b5f3-e897a987c2fb/tasks/b75sukpec.output 2>&1 | tail -200"
-    },
-    {
-      "t": "2026-10-26T20:32:39Z",
-      "kind": "think",
-      "text": "I'll stop checking manually and wait for the scheduled wakeup or task notification."
-    },
-    {
-      "t": "2026-10-26T20:32:42Z",
-      "kind": "tool",
-      "text": "ScheduleWakeup"
-    },
-    {
-      "t": "2026-10-26T20:32:44Z",
-      "kind": "think",
-      "text": "I'll wait for the probe to finish before continuing."
-    },
-    {
-      "t": "2026-10-26T20:32:45Z",
-      "kind": "run",
-      "text": "echo waiting"
-    },
     {
       "t": "2026-10-26T20:32:47Z",
       "kind": "think",
@@ -1427,6 +1405,36 @@
       "t": "2026-10-27T00:30:18Z",
       "kind": "run",
       "text": "cat >> /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md << 'PROGRESS_EOF'  ## Session 107 \u2014 2026-10-27  ### Done - Fresh checkout; `npm install`, then `npm run typech\u2026"
+    },
+    {
+      "t": "2026-10-27T00:30:20Z",
+      "kind": "think",
+      "text": "Final verification pass before finishing."
+    },
+    {
+      "t": "2026-10-27T00:30:21Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10 && cd .. && echo \"\u2026"
+    },
+    {
+      "t": "2026-10-27T00:30:29Z",
+      "kind": "think",
+      "text": "Everything is clean: 246/246 tests passing, typecheck/build clean, no stray temp files, only `README.md` and `PROGRESS.md` modified."
+    },
+    {
+      "t": "2026-10-27T00:30:29Z",
+      "kind": "tool",
+      "text": "TaskUpdate"
+    },
+    {
+      "t": "2026-10-27T00:30:35Z",
+      "kind": "think",
+      "text": "This session's work (no code changes \u2014 docs + live verification only):"
+    },
+    {
+      "t": "2026-10-27T00:30:37Z",
+      "kind": "done",
+      "text": "Session 110 finished \u00b7 44 steps \u00b7 covered by Claude subscription ($1.58 API value)"
     }
   ],
   "schedule": {
