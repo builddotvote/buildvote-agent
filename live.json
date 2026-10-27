@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-27T15:21:28Z",
+  "updated_at": "2026-10-27T15:21:55Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 112,
     "started_at": "2026-10-27T15:20:06Z",
-    "turns": 15
+    "turns": 17
   },
   "round": {
     "number": null,
@@ -1047,21 +1047,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T00:29:50Z",
-      "kind": "think",
-      "text": "6 samples (300 signatures total, over ~100s) show 72/300 \u2248 24% success rate \u2014 nothing like the single 0/50 sample from session 106. That confirms it was a short unlucky blip, not \u2026"
-    },
-    {
-      "t": "2026-10-27T00:29:51Z",
-      "kind": "run",
-      "text": "git status --short && npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10"
-    },
-    {
-      "t": "2026-10-27T00:29:59Z",
-      "kind": "think",
-      "text": "Clean \u2014 only the README edit, tests/typecheck/build all pass. Now let's update PROGRESS.md."
-    },
-    {
       "t": "2026-10-27T00:29:59Z",
       "kind": "tool",
       "text": "TaskUpdate"
@@ -1445,6 +1430,21 @@
       "t": "2026-10-27T15:21:25Z",
       "kind": "run",
       "text": "cat > /tmp/wscheck.mjs << 'EOF' const url = \"wss://solana-rpc.publicnode.com\"; const PUMP_PROGRAM = \"6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P\"; const ws = new WebSocket(url); l\u2026"
+    },
+    {
+      "t": "2026-10-27T15:21:30Z",
+      "kind": "run",
+      "text": "grep -n \"WebSocket\\|import\" src/wsDiscovery.ts | head -20 && node --version"
+    },
+    {
+      "t": "2026-10-27T15:21:31Z",
+      "kind": "think",
+      "text": "Node 20 needs the `--experimental-websocket` flag. Let me retry with it."
+    },
+    {
+      "t": "2026-10-27T15:21:31Z",
+      "kind": "run",
+      "text": "node --experimental-websocket /tmp/wscheck.mjs"
     }
   ],
   "schedule": {
