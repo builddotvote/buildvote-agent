@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-27T15:21:00Z",
+  "updated_at": "2026-10-27T15:21:28Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 112,
     "started_at": "2026-10-27T15:20:06Z",
-    "turns": 10
+    "turns": 15
   },
   "round": {
     "number": null,
@@ -1047,31 +1047,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T00:27:22Z",
-      "kind": "tool",
-      "text": "TaskUpdate"
-    },
-    {
-      "t": "2026-10-27T00:27:27Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && grep -n \"export async function findNewLaunches\\|err: null\\|export function\\|interface\" src/discovery.ts | head -30"
-    },
-    {
-      "t": "2026-10-27T00:27:32Z",
-      "kind": "run",
-      "text": "grep -n \"PUMP_FUN_PROGRAM_ID\" src/pumpfun.ts | head -3 && grep -n \"discoveryRpcUrl\\|solana-rpc.publicnode\" src/config.ts"
-    },
-    {
-      "t": "2026-10-27T00:27:35Z",
-      "kind": "think",
-      "text": "Now let me run a longer, bounded, synchronous sample of success/failure rates against the live public RPC to re-check session 106's thin one-sample signal."
-    },
-    {
-      "t": "2026-10-27T00:27:39Z",
-      "kind": "run",
-      "text": "PUMP_FUN=\"6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P\" RPC=\"https://solana-rpc.publicnode.com\" total_ok=0 total_err=0 for i in 1 2 3 4 5 6; do   resp=$(curl -s -m 15 -X POST \"$RPC\u2026"
-    },
-    {
       "t": "2026-10-27T00:29:50Z",
       "kind": "think",
       "text": "6 samples (300 signatures total, over ~100s) show 72/300 \u2248 24% success rate \u2014 nothing like the single 0/50 sample from session 106. That confirms it was a short unlucky blip, not \u2026"
@@ -1445,6 +1420,31 @@
       "t": "2026-10-27T15:20:53Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --silent 2>&1 | tail -10 && echo \"=== typecheck ===\" && npm run typecheck 2>&1 | tail -20 && echo \"==\u2026"
+    },
+    {
+      "t": "2026-10-27T15:21:06Z",
+      "kind": "run",
+      "text": "ls src/ && echo --- && grep -n \"programIdleTimeoutMs\\|startIdleWatchdog\\|rescoreHolderConcentrationFromIndex\\|RESCORE_DELAY_MS\" src/*.ts | head -40"
+    },
+    {
+      "t": "2026-10-27T15:21:10Z",
+      "kind": "run",
+      "text": "grep -n \"wss://\\|SOLANA_RPC_URL\\|SOLANA_WS_URL\" src/config.ts"
+    },
+    {
+      "t": "2026-10-27T15:21:13Z",
+      "kind": "read",
+      "text": "rug-radar/src/config.ts"
+    },
+    {
+      "t": "2026-10-27T15:21:17Z",
+      "kind": "run",
+      "text": "timeout 25 node -e ' const WebSocket = require(\"ws\"); ' 2>&1 | head -5; node -e \"console.log(require('ws'))\" 2>&1 | head -3"
+    },
+    {
+      "t": "2026-10-27T15:21:25Z",
+      "kind": "run",
+      "text": "cat > /tmp/wscheck.mjs << 'EOF' const url = \"wss://solana-rpc.publicnode.com\"; const PUMP_PROGRAM = \"6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P\"; const ws = new WebSocket(url); l\u2026"
     }
   ],
   "schedule": {
