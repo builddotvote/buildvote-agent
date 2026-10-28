@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-28T20:15:00Z",
+  "updated_at": "2026-10-28T20:15:26Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 116,
     "started_at": "2026-10-28T20:15:00Z",
-    "turns": 0
+    "turns": 5
   },
   "round": {
     "number": null,
@@ -1083,31 +1083,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-28T05:40:52Z",
-      "kind": "think",
-      "text": "I'll pause here and wait for the background task notification before continuing."
-    },
-    {
-      "t": "2026-10-28T05:40:59Z",
-      "kind": "done",
-      "text": "Session 114 finished \u00b7 39 steps \u00b7 covered by Claude subscription ($1.24 API value)"
-    },
-    {
-      "t": "2026-10-28T12:49:00Z",
-      "kind": "start",
-      "text": "Session 115 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-28T12:49:05Z",
-      "kind": "run",
-      "text": "cat TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat PROGRESS.md 2>/dev/null"
-    },
-    {
-      "t": "2026-10-28T12:49:08Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
       "t": "2026-10-28T12:49:10Z",
       "kind": "run",
       "text": "wc -l PROGRESS.md; echo \"---\"; grep -n \"^## Session\" PROGRESS.md | tail -30"
@@ -1481,6 +1456,31 @@
       "t": "2026-10-28T20:15:00Z",
       "kind": "start",
       "text": "Session 116 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-28T20:15:05Z",
+      "kind": "run",
+      "text": "cat /home/runner/work/buildvote-agent/buildvote-agent/TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-28T20:15:09Z",
+      "kind": "run",
+      "text": "wc -l TASK.md PROGRESS.md && echo \"---\" && tail -100 PROGRESS.md"
+    },
+    {
+      "t": "2026-10-28T20:15:14Z",
+      "kind": "run",
+      "text": "grep -n \"^## Session\" PROGRESS.md | tail -20 && echo \"---LOG---\" && git log --oneline -20 && echo \"---LOGS DIR---\" && ls rug-radar/logs 2>/dev/null | tail -20"
+    },
+    {
+      "t": "2026-10-28T20:15:22Z",
+      "kind": "run",
+      "text": "cd rug-radar && ls && echo \"---logs---\" && find . -iname \"*session*\" -path \"*logs*\" | sort | tail -20 && echo \"---git show last commit stat---\" && cd .. && git show --stat HEAD | \u2026"
+    },
+    {
+      "t": "2026-10-28T20:15:26Z",
+      "kind": "run",
+      "text": "ls -la && echo \"---logs top---\" && ls logs | tail -30 && echo \"count:\" && ls logs | wc -l"
     }
   ],
   "schedule": {
