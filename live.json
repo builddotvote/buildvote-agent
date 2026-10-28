@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-28T12:56:52Z",
+  "updated_at": "2026-10-28T12:57:19Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 115,
     "started_at": "2026-10-28T12:49:00Z",
-    "turns": 35
+    "turns": 43
   },
   "round": {
     "number": null,
@@ -1074,66 +1074,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-28T05:38:38Z",
-      "kind": "run",
-      "text": "wc -l /home/runner/work/buildvote-agent/buildvote-agent/logs/session-011{0,1,2,3}.md"
-    },
-    {
-      "t": "2026-10-28T05:38:40Z",
-      "kind": "read",
-      "text": "logs/session-0110.md"
-    },
-    {
-      "t": "2026-10-28T05:38:40Z",
-      "kind": "read",
-      "text": "logs/session-0111.md"
-    },
-    {
-      "t": "2026-10-28T05:38:41Z",
-      "kind": "read",
-      "text": "logs/session-0113.md"
-    },
-    {
-      "t": "2026-10-28T05:38:44Z",
-      "kind": "run",
-      "text": "ls -la /tmp/*.log /tmp/*.jsonl 2>/dev/null; echo \"---\"; ps aux | grep -i node; echo \"---git status---\"; git status --short"
-    },
-    {
-      "t": "2026-10-28T05:38:50Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && ls && echo \"---install---\" && npm install 2>&1 | tail -15"
-    },
-    {
-      "t": "2026-10-28T05:38:53Z",
-      "kind": "run",
-      "text": "echo \"=== typecheck ===\" && npm run typecheck 2>&1 | tail -20 && echo \"=== build ===\" && npm run build 2>&1 | tail -20 && echo \"=== test ===\" && npm test 2>&1 | tail -15"
-    },
-    {
-      "t": "2026-10-28T05:39:05Z",
-      "kind": "think",
-      "text": "Baseline is clean: 246/246 tests passing, typecheck/build clean. Now let me pick up where session 113 left off \u2014 the rescore-recovery-rate probe that was finally unblocked by sess\u2026"
-    },
-    {
-      "t": "2026-10-28T05:39:06Z",
-      "kind": "run",
-      "text": "grep -n \"rescoreHolderConcentrationFromIndex\\|RESCORE_DELAY_MS\\|class BalanceIndex\" src/*.ts | head -30"
-    },
-    {
-      "t": "2026-10-28T05:39:08Z",
-      "kind": "tool",
-      "text": "ToolSearch"
-    },
-    {
-      "t": "2026-10-28T05:39:12Z",
-      "kind": "tool",
-      "text": "TaskCreate"
-    },
-    {
-      "t": "2026-10-28T05:39:12Z",
-      "kind": "tool",
-      "text": "TaskCreate"
-    },
-    {
       "t": "2026-10-28T05:39:16Z",
       "kind": "read",
       "text": "rug-radar/src/holderRescore.ts"
@@ -1472,6 +1412,66 @@
       "t": "2026-10-28T12:56:49Z",
       "kind": "edit",
       "text": "/tmp/rescoreRecoveryProbe.mts"
+    },
+    {
+      "t": "2026-10-28T12:56:53Z",
+      "kind": "run",
+      "text": "grep -n \"stop(\" src/wsDiscovery.ts"
+    },
+    {
+      "t": "2026-10-28T12:56:55Z",
+      "kind": "think",
+      "text": "Good, `stop()` exists. Now let's run the probe with a generous timeout (it needs ~280s to complete)."
+    },
+    {
+      "t": "2026-10-28T12:56:56Z",
+      "kind": "run",
+      "text": "npx tsx /tmp/rescoreRecoveryProbe.mts > /tmp/rescoreRecoveryProbe.log 2>&1 & echo \"probe pid: $!\" disown"
+    },
+    {
+      "t": "2026-10-28T12:57:03Z",
+      "kind": "run",
+      "text": "pgrep -fa \"npm run dev\" ; pgrep -fa \"node.*server\" ; pgrep -fa \"tsx.*src/server\" 2>/dev/null; echo \"---\"; ps aux | grep -E \"node|tsx\" | grep -v grep"
+    },
+    {
+      "t": "2026-10-28T12:57:05Z",
+      "kind": "think",
+      "text": "I'll let the dev server keep running (realistic shared-RPC conditions) while the probe runs. Now I'll wait for the probe to finish \u2014 it needs about 260s plus settle time."
+    },
+    {
+      "t": "2026-10-28T12:57:06Z",
+      "kind": "run",
+      "text": "sleep 270; tail -5 /tmp/rescoreRecoveryProbe.log; echo \"---still running?---\"; pgrep -f rescoreRecoveryProbe.mts"
+    },
+    {
+      "t": "2026-10-28T12:57:09Z",
+      "kind": "run",
+      "text": "until ! pgrep -f rescoreRecoveryProbe.mts >/dev/null; do sleep 5; done; echo \"probe finished\""
+    },
+    {
+      "t": "2026-10-28T12:57:11Z",
+      "kind": "think",
+      "text": "I'll be notified when the probe finishes. In the meantime, let me check the dev server's state and look at what other open items exist while waiting."
+    },
+    {
+      "t": "2026-10-28T12:57:12Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"^## Session 109\" -A 2 PROGRESS.md | head -5; echo \"---\"; grep -c \"too many pending scores\\|rescored holder-concent\u2026"
+    },
+    {
+      "t": "2026-10-28T12:57:15Z",
+      "kind": "think",
+      "text": "Now I'll wait for the background probe to complete."
+    },
+    {
+      "t": "2026-10-28T12:57:17Z",
+      "kind": "tool",
+      "text": "ScheduleWakeup"
+    },
+    {
+      "t": "2026-10-28T12:57:19Z",
+      "kind": "run",
+      "text": "cat /tmp/rescoreRecoveryProbe.log 2>/dev/null | tail -40; echo \"---still running?---\"; pgrep -f rescoreRecoveryProbe.mts"
     }
   ],
   "schedule": {
