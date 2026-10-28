@@ -1,10 +1,11 @@
 {
-  "updated_at": "2026-10-27T22:17:47Z",
+  "updated_at": "2026-10-28T05:37:54Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 113,
-    "turns": 43
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 114,
+    "started_at": "2026-10-28T05:37:54Z",
+    "turns": 0
   },
   "round": {
     "number": null,
@@ -1064,11 +1065,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T15:31:30Z",
-      "kind": "edit",
-      "text": "rug-radar/src/config.ts"
-    },
-    {
       "t": "2026-10-27T15:31:32Z",
       "kind": "think",
       "text": "Now let's check the `config.test.ts` for any assumptions about `wsUrl` defaults that might need updating, then run the full test/typecheck/build suite."
@@ -1462,11 +1458,16 @@
       "t": "2026-10-27T22:17:47Z",
       "kind": "done",
       "text": "Session 113 finished \u00b7 43 steps \u00b7 covered by Claude subscription ($1.54 API value)"
+    },
+    {
+      "t": "2026-10-28T05:37:54Z",
+      "kind": "start",
+      "text": "Session 114 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-10-28T01:10:48Z"
+    "next_run": "2026-10-28T08:37:54Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
