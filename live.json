@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-28T05:39:14Z",
+  "updated_at": "2026-10-28T05:39:42Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 114,
     "started_at": "2026-10-28T05:37:54Z",
-    "turns": 20
+    "turns": 24
   },
   "round": {
     "number": null,
@@ -1065,26 +1065,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T22:11:00Z",
-      "kind": "read",
-      "text": "PROGRESS.md"
-    },
-    {
-      "t": "2026-10-27T22:11:02Z",
-      "kind": "run",
-      "text": "tail -n 300 PROGRESS.md"
-    },
-    {
-      "t": "2026-10-27T22:11:07Z",
-      "kind": "run",
-      "text": "cat TASK.md; echo \"---LOGS---\"; ls logs/ 2>/dev/null | tail -20; echo \"---rug-radar---\"; ls rug-radar 2>/dev/null"
-    },
-    {
-      "t": "2026-10-27T22:11:11Z",
-      "kind": "run",
-      "text": "for f in logs/session-0109.md logs/session-0110.md logs/session-0111.md logs/session-0112.md; do echo \"=== $f ===\"; wc -l \"$f\"; done"
-    },
-    {
       "t": "2026-10-27T22:11:14Z",
       "kind": "read",
       "text": "logs/session-0112.md"
@@ -1463,6 +1443,26 @@
       "t": "2026-10-28T05:39:12Z",
       "kind": "tool",
       "text": "TaskCreate"
+    },
+    {
+      "t": "2026-10-28T05:39:16Z",
+      "kind": "read",
+      "text": "rug-radar/src/holderRescore.ts"
+    },
+    {
+      "t": "2026-10-28T05:39:17Z",
+      "kind": "read",
+      "text": "rug-radar/src/server.ts"
+    },
+    {
+      "t": "2026-10-28T05:39:21Z",
+      "kind": "read",
+      "text": "rug-radar/src/rescore.ts"
+    },
+    {
+      "t": "2026-10-28T05:39:34Z",
+      "kind": "run",
+      "text": "grep -n \"reasons.push\\|reasons:\" src/signals/holderConcentration.ts | head -20"
     }
   ],
   "schedule": {
