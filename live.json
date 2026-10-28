@@ -1,10 +1,9 @@
 {
-  "updated_at": "2026-10-28T20:29:10Z",
+  "updated_at": "2026-10-28T20:29:13Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 116,
-    "started_at": "2026-10-28T20:15:00Z",
     "turns": 34
   },
   "round": {
@@ -1078,15 +1077,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 1.8771
+    },
+    {
+      "date": "2026-10-28T20:15:00Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 35,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0116.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 1.5232
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-28T12:56:55Z",
-      "kind": "think",
-      "text": "Good, `stop()` exists. Now let's run the probe with a generous timeout (it needs ~280s to complete)."
-    },
     {
       "t": "2026-10-28T12:56:56Z",
       "kind": "run",
@@ -1481,6 +1484,11 @@
       "t": "2026-10-28T20:29:10Z",
       "kind": "think",
       "text": "Clean \u2014 only `PROGRESS.md` changed, no stray processes or temp files. This session is done; the runner will commit."
+    },
+    {
+      "t": "2026-10-28T20:29:13Z",
+      "kind": "done",
+      "text": "Session 116 finished \u00b7 34 steps \u00b7 covered by Claude subscription ($1.52 API value)"
     }
   ],
   "schedule": {
