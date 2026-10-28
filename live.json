@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-28T20:27:54Z",
+  "updated_at": "2026-10-28T20:28:40Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 116,
     "started_at": "2026-10-28T20:15:00Z",
-    "turns": 30
+    "turns": 32
   },
   "round": {
     "number": null,
@@ -1083,16 +1083,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-28T12:56:07Z",
-      "kind": "run",
-      "text": "sed -n '1,260p' src/server.ts"
-    },
-    {
-      "t": "2026-10-28T12:56:32Z",
-      "kind": "run",
-      "text": "sed -n '1,60p' src/wsDiscovery.ts | grep -n \"class LaunchWatcher\\|constructor\\|onLaunch\\|onTrade\\|trackMint\\|interface\""
-    },
-    {
       "t": "2026-10-28T12:56:35Z",
       "kind": "run",
       "text": "grep -n \"export class LaunchWatcher\\|constructor(\\|export interface LaunchWatcherOptions\\|trackMint\\|untrackMint\\|onLaunch\\|onTrade\\|onError\" src/wsDiscovery.ts"
@@ -1481,6 +1471,16 @@
       "t": "2026-10-28T20:27:52Z",
       "kind": "run",
       "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && tail -c 300 PROGRESS.md"
+    },
+    {
+      "t": "2026-10-28T20:28:08Z",
+      "kind": "run",
+      "text": "sed -n '6701,6938p' PROGRESS.md"
+    },
+    {
+      "t": "2026-10-28T20:28:40Z",
+      "kind": "edit",
+      "text": "PROGRESS.md"
     }
   ],
   "schedule": {
