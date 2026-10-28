@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-28T05:38:48Z",
+  "updated_at": "2026-10-28T05:39:14Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 114,
     "started_at": "2026-10-28T05:37:54Z",
-    "turns": 14
+    "turns": 20
   },
   "round": {
     "number": null,
@@ -1065,41 +1065,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T15:34:47Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-27T15:34:49Z",
-      "kind": "think",
-      "text": "Now let's run the full test suite once more to confirm nothing broke, then update PROGRESS.md."
-    },
-    {
-      "t": "2026-10-27T15:34:50Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -10 && cd .. && git status --short"
-    },
-    {
-      "t": "2026-10-27T15:34:57Z",
-      "kind": "done",
-      "text": "Session 112 reached its step limit, continues next session \u00b7 60 steps \u00b7 covered by Claude subscription ($2.48 API value)"
-    },
-    {
-      "t": "2026-10-27T22:10:48Z",
-      "kind": "start",
-      "text": "Session 113 started: Rug radar: live launch scoring"
-    },
-    {
-      "t": "2026-10-27T22:10:54Z",
-      "kind": "run",
-      "text": "cat TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat PROGRESS.md 2>/dev/null"
-    },
-    {
-      "t": "2026-10-27T22:10:58Z",
-      "kind": "run",
-      "text": "wc -l TASK.md PROGRESS.md; echo \"---\"; echo \"TASK.md size:\"; wc -c TASK.md"
-    },
-    {
       "t": "2026-10-27T22:11:00Z",
       "kind": "read",
       "text": "PROGRESS.md"
@@ -1463,6 +1428,41 @@
       "t": "2026-10-28T05:38:44Z",
       "kind": "run",
       "text": "ls -la /tmp/*.log /tmp/*.jsonl 2>/dev/null; echo \"---\"; ps aux | grep -i node; echo \"---git status---\"; git status --short"
+    },
+    {
+      "t": "2026-10-28T05:38:50Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && ls && echo \"---install---\" && npm install 2>&1 | tail -15"
+    },
+    {
+      "t": "2026-10-28T05:38:53Z",
+      "kind": "run",
+      "text": "echo \"=== typecheck ===\" && npm run typecheck 2>&1 | tail -20 && echo \"=== build ===\" && npm run build 2>&1 | tail -20 && echo \"=== test ===\" && npm test 2>&1 | tail -15"
+    },
+    {
+      "t": "2026-10-28T05:39:05Z",
+      "kind": "think",
+      "text": "Baseline is clean: 246/246 tests passing, typecheck/build clean. Now let me pick up where session 113 left off \u2014 the rescore-recovery-rate probe that was finally unblocked by sess\u2026"
+    },
+    {
+      "t": "2026-10-28T05:39:06Z",
+      "kind": "run",
+      "text": "grep -n \"rescoreHolderConcentrationFromIndex\\|RESCORE_DELAY_MS\\|class BalanceIndex\" src/*.ts | head -30"
+    },
+    {
+      "t": "2026-10-28T05:39:08Z",
+      "kind": "tool",
+      "text": "ToolSearch"
+    },
+    {
+      "t": "2026-10-28T05:39:12Z",
+      "kind": "tool",
+      "text": "TaskCreate"
+    },
+    {
+      "t": "2026-10-28T05:39:12Z",
+      "kind": "tool",
+      "text": "TaskCreate"
     }
   ],
   "schedule": {
