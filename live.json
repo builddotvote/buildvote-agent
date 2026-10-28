@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-28T12:49:28Z",
+  "updated_at": "2026-10-28T12:49:55Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 115,
     "started_at": "2026-10-28T12:49:00Z",
-    "turns": 8
+    "turns": 12
   },
   "round": {
     "number": null,
@@ -1074,31 +1074,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T22:14:35Z",
-      "kind": "think",
-      "text": "PROGRESS.md is now caught up. Now let's run the rescore-recovery probe that's finally unblocked by the websocket fix \u2014 this is the natural next step."
-    },
-    {
-      "t": "2026-10-27T22:14:36Z",
-      "kind": "run",
-      "text": "cd rug-radar && grep -n \"rescoreHolderConcentrationFromIndex\\|class BalanceIndex\\|RESCORE_DELAY_MS\" src/rescore.ts src/balanceIndex.ts src/server.ts | head -30"
-    },
-    {
-      "t": "2026-10-27T22:14:39Z",
-      "kind": "read",
-      "text": "rug-radar/src/server.ts"
-    },
-    {
-      "t": "2026-10-27T22:14:44Z",
-      "kind": "read",
-      "text": "rug-radar/src/holderRescore.ts"
-    },
-    {
-      "t": "2026-10-27T22:14:52Z",
-      "kind": "run",
-      "text": "grep -n \"console.log\\|console.error\" src/watcherOnLaunch.ts src/feed.ts src/server.ts"
-    },
-    {
       "t": "2026-10-27T22:15:03Z",
       "kind": "run",
       "text": "grep -n \"maxSize\\|class LiveFeed\" src/feed.ts | head -10"
@@ -1472,6 +1447,31 @@
       "t": "2026-10-28T12:49:26Z",
       "kind": "run",
       "text": "find . -iname \"logs\" -maxdepth 3; find . -iname \"session-01*\" 2>/dev/null | tail -20"
+    },
+    {
+      "t": "2026-10-28T12:49:33Z",
+      "kind": "run",
+      "text": "wc -l logs/session-0110.md logs/session-0111.md logs/session-0113.md logs/session-0114.md"
+    },
+    {
+      "t": "2026-10-28T12:49:36Z",
+      "kind": "think",
+      "text": "These logs are small enough to read directly. Let me check them to see what's happened since the last PROGRESS.md entry."
+    },
+    {
+      "t": "2026-10-28T12:49:36Z",
+      "kind": "read",
+      "text": "logs/session-0110.md"
+    },
+    {
+      "t": "2026-10-28T12:49:44Z",
+      "kind": "run",
+      "text": "grep -n \"^## Session\" PROGRESS.md | awk -F: '$1>6938'"
+    },
+    {
+      "t": "2026-10-28T12:49:49Z",
+      "kind": "run",
+      "text": "grep -n \"^## Session 107\" PROGRESS.md; echo \"---112---\"; grep -n \"^## Session 112\\|Session 112\" PROGRESS.md | head; echo \"---110/111/113/114---\"; grep -n \"Session 110\\|Session 111\u2026"
     }
   ],
   "schedule": {
