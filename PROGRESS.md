@@ -6936,3 +6936,91 @@ flagging it here so future sessions trust `logs/` over this file's numbering.
   `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
   endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
 - All five TASK.md steps remain functionally complete.
+
+## Session 110 — 2026-10-28
+
+### Done
+- Fresh checkout; `npm install`, then `npm run typecheck`/`npm run build`
+  clean, `npm test` 246/246 — matches session 109's count, no drift.
+- Log sessions 114 and 115 (`logs/session-0114.md`, `logs/session-0115.md`)
+  both tried to finally run the rescore-recovery-rate probe (the "Next"
+  item open since session 106) by starting the dev server and a polling
+  loop with `&`/`nohup`, then calling `ScheduleWakeup` to resume later —
+  and both lost all of it: this session started with an empty `/tmp` and
+  no server process running, confirming each session runs in a *fresh
+  sandbox*, not a resumed one. **`ScheduleWakeup`/background shell jobs do
+  not survive across session boundaries in this environment** — anything
+  backgrounded with `&`/`nohup`/`disown` and left for a future wakeup to
+  collect is gone the moment the session ends, wakeup or not. This is a
+  standing environment fact worth remembering before attempting the same
+  pattern again: any live-network measurement that takes longer than one
+  reply must run **synchronously inside a single tool call** (the `Bash`
+  tool accepts a `timeout` up to 600000ms/10 minutes — plenty for a
+  several-minute probe), not backgrounded-then-resumed.
+- Applying that fix, ran the rescore-recovery probe twice, synchronously,
+  each as one blocking shell command (start `npm run dev` with
+  `NODE_OPTIONS=--experimental-websocket`, poll `/api/feed` every 5s,
+  settle 30s, then grep the server log and `pkill` the server — all
+  before the tool call returns):
+  - Run 1 (~230s): 6 distinct mints reached the feed; 3 aged past 65s by
+    the end of polling (allowing for `RESCORE_DELAY_MS`=60s plus a margin
+    for polling granularity); 1 of those 3 got a successful
+    `rescored holder-concentration for ...` log line, 0 explicit
+    `rescore failed` errors (the other 2 are silent "no trades observed"
+    nulls — `rescoreHolderConcentrationFromIndex` returns `null` with no
+    log line in that case, see `rescore.ts`).
+  - Run 2 (~310s): 6 distinct mints reached the feed; 4 aged past 65s; 2
+    of those 4 rescored successfully, 0 explicit failures, 2 silent
+    nulls.
+  - **Combined: 7 mints old enough to have been rescored, 3 succeeded
+    (~43%), 0 RPC-level failures, 4 silent no-trades-observed nulls.**
+    This is a thin sample (n=7, same honesty standard as session 106's
+    flagged 0/50) — not a confident long-run rate, but it's the first
+    actual data point for this metric, and it's a materially different
+    population than session 47/72's bypass-the-gate probes (~3/62,
+    ~11/85+ trading at all among *all* discovered mints): this probe only
+    measured mints that already survived `ScoringGate` into the feed, a
+    biased-toward-more-active subset, consistent with this session's
+    higher observed rate.
+  - Both runs' dev-server logs showed `ScoringGate` ("too many pending
+    scores") dropping the large majority of discovered launches before
+    they ever reach the feed, let alone a scheduled rescore — confirming
+    this metric is bottlenecked far more by the scoring-RPC-rate-limit
+    gate (sessions 20-26, 61, 68, 69, 71) than by the rescore mechanism
+    itself. Didn't change `ScoringGate`'s cap (3) — out of scope for this
+    measurement, and prior sessions already tuned it deliberately.
+  - Cleaned up both probes' temp files (`/tmp/rescoreprobe*.log`,
+    `/tmp/feedsnap*.jsonl`) and confirmed no leftover `tsx`/`npm run dev`
+    processes before finishing.
+- No source files changed this session — this was a live measurement
+  only, filling in the "Next" item multiple prior sessions left blocked.
+
+### Works
+- `npm run typecheck`, `npm run build`: clean.
+- `npm test`: 246/246 passing, offline — unchanged, no source files
+  touched this session.
+- `git status`: only this `PROGRESS.md` update; no stray temp files or
+  leftover background processes.
+
+### Next
+- The rescore-recovery-rate number above (~43%, n=7) is thin. If a future
+  session wants a tighter number, run the same synchronous-probe pattern
+  again (not backgrounded — see this session's environment finding) for
+  longer, and/or consider a probe that bypasses `ScoringGate` (like
+  sessions 47/72/73 did for first-trade delay) to separate "does the
+  rescore mechanism work" from "does the launch survive the scoring gate
+  long enough to get scheduled for one" — right now this session's number
+  conflates both.
+- Remember for any future live-network measurement: this environment
+  gives each session a fresh sandbox, so `ScheduleWakeup` cannot be used
+  to resume a background probe — run it synchronously in one bounded
+  `Bash` call instead (up to 10 minutes). Don't repeat sessions
+  113/114/115's pattern.
+- Watch for whether *sustained* (hours, not seconds) frequent reconnecting
+  against the shared official-endpoint websocket host eventually triggers
+  stricter throttling — still flagged in the README as untested beyond
+  short windows.
+- Standing low-priority items unchanged: `RESCORE_DELAY_MS` (session 73),
+  `findFundingSource`'s ~2% unknown rate (session 39), and the scoring
+  endpoint's rate-limit ceiling (sessions 20-26, 61, 68, 69, 71).
+- All five TASK.md steps remain functionally complete.
