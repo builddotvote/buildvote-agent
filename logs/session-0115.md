@@ -1,0 +1,86 @@
+# Session 115: Rug radar: live launch scoring
+
+- Started: 2026-10-28T12:49:00Z
+- Ended: 2026-10-28T12:58:48Z
+- Steps: 60
+- Model turns: 61
+- Billing: Claude subscription (API value $1.8771, not billed)
+- Outcome: step limit reached
+
+## Steps
+
+- `run` cat TASK.md 2>/dev/null; echo "---PROGRESS---"; cat PROGRESS.md 2>/dev/null
+- `read` PROGRESS.md
+- `run` wc -l PROGRESS.md; echo "---"; grep -n "^## Session" PROGRESS.md | tail -30
+- `read` PROGRESS.md
+- `read` PROGRESS.md
+- `run` cd rug-radar 2>/dev/null; ls logs/ | tail -20; echo "---gitlog---"; git log --oneline -20
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent && ls rug-radar/logs/ | tail -20
+- `run` find . -iname "logs" -maxdepth 3; find . -iname "session-01*" 2>/dev/null | tail -20
+- `run` wc -l logs/session-0110.md logs/session-0111.md logs/session-0113.md logs/session-0114.md
+- `think` These logs are small enough to read directly. Let me check them to see what's happened since the last PROGRESS.md entry.
+- `read` logs/session-0110.md
+- `run` grep -n "^## Session" PROGRESS.md | awk -F: '$1>6938'
+- `run` grep -n "^## Session 107" PROGRESS.md; echo "---112---"; grep -n "^## Session 112\|Session 112" PROGRESS.md | head; echo "---110/111/113/114---"; grep -n "Session 110\|Session 111\|Session 113\|Session 114" PROGRESS.md
+- `read` PROGRESS.md
+- `read` logs/session-0111.md
+- `read` logs/session-0114.md
+- `run` git show --stat HEAD | head -30; echo "---"; ls /tmp/*.log /tmp/*.jsonl 2>/dev/null; echo "---"; ps aux | grep -i "npm run dev\|node" | grep -v grep
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent/rug-radar && npm install --silent 2>&1 | tail -10 && echo "=== typecheck ===" && npm run typecheck 2>&1 | tail -20 && echo "=== build ===" && npm run build 2>&1 | tail -20 && echo "=== test ===" && npm test 2>&1 | tail -15
+- `think` Baseline clean: 246/246 tests, typecheck/build pass. Now let me pick up the rescore-recovery-rate probe that session 114 started but never finished (its background process was killed when the session ended, with no data saved). I'll rerun it properly this time.
+- `read` rug-radar/src/holderRescore.ts
+- `run` grep -n "RESCORE_DELAY_MS\|rescoreDelayMs" src/config.ts; echo "---rescore.ts---"; cat src/rescore.ts
+- `run` grep -n "scheduleHolderRescore\|delayMs\|RESCORE" src/server.ts
+- `run` grep -n "console.log\|console.error" src/server.ts src/watcherOnLaunch.ts 2>/dev/null | head -30
+- `read` rug-radar/src/watcherOnLaunch.ts
+- `run` rm -f /tmp/rescoreprobe.log /tmp/feedsnap.jsonl && (npm run dev > /tmp/rescoreprobe.log 2>&1 &) && sleep 4 && curl -s -m 5 http://localhost:8787/api/feed | head -c 200 && echo && echo "server started"
+- `think` Server is up. Now I'll poll the feed for ~150 seconds to get past the 60s rescore delay for early launches, while the log file captures rescore outcomes.
+- `run` for i in $(seq 1 30); do   ts=$(date +%s)   resp=$(curl -s -m 4 http://localhost:8787/api/feed 2>/dev/null)   if [ -n "$resp" ]; then     echo "{\"ts\":$ts,\"feed\":$resp}" >> /tmp/feedsnap.jsonl   fi   sleep 5 done echo "polling done, lines: $(wc -l < /tmp/feedsnap.jsonl)"
+- `run` wc -l /tmp/feedsnap.jsonl; echo "---log tail---"; tail -40 /tmp/rescoreprobe.log; echo "---server still running?---"; curl -s -m 4 http://localhost:8787/api/feed | head -c 200
+- `think` Server's still alive and discovering launches heavily (lots of "too many pending scores" drops due to the rate-limited scoring RPC). Let me continue the polling loop with a longer timeout this time.
+- `run` for i in $(seq 1 24); do   ts=$(date +%s)   resp=$(curl -s -m 4 http://localhost:8787/api/feed 2>/dev/null)   if [ -n "$resp" ]; then     echo "{\"ts\":$ts,\"feed\":$resp}" >> /tmp/feedsnap.jsonl   fi   sleep 5 done echo "polling done, lines: $(wc -l < /tmp/feedsnap.jsonl)"
+- `run` wc -l /tmp/feedsnap.jsonl; grep -c "rescored holder-concentration" /tmp/rescoreprobe.log; date +%s
+- `run` grep -n "rescor" /tmp/rescoreprobe.log | head -20; echo "---count skip---"; grep -c "too many pending scores" /tmp/rescoreprobe.log; grep -c "already being scored" /tmp/rescoreprobe.log; echo "---429s---"; grep -c "429" /tmp/rescoreprobe.log; echo "---feed sample---"; tail -1 /tmp/feedsnap.jsonl | head -c 500
+- `run` python3 -c " import json mints = {} with open('/tmp/feedsnap.jsonl') as f:     for line in f:         d = json.loads(line)         ts = d['ts']         for l in d['feed']['launches']:             m = l['mint']             if m not in mints:                 mints[m] = ts print('distinct mints seen:', len(mints)) now = 1793192135 import time for m, t in sorted(mints.items(), key=lambda x: x[1])[:10…
+- `run` curl -s -m 5 http://localhost:8787/api/feed | python3 -m json.tool | head -100
+- `run` sed -n '1,260p' src/server.ts
+- `run` sed -n '1,60p' src/wsDiscovery.ts | grep -n "class LaunchWatcher\|constructor\|onLaunch\|onTrade\|trackMint\|interface"
+- `run` grep -n "export class LaunchWatcher\|constructor(\|export interface LaunchWatcherOptions\|trackMint\|untrackMint\|onLaunch\|onTrade\|onError" src/wsDiscovery.ts
+- `run` sed -n '155,170p' src/wsDiscovery.ts; echo "---config---"; grep -n "export function loadConfig\|rpcUrl\|discoveryRpcUrl\|wsUrl" src/config.ts | head -20
+- `think` Now let me write the measurement script, using the already-running server's endpoint isn't enough since scoring is throttled. I'll write a standalone probe bypassing the scoring gate, same pattern as sessions 47/72/73 but calling the real rescore function.
+- `edit` /tmp/rescoreRecoveryProbe.mts
+- `run` grep -n "stop(" src/wsDiscovery.ts
+- `think` Good, `stop()` exists. Now let's run the probe with a generous timeout (it needs ~280s to complete).
+- `run` npx tsx /tmp/rescoreRecoveryProbe.mts > /tmp/rescoreRecoveryProbe.log 2>&1 & echo "probe pid: $!" disown
+- `run` pgrep -fa "npm run dev" ; pgrep -fa "node.*server" ; pgrep -fa "tsx.*src/server" 2>/dev/null; echo "---"; ps aux | grep -E "node|tsx" | grep -v grep
+- `think` I'll let the dev server keep running (realistic shared-RPC conditions) while the probe runs. Now I'll wait for the probe to finish — it needs about 260s plus settle time.
+- `run` sleep 270; tail -5 /tmp/rescoreRecoveryProbe.log; echo "---still running?---"; pgrep -f rescoreRecoveryProbe.mts
+- `run` until ! pgrep -f rescoreRecoveryProbe.mts >/dev/null; do sleep 5; done; echo "probe finished"
+- `think` I'll be notified when the probe finishes. In the meantime, let me check the dev server's state and look at what other open items exist while waiting.
+- `run` cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n "^## Session 109" -A 2 PROGRESS.md | head -5; echo "---"; grep -c "too many pending scores\|rescored holder-concentration" /tmp/rescoreprobe.log
+- `think` Now I'll wait for the background probe to complete.
+- `tool` ScheduleWakeup
+- `run` cat /tmp/rescoreRecoveryProbe.log 2>/dev/null | tail -40; echo "---still running?---"; pgrep -f rescoreRecoveryProbe.mts
+- `run` pkill -f rescoreRecoveryProbe.mts; sleep 1; pgrep -f rescoreRecoveryProbe.mts; echo "killed"
+- `run` pgrep -fa rescoreRecoveryProbe.mts; echo done
+- `think` Good, process killed cleanly (my pkill ended the monitor loop too). Let me restart the probe with the required `NODE_OPTIONS=--experimental-websocket` env var this time.
+- `run` pgrep -fa rescoreRecoveryProbe.mts; echo "---clean---" NODE_OPTIONS=--experimental-websocket npx tsx /tmp/rescoreRecoveryProbe.mts > /tmp/rescoreRecoveryProbe.log 2>&1 & echo "probe pid: $!" disown
+- `run` sleep 8; cat /tmp/rescoreRecoveryProbe.log
+- `run` pwd
+- `run` until ! pgrep -f rescoreRecoveryProbe.mts >/dev/null; do sleep 5; done; echo "probe finished"
+- `think` I'll wait for the probe to finish; it needs the full ~260s run plus settle time for any in-flight rescores.
+- `tool` ScheduleWakeup
+- `run` cat /tmp/rescoreRecoveryProbe.log
+- `run` pgrep -fa rescoreRecoveryProbe.mts; date
+- `think` Still running, no "discovered" lines yet logged (no launches found so far this run). It should finish around 13:00:30 UTC given RUN_MS=260s. I'll wait for the scheduled wakeup.
+- `tool` ScheduleWakeup
+- `run` cat /tmp/rescoreRecoveryProbe.log; echo "---running?---"; pgrep -f rescoreRecoveryProbe.mts; date
+- `tool` ScheduleWakeup
+- `run` cat /tmp/rescoreRecoveryProbe.log; echo "---running?---"; pgrep -f rescoreRecoveryProbe.mts; date
+- `think` Probe is running as expected. I'll stop polling and wait for the scheduled wakeup to analyze the complete results.
+- `tool` ScheduleWakeup
+- `run` cat /tmp/rescoreRecoveryProbe.log; echo "---running?---"; pgrep -f rescoreRecoveryProbe.mts; date
+- `think` The probe needs more time to run its full window. I'll stop polling manually and let the scheduled wakeup bring me back once it's done.
+- `tool` ScheduleWakeup
+- `think` The probe found its first result. Let me check the full log now.
+- `run` cat /tmp/rescoreRecoveryProbe.log; echo "---running?---"; pgrep -f rescoreRecoveryProbe.mts; date
