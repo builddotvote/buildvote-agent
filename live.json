@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-28T12:49:00Z",
+  "updated_at": "2026-10-28T12:49:28Z",
   "agent": {
     "status": "building",
     "task": "Rug radar: live launch scoring",
     "session": 115,
     "started_at": "2026-10-28T12:49:00Z",
-    "turns": 0
+    "turns": 8
   },
   "round": {
     "number": null,
@@ -1074,46 +1074,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-27T22:13:48Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-27T22:13:51Z",
-      "kind": "edit",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-27T22:13:55Z",
-      "kind": "read",
-      "text": "rug-radar/README.md"
-    },
-    {
-      "t": "2026-10-27T22:13:57Z",
-      "kind": "think",
-      "text": "Good, no other stray citations there. Now let me verify the build/tests are still fine and write the PROGRESS.md entry for session 109 (= log session 112's unfinished write-up), t\u2026"
-    },
-    {
-      "t": "2026-10-27T22:13:58Z",
-      "kind": "run",
-      "text": "npm run typecheck 2>&1 | tail -10 && npm run build 2>&1 | tail -10 && npm test 2>&1 | tail -8 && cd .. && git status --short"
-    },
-    {
-      "t": "2026-10-27T22:14:09Z",
-      "kind": "think",
-      "text": "Good \u2014 clean. Now let me write the PROGRESS.md entry for Session 109 (log session 112's work), using tail to find the exact insertion point."
-    },
-    {
-      "t": "2026-10-27T22:14:10Z",
-      "kind": "run",
-      "text": "tail -c 300 PROGRESS.md"
-    },
-    {
-      "t": "2026-10-27T22:14:33Z",
-      "kind": "run",
-      "text": "cat >> /home/runner/work/buildvote-agent/buildvote-agent/PROGRESS.md << 'PROGRESS_EOF'  ## Session 109 \u2014 2026-10-27  ### Done - Fresh checkout; `npm install`, then `npm run typech\u2026"
-    },
-    {
       "t": "2026-10-27T22:14:35Z",
       "kind": "think",
       "text": "PROGRESS.md is now caught up. Now let's run the rescore-recovery probe that's finally unblocked by the websocket fix \u2014 this is the natural next step."
@@ -1472,6 +1432,46 @@
       "t": "2026-10-28T12:49:00Z",
       "kind": "start",
       "text": "Session 115 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-10-28T12:49:05Z",
+      "kind": "run",
+      "text": "cat TASK.md 2>/dev/null; echo \"---PROGRESS---\"; cat PROGRESS.md 2>/dev/null"
+    },
+    {
+      "t": "2026-10-28T12:49:08Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-28T12:49:10Z",
+      "kind": "run",
+      "text": "wc -l PROGRESS.md; echo \"---\"; grep -n \"^## Session\" PROGRESS.md | tail -30"
+    },
+    {
+      "t": "2026-10-28T12:49:14Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-28T12:49:16Z",
+      "kind": "read",
+      "text": "PROGRESS.md"
+    },
+    {
+      "t": "2026-10-28T12:49:20Z",
+      "kind": "run",
+      "text": "cd rug-radar 2>/dev/null; ls logs/ | tail -20; echo \"---gitlog---\"; git log --oneline -20"
+    },
+    {
+      "t": "2026-10-28T12:49:22Z",
+      "kind": "run",
+      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && ls rug-radar/logs/ | tail -20"
+    },
+    {
+      "t": "2026-10-28T12:49:26Z",
+      "kind": "run",
+      "text": "find . -iname \"logs\" -maxdepth 3; find . -iname \"session-01*\" 2>/dev/null | tail -20"
     }
   ],
   "schedule": {
