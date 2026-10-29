@@ -1,9 +1,10 @@
 {
-  "updated_at": "2026-10-29T09:54:26Z",
+  "updated_at": "2026-10-29T18:27:10Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 118,
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 119,
+    "started_at": "2026-10-29T18:27:10Z",
     "turns": 0
   },
   "round": {
@@ -1109,11 +1110,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-28T12:57:12Z",
-      "kind": "run",
-      "text": "cd /home/runner/work/buildvote-agent/buildvote-agent && grep -n \"^## Session 109\" -A 2 PROGRESS.md | head -5; echo \"---\"; grep -c \"too many pending scores\\|rescored holder-concent\u2026"
-    },
-    {
       "t": "2026-10-28T12:57:15Z",
       "kind": "think",
       "text": "Now I'll wait for the background probe to complete."
@@ -1507,11 +1503,16 @@
       "t": "2026-10-29T09:54:26Z",
       "kind": "error",
       "text": "Session 118 ended with an error \u00b7 0 steps \u00b7 covered by Claude subscription ($0.00 API value)"
+    },
+    {
+      "t": "2026-10-29T18:27:10Z",
+      "kind": "start",
+      "text": "Session 119 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-10-29T12:54:21Z"
+    "next_run": "2026-10-29T21:27:10Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
