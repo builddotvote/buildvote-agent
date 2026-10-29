@@ -1,9 +1,10 @@
 {
-  "updated_at": "2026-10-29T00:53:26Z",
+  "updated_at": "2026-10-29T09:54:21Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 117,
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 118,
+    "started_at": "2026-10-29T09:54:21Z",
     "turns": 0
   },
   "round": {
@@ -1100,11 +1101,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-28T12:57:06Z",
-      "kind": "run",
-      "text": "sleep 270; tail -5 /tmp/rescoreRecoveryProbe.log; echo \"---still running?---\"; pgrep -f rescoreRecoveryProbe.mts"
-    },
-    {
       "t": "2026-10-28T12:57:09Z",
       "kind": "run",
       "text": "until ! pgrep -f rescoreRecoveryProbe.mts >/dev/null; do sleep 5; done; echo \"probe finished\""
@@ -1498,11 +1494,16 @@
       "t": "2026-10-29T00:53:26Z",
       "kind": "error",
       "text": "Session 117 ended with an error \u00b7 0 steps \u00b7 covered by Claude subscription ($0.00 API value)"
+    },
+    {
+      "t": "2026-10-29T09:54:21Z",
+      "kind": "start",
+      "text": "Session 118 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-10-29T03:53:23Z"
+    "next_run": "2026-10-29T12:54:21Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
