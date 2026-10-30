@@ -1,9 +1,10 @@
 {
-  "updated_at": "2026-10-30T00:57:20Z",
+  "updated_at": "2026-10-30T09:57:49Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 120,
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 121,
+    "started_at": "2026-10-30T09:57:49Z",
     "turns": 0
   },
   "round": {
@@ -1127,11 +1128,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-28T12:57:29Z",
-      "kind": "think",
-      "text": "Good, process killed cleanly (my pkill ended the monitor loop too). Let me restart the probe with the required `NODE_OPTIONS=--experimental-websocket` env var this time."
-    },
-    {
       "t": "2026-10-28T12:57:30Z",
       "kind": "run",
       "text": "pgrep -fa rescoreRecoveryProbe.mts; echo \"---clean---\" NODE_OPTIONS=--experimental-websocket npx tsx /tmp/rescoreRecoveryProbe.mts > /tmp/rescoreRecoveryProbe.log 2>&1 & echo \"pro\u2026"
@@ -1525,11 +1521,16 @@
       "t": "2026-10-30T00:57:20Z",
       "kind": "error",
       "text": "Session 120 ended with an error \u00b7 0 steps \u00b7 covered by Claude subscription ($0.00 API value)"
+    },
+    {
+      "t": "2026-10-30T09:57:49Z",
+      "kind": "start",
+      "text": "Session 121 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-10-30T03:57:16Z"
+    "next_run": "2026-10-30T12:57:49Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
