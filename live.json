@@ -1,10 +1,9 @@
 {
-  "updated_at": "2026-11-01T00:06:42Z",
+  "updated_at": "2026-11-01T00:06:45Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 127,
-    "started_at": "2026-11-01T00:06:42Z",
     "turns": 0
   },
   "round": {
@@ -1177,20 +1176,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 0.0
+    },
+    {
+      "date": "2026-11-01T00:06:42Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 1,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0127.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 0.0
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-10-28T12:58:42Z",
-      "kind": "think",
-      "text": "The probe found its first result. Let me check the full log now."
-    },
-    {
-      "t": "2026-10-28T12:58:43Z",
-      "kind": "run",
-      "text": "cat /tmp/rescoreRecoveryProbe.log; echo \"---running?---\"; pgrep -f rescoreRecoveryProbe.mts; date"
-    },
     {
       "t": "2026-10-28T12:58:49Z",
       "kind": "done",
@@ -1580,6 +1578,16 @@
       "t": "2026-11-01T00:06:42Z",
       "kind": "start",
       "text": "Session 127 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-11-01T00:06:44Z",
+      "kind": "think",
+      "text": "Your organization has disabled Claude subscription access for Claude Code \u00b7 Use an Anthropic API key instead, or ask your admin to enable access"
+    },
+    {
+      "t": "2026-11-01T00:06:45Z",
+      "kind": "error",
+      "text": "Session 127 ended with an error \u00b7 0 steps \u00b7 covered by Claude subscription ($0.00 API value)"
     }
   ],
   "schedule": {
