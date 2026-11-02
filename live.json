@@ -1,9 +1,10 @@
 {
-  "updated_at": "2026-11-02T00:41:15Z",
+  "updated_at": "2026-11-02T10:58:22Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 131,
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 132,
+    "started_at": "2026-11-02T10:58:22Z",
     "turns": 0
   },
   "round": {
@@ -1226,11 +1227,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-10-28T20:15:48Z",
-      "kind": "run",
-      "text": "cd rug-radar && npm install --silent 2>&1 | tail -10 && echo \"=== typecheck ===\" && npm run typecheck 2>&1 | tail -20 && echo \"=== build ===\" && npm run build 2>&1 | tail -20 && e\u2026"
-    },
-    {
       "t": "2026-10-28T20:16:01Z",
       "kind": "think",
       "text": "Baseline is clean: 246/246 tests pass, typecheck/build clean. Now let me check the holder-rescore code to run the recovery-rate probe synchronously within this session, since prio\u2026"
@@ -1624,11 +1620,16 @@
       "t": "2026-11-02T00:41:15Z",
       "kind": "error",
       "text": "Session 131 ended with an error \u00b7 0 steps \u00b7 covered by Claude subscription ($0.00 API value)"
+    },
+    {
+      "t": "2026-11-02T10:58:22Z",
+      "kind": "start",
+      "text": "Session 132 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-11-02T03:41:12Z"
+    "next_run": "2026-11-02T13:58:22Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
