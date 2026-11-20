@@ -1,10 +1,9 @@
 {
-  "updated_at": "2026-11-20T20:10:47Z",
+  "updated_at": "2026-11-20T20:10:50Z",
   "agent": {
-    "status": "building",
-    "task": "Rug radar: live launch scoring",
+    "status": "idle",
+    "task": "Last session: Rug radar: live launch scoring",
     "session": 186,
-    "started_at": "2026-11-20T20:10:47Z",
     "turns": 0
   },
   "round": {
@@ -1708,20 +1707,19 @@
       "billing": "subscription",
       "cost_usd": 0,
       "api_value_usd": 0.0
+    },
+    {
+      "date": "2026-11-20T20:10:47Z",
+      "task": "Rug radar: live launch scoring",
+      "calls": 1,
+      "log_url": "https://github.com/builddotvote/buildvote-agent/blob/main/logs/session-0186.md",
+      "billing": "subscription",
+      "cost_usd": 0,
+      "api_value_usd": 0.0
     }
   ],
   "ledger": [],
   "feed": [
-    {
-      "t": "2026-11-11T10:52:25Z",
-      "kind": "error",
-      "text": "Session 159 ended with an error \u00b7 0 steps \u00b7 covered by Claude subscription ($0.00 API value)"
-    },
-    {
-      "t": "2026-11-11T19:33:32Z",
-      "kind": "start",
-      "text": "Session 160 started: Rug radar: live launch scoring"
-    },
     {
       "t": "2026-11-11T19:33:35Z",
       "kind": "think",
@@ -2111,6 +2109,16 @@
       "t": "2026-11-20T20:10:47Z",
       "kind": "start",
       "text": "Session 186 started: Rug radar: live launch scoring"
+    },
+    {
+      "t": "2026-11-20T20:10:49Z",
+      "kind": "think",
+      "text": "Your organization has disabled Claude subscription access for Claude Code \u00b7 Use an Anthropic API key instead, or ask your admin to enable access"
+    },
+    {
+      "t": "2026-11-20T20:10:50Z",
+      "kind": "error",
+      "text": "Session 186 ended with an error \u00b7 0 steps \u00b7 covered by Claude subscription ($0.00 API value)"
     }
   ],
   "schedule": {
