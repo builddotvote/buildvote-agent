@@ -1,9 +1,10 @@
 {
-  "updated_at": "2026-11-24T23:52:41Z",
+  "updated_at": "2026-11-25T08:26:46Z",
   "agent": {
-    "status": "idle",
-    "task": "Last session: Rug radar: live launch scoring",
-    "session": 197,
+    "status": "building",
+    "task": "Rug radar: live launch scoring",
+    "session": 198,
+    "started_at": "2026-11-25T08:26:46Z",
     "turns": 0
   },
   "round": {
@@ -1820,11 +1821,6 @@
   "ledger": [],
   "feed": [
     {
-      "t": "2026-11-15T06:23:45Z",
-      "kind": "think",
-      "text": "Your organization has disabled Claude subscription access for Claude Code \u00b7 Use an Anthropic API key instead, or ask your admin to enable access"
-    },
-    {
       "t": "2026-11-15T06:23:46Z",
       "kind": "error",
       "text": "Session 171 ended with an error \u00b7 0 steps \u00b7 covered by Claude subscription ($0.00 API value)"
@@ -2218,11 +2214,16 @@
       "t": "2026-11-24T23:52:41Z",
       "kind": "error",
       "text": "Session 197 ended with an error \u00b7 0 steps \u00b7 covered by Claude subscription ($0.00 API value)"
+    },
+    {
+      "t": "2026-11-25T08:26:46Z",
+      "kind": "start",
+      "text": "Session 198 started: Rug radar: live launch scoring"
     }
   ],
   "schedule": {
     "every_hours": 3.0,
-    "next_run": "2026-11-25T02:52:38Z"
+    "next_run": "2026-11-25T11:26:46Z"
   },
   "billing": "subscription",
   "max_sessions_per_day": 8
